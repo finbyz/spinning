@@ -7,7 +7,7 @@ def get_data():
 		{
 			"module_name": "Spinning",
 			"color": "Orange",
-			"icon": "/private/files/cone-yarn.png",
+			"icon": "fa fa-industry",
 			"type": "module",
 			"label": _("Spinning")
 		}

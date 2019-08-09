@@ -6,7 +6,7 @@ app_name = "spinning"
 app_title = "Spinning"
 app_publisher = "FinByz Tech Pvt Ltd"
 app_description = "Custom app for spinning app"
-app_icon = "/private/files/cone-yarn.png"
+app_icon = "/public/files/cone-yarn.png"
 app_color = "Orange"
 app_email = "info@finbyz.com"
 app_license = "GPL 3.0"
@@ -30,6 +30,12 @@ app_license = "GPL 3.0"
 # doctype_list_js = {"doctype" : "public/js/doctype_list.js"}
 # doctype_tree_js = {"doctype" : "public/js/doctype_tree.js"}
 # doctype_calendar_js = {"doctype" : "public/js/doctype_calendar.js"}
+
+doctype_js = {
+	"Purchase Receipt": "public/js/doctype_js/purchase_receipt.js",
+	"Purchase Invoice": "public/js/doctype_js/purchase_invoice.js",
+	"Delivery Note": "public/js/doctype_js/delivery_note.js",
+}
 
 # Home Pages
 # ----------
@@ -110,28 +116,33 @@ app_license = "GPL 3.0"
 
 doc_events = {
 	"Stock Entry": {
-		"validate": "spinning.batch_valuation.stock_entry_validate",
-		"on_submit":"spinning.batch_valuation.stock_entry_on_submit",
-		"on_cancel":"spinning.batch_valuation.stock_entry_on_cancel",
+		"validate": "spinning.doc_events.stock_entry.validate",
 	},
+
 	"Batch": {
-		'before_naming': "spinning.batch_valuation.override_batch_autoname",
+		'before_naming': "spinning.doc_events.batch.before_naming",
 	},
+
 	"Purchase Receipt": {
-		"validate": "spinning.batch_valuation.pr_validate",
-		"on_cancel": "spinning.batch_valuation.pr_on_cancel",
+		"validate": "spinning.doc_events.purchase_receipt.validate",
+		"on_submit": "spinning.doc_events.purchase_receipt.on_submit",
+		"on_cancel": "spinning.doc_events.purchase_receipt.on_cancel",
 	},
+	
 	"Purchase Invoice": {
-		"validate": "spinning.batch_valuation.pi_validate",
-		"on_cancel": "spinning.batch_valuation.pi_on_cancel",
+		"validate": "spinning.doc_events.purchase_invoice.validate",
 	},
-	"Landed Cost Voucher": {
-		"validate": "spinning.batch_valuation.lcv_validate",
-		"on_submit": "spinning.batch_valuation.lcv_on_submit",
-		"on_cancel": [
-			"spinning.batch_valuation.lcv_on_cancel",
-		],
-	}
+
+	"BOM": {
+		"before_naming": "spinning.doc_events.bom.before_naming",
+	},
+
+	"Delivery Note": {
+		"validate": "spinning.doc_events.delivery_note.validate",
+		"before_save": "spinning.doc_events.delivery_note.before_save",
+		"on_submit": "spinning.doc_events.delivery_note.on_submit",
+		"on_cancel": "spinning.doc_events.delivery_note.on_cancel",
+	},
 }
 
 
