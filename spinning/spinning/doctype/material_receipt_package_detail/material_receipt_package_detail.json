@@ -1,0 +1,59 @@
+{
+ "creation": "2019-08-12 17:56:38.210686",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "package",
+  "gross_weight",
+  "net_weight",
+  "spools",
+  "row_ref"
+ ],
+ "fields": [
+  {
+   "fieldname": "package",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Package",
+   "reqd": 1
+  },
+  {
+   "fieldname": "gross_weight",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Gross Weight",
+   "reqd": 1
+  },
+  {
+   "fieldname": "net_weight",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Net Weight",
+   "reqd": 1
+  },
+  {
+   "fieldname": "row_ref",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Row Ref",
+   "options": "1"
+  },
+  {
+   "default": "0",
+   "fieldname": "spools",
+   "fieldtype": "Int",
+   "label": "Spools"
+  }
+ ],
+ "istable": 1,
+ "modified": "2019-08-14 12:34:02.986404",
+ "modified_by": "Administrator",
+ "module": "Spinning",
+ "name": "Material Receipt Package Detail",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "track_changes": 1
+}

@@ -16,6 +16,14 @@ cur_frm.fields_dict['items'].grid.get_field("grade").get_query = function(doc) {
 	}
 };
 
+this.frm.fields_dict.taxes_and_charges.get_query = function(doc){
+	return {
+		"filters": {
+			'company': doc.company
+		}
+	};
+}
+
 frappe.ui.form.on('Purchase Invoice', {
 	onload: function(frm){
 		frm.trigger('override_merge_new_doc');

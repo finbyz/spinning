@@ -24,17 +24,25 @@ def on_cancel(self, method):
 
 def validate_packages(self):
 	for row in self.packages:
-		is_delivered = cint(frappe.db.get_value("Package", row.package, 'is_delivered'))
+		status = frappe.db.get_value("Package", row.package, 'status')
 
-		if is_delivered:
-			frappe.throw(_("Row {}: Package {} is already delivered. Please select another package.".format(row.idx, frappe.bold(row.package))))
+		if status == "Out of Stock":
+			frappe.throw(_("Row {}: Package {} is Out of Stock. Please select another package.".format(row.idx, frappe.bold(row.package))))
 
 def set_items_as_per_packages(self):
+	to_remove = []
+	items_row_dict = {}
 
-	package_items = list(set(map(lambda x: (x.item_code, x.merge, x.grade, x.batch_no), self.packages)))
-	sales_order = list(set(map(lambda x: (x.against_sales_order, x.rate), self.items)))[0]
+	for row in self.items:
+		has_batch_no = frappe.db.get_value("Item", row.item_code, 'has_batch_no')
+		
+		if has_batch_no:
+			to_remove.append(row)
+			items_row_dict.setdefault(row.item_code, row.as_dict())
 
-	item_row = self.items[0].as_dict()
+	else:
+		[self.remove(d) for d in to_remove]
+
 	package_items = {}
 
 	for row in self.packages:
@@ -42,14 +50,11 @@ def set_items_as_per_packages(self):
 		package_items.setdefault(key, frappe._dict({
 			'net_weight': 0,
 		}))
-		package_items[key].update(item_row)
+		package_items[key].update(items_row_dict.get(row.item_code))
 		package_items[key].warehouse = row.warehouse
 		package_items[key].net_weight += row.net_weight
-
-	self.set('items', [])
 	
 	for (item_code, merge, grade, batch_no), args in package_items.items():
-
 		self.append('items', {
 			'item_code': args.item_code,
 			'item_name': args.item_name,
@@ -68,36 +73,19 @@ def set_items_as_per_packages(self):
 			'so_detail': args.so_detail,
 		})
 
+	if package_items:
+		for idx, row in enumerate(self.items, start = 1):
+			row.idx = idx
 
 def update_packages(self, method):
 	if method == "on_submit":
 		for row in self.packages:
 			doc = frappe.get_doc("Package", row.package)
-			doc.delivery_document_type = self.doctype
-			doc.delivery_document_no = self.name
-			doc.delivery_date = self.posting_date
-			doc.delivery_time = self.posting_time
-			doc.outgoing_warehouse = row.warehouse
-			doc.is_delivered = 1
-			doc.customer = self.customer
-			doc.customer_name = frappe.db.get_value("Customer", self.customer, 'customer_name')
+			doc.add_consumption(self.doctype, self.name, row.net_weight)
 			doc.save(ignore_permissions=True)
-
-		else:
-			frappe.db.commit()
 
 	elif method == "on_cancel":
 		for row in self.packages:
 			doc = frappe.get_doc("Package", row.package)
-			doc.delivery_document_type = ''
-			doc.delivery_document_no = ''
-			doc.delivery_date = ''
-			doc.delivery_time = ''
-			doc.outgoing_warehouse = ''
-			doc.is_delivered = 0
-			doc.customer = ''
-			doc.customer_name = ''
+			doc.remove_consumption(self.doctype, self.name)
 			doc.save(ignore_permissions=True)
-
-		else:
-			frappe.db.commit()

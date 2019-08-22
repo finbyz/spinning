@@ -117,6 +117,7 @@ doctype_js = {
 doc_events = {
 	"Stock Entry": {
 		"validate": "spinning.doc_events.stock_entry.validate",
+		'before_save': "spinning.doc_events.stock_entry.before_save",
 	},
 
 	"Batch": {
@@ -143,6 +144,10 @@ doc_events = {
 		"on_submit": "spinning.doc_events.delivery_note.on_submit",
 		"on_cancel": "spinning.doc_events.delivery_note.on_cancel",
 	},
+	"Work Order":{
+		"before_save": "spinning.doc_events.work_order.before_save",
+		"on_submit": "spinning.doc_events.work_order.on_submit"
+	}
 }
 
 

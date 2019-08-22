@@ -6,8 +6,13 @@ from frappe import _
 
 from spinning.controllers.batch_controller import set_batches
 
+
 @frappe.whitelist()
-def stock_entry_validate(self, method):
+def before_save(self, method):
+	pass
+
+@frappe.whitelist()
+def validate(self, method):
 	if self._action == 'submit':
 		set_batches(self, 't_warehouse')
 	else:

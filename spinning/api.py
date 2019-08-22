@@ -184,10 +184,14 @@ def make_workorder_finish(work_order_id):
 	wof.item_code = work_order.production_item
 	wof.merge = work_order.merge
 	wof.package_type = work_order.package_type
+	wof.package_item = work_order.package_item
 	wof.is_returnable = work_order.is_returnable
 	wof.fg_completed_qty = work_order.qty
-	wof.spool_color = work_order.spool_color
+	wof.paper_tube = work_order.paper_tube
 	wof.spool_weight = work_order.spool_weight
 	wof.target_warehouse = work_order.fg_warehouse
+	wof.source_warehouse = work_order.source_warehouse
+	wof.work_station = work_order.work_station
+	wof.series = work_order.series
 	
 	return wof
