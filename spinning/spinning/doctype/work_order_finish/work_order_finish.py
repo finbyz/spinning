@@ -117,7 +117,7 @@ class WorkOrderFinish(Document):
 			child_row.package = package.name
 
 		if commit:
-			child_row.save()
+			child_row.save(ignore_permissions=True)
 
 	def get_child_doc(self, child_row):
 		def parse_args(child_row):

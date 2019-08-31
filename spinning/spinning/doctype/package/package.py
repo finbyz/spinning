@@ -11,6 +11,9 @@ from frappe.model.naming import make_autoname
 
 from spinning.controllers.batch_controller import get_batch_no
 
+import json
+from six import string_types
+
 class Package(Document):
 	def autoname(self):
 		if self.package_series:
@@ -91,6 +94,11 @@ class Package(Document):
 @frappe.whitelist()
 def get_packages(filters):
 	fields = ('name', 'spools', 'item_code', 'item_name', 'warehouse', 'batch_no', 'merge', 'grade', 'gross_weight', 'net_weight', 'tare_weight')
+
+	if isinstance(filters, string_types):
+		filters = json.loads(filters)
+
+	filters['status'] = ["!=", "Out of Stock"]
 
 	data = frappe.get_list("Package", filters = filters, fields = fields)
 

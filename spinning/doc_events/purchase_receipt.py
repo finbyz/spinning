@@ -96,7 +96,7 @@ def delete_packages(self):
 			frappe.throw(_("#Row {}: This Package is already delivered with document reference {}.".format(row.idx, frappe.bold(doc.delivery_document_no))))
 
 		check_if_doc_is_linked(doc)
-		frappe.delete_doc("Package", doc.name)
+		frappe.delete_doc("Package", doc.name,ignore_permissions=True)
 
 	else:
 		frappe.db.commit()
