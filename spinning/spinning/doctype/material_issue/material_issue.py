@@ -201,10 +201,10 @@ class MaterialIssue(Document):
 
 	def update_packages(self,method):
 		if method == "on_submit":
-		for row in self.packages:
-			doc = frappe.get_doc("Package", row.package)
-			doc.add_consumption(self.doctype, self.name, row.net_weight)
-			doc.save(ignore_permissions=True)
+			for row in self.packages:
+				doc = frappe.get_doc("Package", row.package)
+				doc.add_consumption(self.doctype, self.name, row.net_weight)
+				doc.save(ignore_permissions=True)
 
 		elif method == "on_cancel":
 			for row in self.packages:

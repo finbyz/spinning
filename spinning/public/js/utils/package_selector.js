@@ -7,12 +7,41 @@ PackageSelector = Class.extend({
 
 	setup: function(){
 		this.set_variables();
+		this.get_dist_grades();
 		this.make_dialog();
 	},
 
 	set_variables: function() {
-		this.warehouse = this.warehouse ? this.warehouse : (this.frm.doc.s_warehouse ? this.frm.doc.s_warehouse : this.frm.doc.warehouse);
 		this.merge = this.merge ? this.merge : this.frm.doc.merge;
+	},
+
+	get_dist_grades: function() {
+		let me = this;
+		let filters = {};
+
+		if(this.warehouse) {
+			filters['warehouse'] = this.warehouse;
+		}
+
+		if(this.item_code) {
+			filters['item_code'] = this.item_code;
+		}
+
+		if(this.merge) {
+			filters['merge'] = this.merge;
+		}
+
+		frappe.call({
+			method: "spinning.spinning.doctype.package.package.get_dist_grade_list",
+			freeze: true,
+			args: {
+				'filters': filters,
+			},
+			callback: function(r){
+				console.log(r)
+				me.dist_grades = r.message;
+			},
+		});
 	},
 
 	make_dialog: function(){
@@ -34,8 +63,15 @@ PackageSelector = Class.extend({
 				options: 'Item',
 				default: me.item_code,
 				read_only: me.item_code ? 1 : 0,
+				reqd: 1,
 				get_query: function(){
-					let items = [...new Set((me.frm.doc.items || []).map(function(i){return i.item_code}))]
+					let items = [...new Set((me.frm.doc.items || me.frm.doc.item_code).map(function(i){return i.item_code}))]
+					/* if(me.frm.doc.items){
+						let items = [...new Set((me.frm.doc.items || []).map(function(i){return i.item_code}))]
+					}
+					else{
+						let items = [me.frm.doc.item_code]
+					} */
 					return {
 						filters: {
 							"item_code": ['in', items]
@@ -44,15 +80,26 @@ PackageSelector = Class.extend({
 				},
 				change: function(){
 					let item_code = this.get_value();
+					let merge = this.layout.get_value('merge');
+					let grade = this.layout.get_value('grade');
+					let paper_tube = this.layout.get_value('paper_tube');
 
-
-					let filters = {
-						'warehouse': me.warehouse,
-						'merge': me.merge,
-					}
+					let filters = {'warehouse': me.warehouse}
 
 					if(item_code){
 						filters['item_code'] = item_code
+					}
+
+					if(grade){
+						filters['grade'] = grade
+					}
+
+					if(merge){
+						filters['merge'] = merge
+					}
+
+					if(paper_tube){
+						filters['paper_tube'] = paper_tube
 					}
 
 					me.set_package_data(filters)
@@ -66,20 +113,20 @@ PackageSelector = Class.extend({
 				options: 'Merge',
 				default: me.merge,
 				read_only: me.merge ? 1 : 0,
-			},
-			{
-				label: __("Grade"),
-				fieldtype:'Link',
-				fieldname: 'grade',
-				options: 'Grade',
-				change: function(){
-					let grade = this.get_value();
-					let item_code = me.item_code || this.layout.get_value('item_code');
-
-					let filters = {
-						'warehouse': me.warehouse,
-						'merge': me.merge,
+				get_query: function(){
+					return {
+						filters: {
+							"item_code": me.item_code
+						}
 					}
+				},
+				change: function(){
+					let merge = this.get_value();
+					let item_code = this.layout.get_value('item_code');
+					let grade = this.layout.get_value('grade');
+					let paper_tube = this.layout.get_value('paper_tube');
+
+					let filters = {'warehouse': me.warehouse}
 
 					if(item_code){
 						filters['item_code'] = item_code
@@ -87,6 +134,53 @@ PackageSelector = Class.extend({
 
 					if(grade){
 						filters['grade'] = grade
+					}
+
+					if(merge){
+						filters['merge'] = merge
+					}
+
+					if(paper_tube){
+						filters['paper_tube'] = paper_tube
+					}
+
+					me.set_package_data(filters)
+				}
+			},
+			{
+				label: __("Grade"),
+				fieldtype:'Link',
+				fieldname: 'grade',
+				options: 'Grade',
+				get_query: function(){
+					return {
+						filters: {
+							"grade": ['in', me.dist_grades]
+						}
+					}
+				},
+				change: function(){
+					let grade = this.get_value();
+					let item_code = this.layout.get_value('item_code');
+					let merge = this.layout.get_value('merge');
+					let paper_tube = this.layout.get_value('paper_tube');
+
+					let filters = {'warehouse': me.warehouse}
+
+					if(item_code){
+						filters['item_code'] = item_code
+					}
+
+					if(grade){
+						filters['grade'] = grade
+					}
+
+					if(merge){
+						filters['merge'] = merge
+					}
+
+					if(paper_tube){
+						filters['paper_tube'] = paper_tube
 					}
 
 					me.set_package_data(filters)
@@ -111,6 +205,32 @@ PackageSelector = Class.extend({
 							'item_group': "Paper Tube"
 						}
 					}
+				},
+				change: function(){
+					let paper_tube = this.get_value();
+					let item_code = this.layout.get_value('item_code');
+					let merge = this.layout.get_value('merge');
+					let grade = this.layout.get_value('grade');
+
+					let filters = {'warehouse': me.warehouse}
+
+					if(item_code){
+						filters['item_code'] = item_code
+					}
+
+					if(grade){
+						filters['grade'] = grade
+					}
+
+					if(merge){
+						filters['merge'] = merge
+					}
+
+					if(paper_tube){
+						filters['paper_tube'] = paper_tube
+					}
+
+					me.set_package_data(filters)
 				}
 			},
 			
@@ -312,11 +432,24 @@ PackageSelector = Class.extend({
 	set_package_data: function(filters){
 		let me = this;
 
+		if(!filters['item_code']){
+			me.dialog.fields_dict.packages.grid.df.data = [];
+			me.dialog.fields_dict.packages.grid.refresh();
+			return;
+		}
+
+		filters['company'] = me.frm.doc.company;
+		filters['purchase_date'] = ["<=", me.frm.doc.posting_date];
+		// filters['purchase_time'] = ["<", me.frm.doc.posting_time];
+		// filters['CONCAT(purchase_date, " ", purchase_time)'] = ["<=", me.frm.doc.posting_date + " " + me.frm.doc.posting_time];
+		let raw_filters = ` and CONCAT(purchase_date, " ", purchase_time) <= "${me.frm.doc.posting_date} ${me.frm.doc.posting_time}"`
+
 		frappe.call({
 			method: "spinning.spinning.doctype.package.package.get_packages",
 			freeze: true,
 			args: {
-				'filters': filters
+				'filters': filters,
+				'raw_filters': raw_filters,
 			},
 			callback: function(r){
 				me.dialog.fields_dict.packages.grid.df.data = r.message;

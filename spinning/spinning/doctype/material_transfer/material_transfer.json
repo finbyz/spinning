@@ -8,6 +8,8 @@
   "naming_series",
   "s_warehouse",
   "t_warehouse",
+  "is_send_to_subcontractor",
+  "purchase_order",
   "is_material_transfer_for_manufacture",
   "column_break_4",
   "posting_date",
@@ -15,7 +17,7 @@
   "set_posting_time",
   "company",
   "work_order_details_section",
-  "work_station",
+  "workstation",
   "work_order",
   "bom_no",
   "column_break_13",
@@ -29,6 +31,11 @@
   "packages",
   "total_gross_weight",
   "total_net_weight",
+  "supplier_detail_section",
+  "supplier",
+  "supplier_name",
+  "column_break_30",
+  "address",
   "printing_settings_section",
   "print_heading",
   "letter_head",
@@ -46,6 +53,7 @@
   {
    "fieldname": "company",
    "fieldtype": "Link",
+   "in_standard_filter": 1,
    "label": "Company",
    "options": "Company",
    "reqd": 1
@@ -90,8 +98,7 @@
    "fieldname": "packages",
    "fieldtype": "Table",
    "label": "Packages",
-   "options": "Material Transfer Package",
-   "read_only": 1
+   "options": "Material Transfer Package"
   },
   {
    "collapsible": 1,
@@ -112,20 +119,22 @@
    "fieldname": "s_warehouse",
    "fieldtype": "Link",
    "in_list_view": 1,
+   "in_standard_filter": 1,
    "label": "Source Warehouse",
-   "options": "Warehouse",
-   "reqd": 1
+   "options": "Warehouse"
   },
   {
    "fieldname": "t_warehouse",
    "fieldtype": "Link",
    "in_list_view": 1,
+   "in_standard_filter": 1,
    "label": "Target Warehouse",
    "options": "Warehouse",
    "reqd": 1
   },
   {
    "default": "0",
+   "depends_on": "eval: !doc.is_send_to_subcontractor",
    "fieldname": "is_material_transfer_for_manufacture",
    "fieldtype": "Check",
    "label": "Is Material Transfer for Manufacture?"
@@ -153,6 +162,7 @@
    "fetch_from": "work_order.merge",
    "fieldname": "merge",
    "fieldtype": "Link",
+   "in_standard_filter": 1,
    "label": "Merge",
    "options": "Merge",
    "read_only": 1
@@ -206,12 +216,6 @@
    "label": "Add Packages"
   },
   {
-   "fieldname": "work_station",
-   "fieldtype": "Link",
-   "label": "Work station",
-   "options": "Workstation"
-  },
-  {
    "fieldname": "total_amount",
    "fieldtype": "Currency",
    "label": "Total Amount",
@@ -228,10 +232,60 @@
    "fieldtype": "Float",
    "label": "Total Net Weight",
    "read_only": 1
+  },
+  {
+   "fieldname": "workstation",
+   "fieldtype": "Link",
+   "label": "Workstation",
+   "options": "Workstation"
+  },
+  {
+   "default": "0",
+   "depends_on": "eval: !doc.is_material_transfer_for_manufacture",
+   "fieldname": "is_send_to_subcontractor",
+   "fieldtype": "Check",
+   "label": "Is Send to Subcontractor"
+  },
+  {
+   "depends_on": "eval: doc.is_send_to_subcontractor",
+   "fieldname": "purchase_order",
+   "fieldtype": "Link",
+   "label": "Purchase Order",
+   "options": "Purchase Order"
+  },
+  {
+   "depends_on": "eval: doc.is_send_to_subcontractor",
+   "fieldname": "supplier_detail_section",
+   "fieldtype": "Section Break",
+   "label": "Supplier Detail"
+  },
+  {
+   "fieldname": "supplier",
+   "fieldtype": "Link",
+   "label": "Supplier",
+   "options": "Supplier"
+  },
+  {
+   "fetch_from": "supplier.supplier_name",
+   "fetch_if_empty": 1,
+   "fieldname": "supplier_name",
+   "fieldtype": "Data",
+   "label": "Supplier Name",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_30",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "address",
+   "fieldtype": "Small Text",
+   "label": "Address",
+   "read_only": 1
   }
  ],
  "is_submittable": 1,
- "modified": "2019-08-22 16:17:53.298987",
+ "modified": "2019-10-17 14:47:31.894050",
  "modified_by": "Administrator",
  "module": "Spinning",
  "name": "Material Transfer",

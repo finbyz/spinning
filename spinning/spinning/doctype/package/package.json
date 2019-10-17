@@ -1,5 +1,5 @@
 {
- "autoname": "field:package_no",
+ "allow_import": 1,
  "creation": "2019-08-07 15:52:22.298797",
  "doctype": "DocType",
  "editable_grid": 1,
@@ -68,15 +68,12 @@
    "fieldtype": "Data",
    "in_list_view": 1,
    "label": "Package No",
-   "reqd": 1,
-   "unique": 1
+   "reqd": 1
   },
   {
    "fieldname": "package_series",
-   "fieldtype": "Link",
-   "hidden": 1,
+   "fieldtype": "Data",
    "label": "Package Series",
-   "options": "Package Series",
    "read_only": 1
   },
   {
@@ -377,6 +374,7 @@
   {
    "fieldname": "remaining_qty",
    "fieldtype": "Float",
+   "in_list_view": 1,
    "label": "Remaining Qty",
    "read_only": 1
   },
@@ -408,7 +406,7 @@
    "read_only": 1
   }
  ],
- "modified": "2019-08-22 11:16:05.593746",
+ "modified": "2019-10-11 09:46:52.389774",
  "modified_by": "Administrator",
  "module": "Spinning",
  "name": "Package",
@@ -451,7 +449,7 @@
    "write": 1
   }
  ],
- "search_fields": "item_code, merge, grade",
+ "search_fields": "item_code, merge, grade,package_no",
  "sort_field": "modified",
  "sort_order": "DESC",
  "title_field": "package_no",

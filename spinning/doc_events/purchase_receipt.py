@@ -11,28 +11,23 @@ from spinning.controllers.batch_controller import set_batches
 @frappe.whitelist()
 def validate(self, method):
 	set_batches(self, 'warehouse')
-
-	if self._action == 'submit':
-		validate_weights(self)
+	
+@frappe.whitelist()
+def before_save(self, method):
+	pass
+	#update_pallet_item(self)
 
 @frappe.whitelist()
 def on_submit(self, method):
+	validate_gate_pass(self)
 	create_packages(self)
+	create_stock_entry(self)
 
 @frappe.whitelist()
 def on_cancel(self, method):
 	delete_packages(self)
-
-def validate_weights(self):
-	for row in self.items:
-		has_batch_no = frappe.db.get_value('Item', row.item_code, 'has_batch_no')
-
-		if has_batch_no:
-			total_net_weight = sum(map(lambda x: x.net_weight if x.row_ref == str(row.idx) else 0, self.packages))
-
-			if flt(row.qty, row.precision('qty')) != flt(total_net_weight, row.precision('qty')):
-				frappe.throw(_("Total Qty does not match with Total Net Weight for Item {} in Row {}".format(row.item_code, row.idx)))
-
+	cancel_stock_entry(self)
+	
 def create_packages(self):
 	def validate_package_type():
 		if not self.get('package_type'):
@@ -58,15 +53,15 @@ def create_packages(self):
 
 		doc = frappe.new_doc("Package")
 		doc.package_no = pkg.package
-		doc.package_type = self.package_type
-		doc.package_item = self.package_item
+		doc.package_type = pkg.package_type
+		doc.package_item = pkg.package_item
 		doc.spools = cint(pkg.spools)
 		doc.company = self.company
 		doc.warehouse = row.warehouse
 
-		if self.package_type == "Pallet":
-			doc.is_returnable = self.is_returnable
-			doc.returnable_by = self.returnable_by
+		if pkg.package_type == "Pallet":
+			doc.is_returnable = pkg.is_returnable
+			doc.returnable_by = pkg.returnable_by
 
 		doc.gross_weight = pkg.gross_weight
 		doc.net_weight = pkg.net_weight
@@ -90,13 +85,74 @@ def create_packages(self):
 		doc.save(ignore_permissions=True)
 
 def delete_packages(self):
-	for row in self.packages:
-		doc = frappe.get_doc("Package", row.package)
-		if cint(doc.get('is_delivered')):
-			frappe.throw(_("#Row {}: This Package is already delivered with document reference {}.".format(row.idx, frappe.bold(doc.delivery_document_no))))
+	package_list = frappe.get_list("Package",filters={'purchase_document_type':self.doctype,'purchase_document_no':self.name})		
+	for row in package_list:		
+		doc = frappe.get_doc("Package", row.name)	
+		if doc.status != "In Stock":
+			frappe.throw(_("#Row {}: This Package is Partial Stock or Out of Stock.".format(row.idx)))
 
 		check_if_doc_is_linked(doc)
-		frappe.delete_doc("Package", doc.name,ignore_permissions=True)
+		frappe.delete_doc("Package", doc.name)
 
 	else:
 		frappe.db.commit()
+			
+def create_stock_entry(self):
+	abbr = frappe.db.get_value('Company',self.company,'abbr')
+	if self.pallet_item:
+		pallet_se = frappe.new_doc("Stock Entry")
+		pallet_se.stock_entry_type = "Material Receipt"
+		pallet_se.purpose = "Material Receipt"
+		pallet_se.posting_date = self.posting_date
+		pallet_se.posting_time = self.posting_time
+		pallet_se.set_posting_time = self.set_posting_time
+		pallet_se.company = self.company
+		pallet_se.reference_doctype = self.doctype
+		pallet_se.reference_docname = self.name
+		
+		for row in self.pallet_item:
+			pallet_se.append("items",{
+				'item_code': row.pallet_item,
+				'qty': row.qty,
+				'basic_rate': 0,
+				't_warehouse': 'Zero Rated Pallet - %s' % abbr,
+				'allow_zero_valuation_rate': 1
+			})
+		try:
+			pallet_se.save(ignore_permissions=True)
+			pallet_se.submit()
+		except Exception as e:
+			frappe.throw(str(e))
+		else:
+			self.db_set('stock_entry_pallet',pallet_se.name)
+
+def cancel_stock_entry(self):
+	if self.stock_entry_pallet:
+		pallet_se = frappe.get_doc("Stock Entry",self.stock_entry_pallet)
+		pallet_se.cancel()
+		self.db_set('stock_entry_pallet','')
+		frappe.db.commit()
+		
+def update_pallet_item(self):
+	count = 0
+	if self.package_type == 'Pallet' and self.package_item:
+		for d in self.packages:
+			if d.package_item == self.package_item:
+				count +=1
+		if count > 0:
+			if self.is_new() and not self.amended_from:				
+				self.append("pallet_item",{
+					'pallet_item': self.package_item,
+					'qty': count
+				})
+			else:
+				for d in self.packages:
+					for r in self.pallet_item:
+						if d.package_item == r.pallet_item:
+							r.qty = count
+							break
+
+def validate_gate_pass(self):
+	if self.gate_entry_no == 0:
+		frappe.throw(_("Please Enter Gate Pass No"))
+				

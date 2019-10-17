@@ -4,15 +4,23 @@ from __future__ import unicode_literals
 import frappe
 from frappe import _
 from frappe.utils import flt, cint
-
+from erpnext.stock.doctype.batch.batch import set_batch_nos
+from erpnext.stock.doctype.delivery_note.delivery_note import DeliveryNote
+from spinning.controllers.batch_controller import set_batches
 
 @frappe.whitelist()
+def onload(self, method):
+	pass
+		
+@frappe.whitelist()
 def validate(self, method):
+	set_items_as_per_packages(self)
 	validate_packages(self)
-
+		
 @frappe.whitelist()
 def before_save(self, method):
 	set_items_as_per_packages(self)
+	calculate_totals(self)
 
 @frappe.whitelist()
 def on_submit(self, method):
@@ -44,38 +52,42 @@ def set_items_as_per_packages(self):
 		[self.remove(d) for d in to_remove]
 
 	package_items = {}
-
+	
 	for row in self.packages:
 		key = (row.item_code, row.merge, row.grade, row.batch_no)
 		package_items.setdefault(key, frappe._dict({
 			'net_weight': 0,
+			'gross_weight': 0,
+			'packages': 0,
 		}))
+
 		package_items[key].update(items_row_dict.get(row.item_code))
 		package_items[key].warehouse = row.warehouse
 		package_items[key].net_weight += row.net_weight
-	
+		package_items[key].gross_weight += row.gross_weight
+		package_items[key].packages += 1
+
 	for (item_code, merge, grade, batch_no), args in package_items.items():
-		self.append('items', {
-			'item_code': args.item_code,
-			'item_name': args.item_name,
-			'description': args.description,
-			'stock_uom': args.stock_uom,
-			'uom': args.uom,
-			'conversion_factor': args.conversion_factor,
-			'warehouse': args.warehouse,
-			'rate': args.rate,
-			'amount': flt(args.rate * args.net_weight),
-			'merge': merge,
-			'grade': grade,
-			'batch_no': batch_no,
-			'qty': args.net_weight,
-			'against_sales_order': args.against_sales_order,
-			'so_detail': args.so_detail,
-		})
+		amount = flt(args.rate * args.net_weight)
+
+		values = args.copy()
+		values.pop('idx')
+		values.pop('name')
+		values.merge = merge
+		values.grade = grade
+		values.batch_no = batch_no
+		values.qty = args.net_weight
+		values.gross_wt = args.gross_weight
+		values.no_of_packages = args.packages
+
+		self.append('items', values)
 
 	if package_items:
 		for idx, row in enumerate(self.items, start = 1):
 			row.idx = idx
+
+def calculate_totals(self):
+	self.total_gr_wt = sum([row.gross_wt for row in self.items])
 
 def update_packages(self, method):
 	if method == "on_submit":

@@ -1,4 +1,5 @@
 {
+ "allow_import": 1,
  "autoname": "naming_series:",
  "creation": "2019-08-12 17:58:52.195071",
  "doctype": "DocType",
@@ -13,6 +14,7 @@
   "posting_date",
   "posting_time",
   "set_posting_time",
+  "gate_entry_no",
   "section_break_7",
   "items",
   "section_break_10",
@@ -32,14 +34,17 @@
   "total_package_gross_weight",
   "column_break_23",
   "total_package_net_weight",
+  "pallet_detail_section",
+  "pallet_item",
   "printing_settings_section",
   "print_heading",
   "column_break_28",
   "letter_head",
   "section_break_12",
   "stock_entry",
+  "amended_from",
   "column_break_24",
-  "amended_from"
+  "stock_entry_pallet"
  ],
  "fields": [
   {
@@ -58,6 +63,7 @@
   {
    "fieldname": "company",
    "fieldtype": "Link",
+   "in_standard_filter": 1,
    "label": "Company",
    "options": "Company"
   },
@@ -134,7 +140,7 @@
   {
    "fieldname": "package_type",
    "fieldtype": "Select",
-   "label": "Package Type",
+   "label": "Default Package Type",
    "options": "\nBox\nPallet"
   },
   {
@@ -202,6 +208,7 @@
    "fieldname": "warehouse",
    "fieldtype": "Link",
    "in_list_view": 1,
+   "in_standard_filter": 1,
    "label": "Target Warehouse",
    "options": "Warehouse",
    "reqd": 1
@@ -239,12 +246,36 @@
   {
    "fieldname": "package_item",
    "fieldtype": "Link",
-   "label": "Package Item",
+   "label": "Default Package Item",
    "options": "Item"
+  },
+  {
+   "fieldname": "pallet_detail_section",
+   "fieldtype": "Section Break",
+   "label": "Pallet detail"
+  },
+  {
+   "fieldname": "pallet_item",
+   "fieldtype": "Table",
+   "label": "Pallet item",
+   "options": "Material Receipt Pallet Item"
+  },
+  {
+   "fieldname": "stock_entry_pallet",
+   "fieldtype": "Link",
+   "label": "Stock Entry Pallet",
+   "options": "Stock Entry"
+  },
+  {
+   "fieldname": "gate_entry_no",
+   "fieldtype": "Int",
+   "in_standard_filter": 1,
+   "label": "Gate Entry No",
+   "reqd": 1
   }
  ],
  "is_submittable": 1,
- "modified": "2019-08-16 10:15:22.537828",
+ "modified": "2019-10-15 14:01:35.776781",
  "modified_by": "Administrator",
  "module": "Spinning",
  "name": "Material Receipt",
@@ -257,6 +288,7 @@
    "delete": 1,
    "email": 1,
    "export": 1,
+   "import": 1,
    "print": 1,
    "read": 1,
    "report": 1,
@@ -312,6 +344,5 @@
   }
  ],
  "sort_field": "modified",
- "sort_order": "DESC",
- "track_changes": 1
+ "sort_order": "DESC"
 }

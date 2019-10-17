@@ -5,7 +5,7 @@
 from __future__ import unicode_literals
 import frappe
 from frappe import _
-from frappe.utils import nowdate, flt, cint
+from frappe.utils import nowdate, flt, cint, cstr
 from frappe.model.document import Document
 from frappe.model.mapper import get_mapped_doc
 
@@ -61,7 +61,7 @@ class MaterialTransfer(Document):
 			
 			if has_batch_no:
 				if not has_packages:
-					frappe.throw(_("Please select packages for item {} in Row {}".format(frappe.bold(row.item_code, row.idx))))
+					frappe.throw(_("Please select packages for item {} in Row {}".format(frappe.bold(row.item_code), row.idx)))
 					break
 
 				to_remove.append(row)
@@ -71,8 +71,13 @@ class MaterialTransfer(Document):
 			[self.remove(d) for d in to_remove]
 
 		package_items = {}
+		to_remove = []
 
 		for row in self.packages:
+			if not items_row_dict.get(row.item_code, None):
+				to_remove.append(row)
+				continue
+
 			key = (row.item_code, row.merge, row.grade, row.batch_no)
 			package_items.setdefault(key, frappe._dict({
 				'net_weight': 0,
@@ -81,6 +86,9 @@ class MaterialTransfer(Document):
 			package_items[key].s_warehouse = self.s_warehouse
 			package_items[key].t_warehouse = self.t_warehouse
 			package_items[key].net_weight += row.net_weight
+
+		else:
+			[self.remove(d) for d in to_remove]
 		
 		for (item_code, merge, grade, batch_no), args in package_items.items():
 			amount = flt(args.basic_rate * args.net_weight)
@@ -211,7 +219,14 @@ class MaterialTransfer(Document):
 					target.work_order = source.work_order
 					target.bom_no = source.bom_no
 					target.fg_completed_qty = source.total_qty
-
+				
+				if cint(self.is_send_to_subcontractor):
+					purpose = "Send to Subcontractor"
+					target.purchase_order = source.purchase_order
+					target.supplier = source.supplier
+					target.supplier_name = source.supplier_name
+					target.address_display = source.address
+				
 				target.stock_entry_type = purpose
 				target.purpose = purpose
 
@@ -229,7 +244,8 @@ class MaterialTransfer(Document):
 				"Material Transfer Item": {
 					"doctype": "Stock Entry Detail",
 					"field_map": {
-						"batch_no": "batch_no"
+						"batch_no": "batch_no",
+						'subcontracted_item': 'subcontracted_item'
 					},
 				}
 			}, target_doc, set_missing_values)
@@ -265,3 +281,44 @@ class MaterialTransfer(Document):
 				doc = frappe.get_doc("Package", row.package)
 				doc.warehouse = self.s_warehouse
 				doc.save(ignore_permissions=True)
+
+	def add_to_mt_detail(self, item_dict, bom_no=None):
+		cost_center = frappe.db.get_value("Company", self.company, 'cost_center')
+
+		for d in item_dict:
+			stock_uom = item_dict[d].get("stock_uom") or frappe.db.get_value("Item", d, "stock_uom")
+
+			se_child = self.append('items')
+			se_child.s_warehouse = item_dict[d].get("s_warehouse")
+			se_child.t_warehouse = item_dict[d].get("t_warehouse")
+			se_child.item_code = item_dict[d].get('item_code') or cstr(d)
+			se_child.item_name = item_dict[d]["item_name"]
+			se_child.description = item_dict[d]["description"]
+			se_child.basic_rate = item_dict[d]["basic_rate"]
+			se_child.basic_amount = item_dict[d]["basic_amount"]
+			se_child.amount = item_dict[d]["amount"]
+			se_child.subcontracted_item = item_dict[d].get("main_item_code")
+			se_child.uom = item_dict[d]["uom"] if item_dict[d].get("uom") else stock_uom
+			se_child.stock_uom = stock_uom
+			se_child.qty = flt(item_dict[d]["qty"], se_child.precision("qty"))
+			se_child.expense_account = item_dict[d].get("expense_account")
+			se_child.cost_center = item_dict[d].get("cost_center") or cost_center
+			se_child.allow_alternative_item = item_dict[d].get("allow_alternative_item", 0)
+			#se_child.original_item = item_dict[d].get("original_item")
+			se_child.po_detail = item_dict[d].get("po_detail")
+
+			if item_dict[d].get("idx"):
+				se_child.idx = item_dict[d].get("idx")
+
+			if se_child.s_warehouse==None:
+				se_child.s_warehouse = self.s_warehouse
+			if se_child.t_warehouse==None:
+				se_child.t_warehouse = self.t_warehouse
+
+			# in stock uom
+			se_child.conversion_factor = flt(item_dict[d].get("conversion_factor")) or 1
+			se_child.transfer_qty = flt(item_dict[d]["qty"]*se_child.conversion_factor, se_child.precision("qty"))
+
+
+			# to be assigned for finished item
+			se_child.bom_no = bom_no

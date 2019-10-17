@@ -5,9 +5,10 @@
 from __future__ import unicode_literals
 import frappe
 from frappe import _
-from frappe.utils import flt, cstr
+from frappe.utils import flt, cstr, cint
 from frappe.model.document import Document
 from frappe.model.mapper import get_mapped_doc
+from frappe.model.naming import parse_naming_series, getseries
 
 from spinning.doc_events.work_order import override_work_order_functions
 from spinning.controllers.batch_controller import get_batch_no, get_fifo_batches
@@ -20,8 +21,9 @@ class WorkOrderFinish(Document):
 	def before_save(self):
 		if not self.is_new():
 			self.set_batch()
+			self.set_missing_packages()
 
-		self.set_missing_packages()
+		self.calculate_totals()
 
 	def set_batch(self):
 		if self.get('batch_no'):
@@ -56,14 +58,29 @@ class WorkOrderFinish(Document):
 
 	def set_missing_packages(self):
 		for row in self.package_details:
-			# frappe.errprint(str(row.get('__islocal')))
 			if not row.get('package'):
 				self.print_row_package(row, False)
 
-	def print_row_package(self, child_row, commit=True):
-		# frappe.errprint(str(type(child_row)))
-		self.set_batch()
+	def calculate_totals(self):
+		totals = frappe._dict({
+			'spools': 0.0,
+			'net_weight': 0.0,
+			'gross_weight': 0.0,
+			'tare_weight': 0.0
+		})
 
+		for row in self.package_details:
+			totals.spools += row.no_of_spool
+			totals.gross_weight += row.gross_weight
+			totals.tare_weight += row.tare_weight
+			totals.net_weight += row.net_weight
+
+		self.db_set('total_spool', flt(totals.spools, 3))
+		self.db_set('total_net_weight', flt(totals.net_weight, 3))
+		self.db_set('total_gross_weight', flt(totals.gross_weight, 3))
+		self.db_set('total_tare_weight', flt(totals.tare_weight, 3))
+
+	def print_row_package(self, child_row, commit=True):
 		def get_package_doc(source_name, target_doc=None):
 			def set_missing_values(source, target):
 				if source.package_type == "Pallet":
@@ -74,13 +91,15 @@ class WorkOrderFinish(Document):
 				"Work Order Finish": {
 					"doctype": "Package",
 					"field_map": {
-						"series": "package_series",
 						"target_warehouse": "warehouse",
 						"posting_date" : "purchase_date",
 						"posting_time" : "purchase_time",
 					}
 				}
 			}, target_doc, set_missing_values)
+
+		self.set_batch()
+		update_series = False
 
 		if isinstance(child_row, dict):
 			child_row = frappe._dict(child_row)
@@ -90,13 +109,13 @@ class WorkOrderFinish(Document):
 				child_row.insert()
 
 			else:
-				child_row = frappe.get_doc(child_row.doctype, child_row.name)
-
+				child_row = frappe.get_doc(child_row)
 
 		if frappe.db.exists("Package", child_row.package):
 			package = frappe.get_doc("Package", child_row.package)
 			
 		else:
+			update_series = True
 			package = get_package_doc(self.name)
 
 		package.gross_weight = child_row.gross_weight
@@ -104,20 +123,30 @@ class WorkOrderFinish(Document):
 		package.tare_weight = child_row.tare_weight
 		package.spools = child_row.no_of_spool
 		package.package_weight = child_row.package_weight
+		package.package_series = self.get_series()
 		package.save(ignore_permissions=True)
 
-		# if child_row.get('__islocal'):
-		# 	row = self.get_child_doc(child_row)
-		# 	row.package = package.name
-		# 	row.insert()
+		try:
+			package.save(ignore_permissions=True)
+		except Exception as e:
+			raise e
+		else:
+			if update_series:
+				value = self.series_value + 1
+				self.update_series_value(value)
 
-		# else:
-		# 	row = frappe.get_doc(child_row.doctype, child_row.name)
+		child_row.tare_weight = flt(child_row.package_weight + (child_row.no_of_spool * self.spool_weight))
+		child_row.net_weight = child_row.gross_weight - child_row.tare_weight
+
 		if not child_row.package:
 			child_row.package = package.name
 
 		if commit:
 			child_row.save(ignore_permissions=True)
+
+		self.calculate_totals()
+		frappe.db.commit()
+		return child_row.name
 
 	def get_child_doc(self, child_row):
 		def parse_args(child_row):
@@ -135,7 +164,6 @@ class WorkOrderFinish(Document):
 
 	def on_submit(self):
 		self.create_stock_entry()
-		self.update_packages()
 
 	def on_cancel(self):
 		self.cancel_stock_entry()
@@ -164,12 +192,12 @@ class WorkOrderFinish(Document):
 				's_warehouse': wo.wip_warehouse,
 				'qty': self.total_spool,
 			})
-
-		se.append("items",{
-			'item_code': self.package_item,
-			's_warehouse': self.source_warehouse,
-			'qty': len(self.package_details),
-		})
+		if self.package_item:
+			se.append("items",{
+				'item_code': self.package_item,
+				's_warehouse': self.package_warehouse or self.source_warehouse,
+				'qty': len(self.package_details),
+			})
 
 		for d in se.items:
 			if d.t_warehouse and d.item_code == self.item_code:
@@ -199,7 +227,7 @@ class WorkOrderFinish(Document):
 			batches = get_fifo_batches(d.item_code, d.s_warehouse, d.merge)
 
 			if not batches:
-				frappe.throw(_("Sufficient quantity for item {} is not available in {} warehouse.".format(frappe.bold(d.item_code), frappe.bold(d.s_warehouse))))
+				frappe.throw(_("Sufficient quantity for item {} is not available in {} warehouse for merge {}.".format(frappe.bold(d.item_code), frappe.bold(d.s_warehouse), frappe.bold(d.merge))))
 
 			remaining_qty = d.qty
 
@@ -255,31 +283,111 @@ class WorkOrderFinish(Document):
 
 		se.extend('items', items)
 
-		for row in se.items:
-			if row.s_warehouse:
-				frappe.msgprint("Row {} : Item Code - {}, Batch No - {}, Merge - {}".format(row.idx, row.item_code, row.batch_no, row.merge))
+		# for row in se.items:
+			# if row.s_warehouse:
+				# frappe.msgprint("Row {} : Item Code - {}, Batch No - {}, Merge - {}".format(row.idx, row.item_code, row.batch_no, row.merge))
 
 		se.save(ignore_permissions=True)
 		se.submit()
 		self.db_set('stock_entry', se.name)
+		self.add_package_consumption(se)
 
-	def update_packages(self):
-		if self._action == "submit":
-			for row in self.package_details:
-				doc = frappe.get_doc("Package", row.package)
-				doc.add_consumption(self.doctype, self.name, row.net_weight)
-				doc.save(ignore_permissions=True)
-
-		elif self._action == "cancel":
-			for row in self.package_details:
-				doc = frappe.get_doc("Package", row.package)
-				doc.remove_consumption(self.doctype, self.name)
-				doc.save(ignore_permissions=True)
-				
 	def cancel_stock_entry(self):
 		if self.stock_entry:
 			se = frappe.get_doc("Stock Entry", self.stock_entry)
 			override_work_order_functions()
 			se.cancel()
+			self.remove_package_consumption(se)
 			self.db_set('stock_entry','')
 			frappe.db.commit()
+
+	def add_package_consumption(self, se):
+		for row in se.items:
+			if row.batch_no and row.s_warehouse and not row.t_warehouse:
+				remaining_qty = row.qty
+				package_list = frappe.get_list("Package", {
+						'status': ["!=", "Out of Stock"],
+						'item_code': row.item_code,
+						'batch_no': row.batch_no,
+						'warehouse': row.s_warehouse,
+					}, order_by = "creation DESC")
+
+				for pkg in package_list:
+					doc = frappe.get_doc("Package", pkg.name)
+					qty = doc.remaining_qty if remaining_qty > doc.remaining_qty else remaining_qty
+					doc.add_consumption(self.doctype, self.name, qty)
+					doc.save(ignore_permissions=True)
+					remaining_qty -= qty
+
+					if remaining_qty <= 0:
+						break
+
+	def remove_package_consumption(self, se):
+		package_list = frappe.get_list("Package Consumption", filters = {
+				'reference_doctype': self.doctype,
+				'reference_docname': self.name
+			}, fields = 'parent')
+
+		for pkg in package_list:
+			doc = frappe.get_doc("Package", pkg.parent)
+			doc.remove_consumption(self.doctype, self.name)
+			doc.save(ignore_permissions=True)
+
+	def set_package_series(self):
+		if not (self.company or self.workstation):
+			return
+
+		series = self.get_series()
+		prefix = self.parse_series(series)
+		current_value = cint(frappe.db.get_value("Series", prefix, "current", order_by="name"))
+
+		value = current_value + 1
+		self.series_value = value
+		self.package_series = prefix
+
+		# next_value = getseries(prefix, 5)
+		next_value = "%05d" % value
+		description = "Next Package Number : " + frappe.bold(prefix + next_value)
+
+		if not self.is_new():
+			self.update_series_value(value)
+
+		return description
+
+	def get_series(self):
+		company_series = cstr(frappe.db.get_value("Company", self.company, "default_package_series"))
+
+		if not company_series:
+			frappe.throw(_("Please set Default Package Series in company."))
+
+		machine_series = cstr(frappe.db.get_value("Workstation", self.workstation, "package_series"))
+
+		if not machine_series:
+			frappe.throw(_("Please set Package Series in Workstation: %s." % frappe.bold(self.workstation)))
+
+		return "{company_series}.YY.{machine_series}.#####".format(company_series = company_series, machine_series = machine_series)
+
+	@staticmethod
+	def parse_series(series):
+		parts = series.split('.')
+
+		if parts[-1] == "#" * len(parts[-1]):
+			del parts[-1]
+
+		prefix = parse_naming_series(parts)
+		return prefix
+
+	def update_series_number(self):
+		series = self.get_series()
+		prefix = self.parse_series(series)
+
+		if not frappe.db.get_value('Series', prefix, 'name', order_by="name"):
+			frappe.db.sql("insert into tabSeries (name, current) values (%s, 0)", (prefix))
+
+		frappe.db.sql("update `tabSeries` set current = %s where name = %s", (cint(self.series_value) - 1, prefix))
+		self.update_series_value(self.series_value)
+		frappe.msgprint(_("Series Updated Successfully!"))
+
+	def update_series_value(self, value):
+		if self.series_value != value:
+			self.db_set('series_value', value)

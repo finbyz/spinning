@@ -8,3 +8,11 @@ from frappe.model.document import Document
 
 class Merge(Document):
 	pass
+	# def autoname(self):
+		# merge = self.merge
+		
+		# i = 1
+		# while frappe.db.exists("Merge", merge):
+			# merge = merge + "-" + str(i)
+			# i += 1
+		# self.name = merge

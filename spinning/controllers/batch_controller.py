@@ -15,7 +15,7 @@ def set_batches(self, warehouse_field):
 				continue
 
 			has_batch_no = frappe.db.get_value('Item', row.item_code, 'has_batch_no')
-
+			
 			if has_batch_no:
 				if not row.get('merge'):
 					frappe.throw(_("Please set Merge in row {}".format(row.idx)))

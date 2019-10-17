@@ -5,9 +5,10 @@
 from __future__ import unicode_literals
 import frappe
 from frappe import _
-from frappe.utils import flt
+from frappe.utils import flt, cint
 from frappe.model.document import Document
 from frappe.model.naming import make_autoname
+from frappe.desk.reportview import get_filters_cond
 
 from spinning.controllers.batch_controller import get_batch_no
 
@@ -17,16 +18,27 @@ from six import string_types
 class Package(Document):
 	def autoname(self):
 		if self.package_series:
-			series = self.package_series + '.######'
+			series = self.package_series
 			
-			name = None
-			while not name:
-				name = make_autoname(series, "Package", self)
-				if frappe.db.exists('Package', name):
-					name = None
-			
-			self.package_no = name
+			# name = None
+			# while not name:
+			# 	name = make_autoname(series, "Package", self)
+			# 	if frappe.db.exists('Package', name):
+			# 		name = None
+
+			name = make_autoname(series, "Package", self)
 			self.name = name
+			self.package_no = name
+		else:
+			package_no = self.package_no
+			new_package_no = package_no
+			
+			i = 1
+			while frappe.db.exists("Package", new_package_no):
+				new_package_no = package_no + "-" + str(i)
+				i += 1
+				
+			self.name = new_package_no			
 
 	def validate(self):
 		self.set_batch_no()
@@ -54,9 +66,12 @@ class Package(Document):
 		self.remaining_qty = flt(self.net_weight - self.total_consumed_qty)
 		
 	def update_status(self):
+		if self.remaining_qty < 0:
+			frappe.throw(_("Remaining Qty cannot be less than 0 in Package."))
+
 		status = None
 
-		if self.remaining_qty == self.net_weight:
+		if self.remaining_qty >= self.net_weight:
 			status = "In Stock"
 
 		elif self.remaining_qty == 0:
@@ -91,18 +106,54 @@ class Package(Document):
 
 		self.calculate_consumption()
 
+# @frappe.whitelist()
+# def get_packages(filters):
+# 	fields = ('name', 'spools', 'item_code', 'item_name', 'warehouse', 'batch_no', 'merge', 'grade', 'gross_weight', 'net_weight', 'tare_weight')
+
+# 	if isinstance(filters, string_types):
+# 		filters = json.loads(filters)
+
+# 	filters['status'] = ["!=", "Out of Stock"]
+
+# 	data = frappe.get_list("Package", filters = filters, fields = fields)
+
+# 	for row in data:
+# 		row.package = row.pop('name')
+
+# 	return data
+
+
 @frappe.whitelist()
-def get_packages(filters):
+def get_packages(filters, raw_filters = None):
 	fields = ('name', 'spools', 'item_code', 'item_name', 'warehouse', 'batch_no', 'merge', 'grade', 'gross_weight', 'net_weight', 'tare_weight')
 
 	if isinstance(filters, string_types):
 		filters = json.loads(filters)
 
-	filters['status'] = ["!=", "Out of Stock"]
+	# filters['status'] = ["!=", "Out of Stock"]
 
-	data = frappe.get_list("Package", filters = filters, fields = fields)
+	data = frappe.db.sql("""
+		SELECT 
+			{fields}
+		FROM 
+			`tabPackage`
+		WHERE
+			status != "Out of Stock" 
+			{fcond} {raw_filters} """.format(
+				fields = ", ".join(fields),
+				fcond = get_filters_cond("Package", filters, []).replace('%', '%%'),
+				raw_filters = raw_filters,
+			), as_dict = True)
+
+	# data = frappe.get_list("Package", filters = filters, fields = fields)
 
 	for row in data:
 		row.package = row.pop('name')
 
 	return data
+
+@frappe.whitelist()
+def get_dist_grade_list(filters):
+	return frappe.db.sql_list("""
+		SELECT DISTINCT grade from `tabPackage` 
+		where status != 'Out of Stock' {fcond} """.format(fcond=get_filters_cond("Package", filters, []).replace('%', '%%')))

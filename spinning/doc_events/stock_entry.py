@@ -9,7 +9,10 @@ from spinning.controllers.batch_controller import set_batches
 
 @frappe.whitelist()
 def before_save(self, method):
-	pass
+	abbr = frappe.db.get_value('Company',self.company,'abbr')
+	if self.is_opening == 'Yes':
+		for row in self.items:
+			row.expense_account = 'Temporary Opening - %s' % abbr	
 
 @frappe.whitelist()
 def validate(self, method):

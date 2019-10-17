@@ -30,6 +30,7 @@
   "column_break_20",
   "merge",
   "grade",
+  "subcontracted_item",
   "accounting_section",
   "expense_account",
   "accounting_dimensions_section",
@@ -42,7 +43,8 @@
    "fieldname": "s_warehouse",
    "fieldtype": "Link",
    "label": "Source Warehouse",
-   "options": "Warehouse"
+   "options": "Warehouse",
+   "reqd": 1
   },
   {
    "columns": 2,
@@ -216,7 +218,8 @@
    "fieldname": "t_warehouse",
    "fieldtype": "Link",
    "label": "Target warehouse",
-   "options": "Warehouse"
+   "options": "Warehouse",
+   "reqd": 1
   },
   {
    "fieldname": "column_break_2",
@@ -233,10 +236,16 @@
    "fieldtype": "Check",
    "label": "Has Batch No",
    "read_only": 1
+  },
+  {
+   "fieldname": "subcontracted_item",
+   "fieldtype": "Link",
+   "label": "Subcontracted Item",
+   "options": "Item"
   }
  ],
  "istable": 1,
- "modified": "2019-08-21 10:35:14.561163",
+ "modified": "2019-10-17 14:07:48.784502",
  "modified_by": "Administrator",
  "module": "Spinning",
  "name": "Material Transfer Item",

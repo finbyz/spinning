@@ -52,3 +52,19 @@ def batch_query(doctype, txt, searchfield, start, page_len, filters):
 			{match_conditions}
 			order by expiry_date, name desc
 			limit %(start)s, %(page_len)s""".format(cond, match_conditions=get_match_cond(doctype)), args)
+			
+def grade_query(doctype, txt, searchfield, start, page_len, filters):
+	cond = ""
+	args = {
+		'item_code': filters.get("item_code"),
+	}
+	grade = None
+	
+	grade = frappe.db.sql("""select gd.grade_detail
+			from `tabGrade Detail` gd
+				where gd.parent = %(item_code)s
+			""",args)
+	if grade:
+		return grade
+	else:
+		frappe.throw(_('Grade not Found. Please define the grade in Item <strong>{}</strong>'.format(args['item_code'])))

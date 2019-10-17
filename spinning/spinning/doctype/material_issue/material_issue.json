@@ -48,6 +48,7 @@
    "fieldname": "company",
    "fieldtype": "Link",
    "in_list_view": 1,
+   "in_standard_filter": 1,
    "label": "Company",
    "options": "Company",
    "reqd": 1
@@ -176,7 +177,7 @@
   }
  ],
  "is_submittable": 1,
- "modified": "2019-08-14 14:32:28.824725",
+ "modified": "2019-10-15 13:52:43.516263",
  "modified_by": "Administrator",
  "module": "Spinning",
  "name": "Material Issue",

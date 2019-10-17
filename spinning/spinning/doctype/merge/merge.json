@@ -1,4 +1,5 @@
 {
+ "allow_import": 1,
  "autoname": "field:merge",
  "creation": "2019-08-05 09:19:56.890728",
  "doctype": "DocType",
@@ -28,7 +29,7 @@
    "reqd": 1
   }
  ],
- "modified": "2019-08-14 14:37:58.039270",
+ "modified": "2019-10-07 10:58:07.942180",
  "modified_by": "Administrator",
  "module": "Spinning",
  "name": "Merge",

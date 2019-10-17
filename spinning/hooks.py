@@ -34,7 +34,10 @@ app_license = "GPL 3.0"
 doctype_js = {
 	"Purchase Receipt": "public/js/doctype_js/purchase_receipt.js",
 	"Purchase Invoice": "public/js/doctype_js/purchase_invoice.js",
+	"Sales Invoice": "public/js/doctype_js/sales_invoice.js",
 	"Delivery Note": "public/js/doctype_js/delivery_note.js",
+	"Stock Reconciliation": "public/js/doctype_js/stock_reconciliation.js",
+	"Purchase Order": "public/js/doctype_js/purchase_order.js"
 }
 
 # Home Pages
@@ -128,6 +131,7 @@ doc_events = {
 		"validate": "spinning.doc_events.purchase_receipt.validate",
 		"on_submit": "spinning.doc_events.purchase_receipt.on_submit",
 		"on_cancel": "spinning.doc_events.purchase_receipt.on_cancel",
+		"before_save": "spinning.doc_events.purchase_receipt.before_save",
 	},
 	
 	"Purchase Invoice": {
@@ -136,6 +140,7 @@ doc_events = {
 
 	"BOM": {
 		"before_naming": "spinning.doc_events.bom.before_naming",
+		"on_submit":  "spinning.doc_events.bom.on_submit",
 	},
 
 	"Delivery Note": {
@@ -143,10 +148,21 @@ doc_events = {
 		"before_save": "spinning.doc_events.delivery_note.before_save",
 		"on_submit": "spinning.doc_events.delivery_note.on_submit",
 		"on_cancel": "spinning.doc_events.delivery_note.on_cancel",
+		"onload": "spinning.doc_events.delivery_note.onload"
 	},
-	"Work Order":{
+
+	"Work Order": {
 		"before_save": "spinning.doc_events.work_order.before_save",
-		"on_submit": "spinning.doc_events.work_order.on_submit"
+		"on_submit": "spinning.doc_events.work_order.on_submit",
+	},
+
+	"Item": {
+		"validate": "spinning.doc_events.item.validate",
+	},
+	"Stock Reconciliation": {
+		"validate": "spinning.doc_events.stock_reconciliation.validate",
+		"on_submit": "spinning.doc_events.stock_reconciliation.on_submit",
+		"on_cancel": "spinning.doc_events.stock_reconciliation.on_cancel"
 	}
 }
 

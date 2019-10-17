@@ -19,14 +19,21 @@ cur_frm.fields_dict['items'].grid.get_field("t_warehouse").get_query = function(
 		}
 	}
 };
-cur_frm.fields_dict['items'].grid.get_field("grade").get_query = function(doc) {
+
+cur_frm.fields_dict['pallet_item'].grid.get_field("pallet_item").get_query = function(doc) {
 	return {
 		filters: {
-			"supplier": doc.company
+			"item_group": 'Pallet'
 		}
 	}
 };
-
+cur_frm.fields_dict.package_item.get_query = function (doc) {
+    return {
+        filters: {
+            "item_group": doc.package_type
+        }
+    }
+};
 frappe.ui.form.on('Material Receipt', {
 	company: function(frm) {
 		if(frm.doc.company) {
@@ -37,7 +44,7 @@ frappe.ui.form.on('Material Receipt', {
 			frm.trigger("toggle_display_account_head");
 		}
 	},
-set_basic_rate: function(frm, cdt, cdn) {
+	set_basic_rate: function(frm, cdt, cdn) {
 		const item = locals[cdt][cdn];
 		item.transfer_qty = flt(item.qty) * flt(item.conversion_factor);
 
@@ -150,6 +157,7 @@ set_basic_rate: function(frm, cdt, cdn) {
 		frm.trigger('cal_total_package_gross_wt');
 		frm.trigger('cal_total_package_net_wt');
 		frm.trigger('cal_total');
+		frm.trigger('calculate_amount');
 	},
 	override_merge_new_doc: function(frm){
 		let merge_field = cur_frm.get_docfield("items", "merge")
@@ -201,7 +209,31 @@ set_basic_rate: function(frm, cdt, cdn) {
 		});
 		frm.set_value("total_amount",total_amount)
 		frm.set_value("total_qty",total_qty)
-	} 
+	},
+	package_item: function(frm) {
+		$.each(frm.doc.packages || [], function(i, d) {
+			d.package_item = frm.doc.package_item;
+		});
+		refresh_field("packages");
+	},
+	package_type: function(frm) {
+		$.each(frm.doc.packages || [], function(i, d) {
+			d.package_type = frm.doc.package_type;
+		});
+		refresh_field("packages");
+	},
+	is_returnable: function(frm) {
+		$.each(frm.doc.packages || [], function(i, d) {
+			d.is_returnable = frm.doc.is_returnable;
+		});
+		refresh_field("packages");
+	},
+	returnable_by: function(frm) {
+		$.each(frm.doc.packages || [], function(i, d) {
+			d.returnable_by = frm.doc.returnable_by;
+		});
+		refresh_field("packages");
+	},
 });
 
 frappe.ui.form.on('Material Receipt Item', {
@@ -302,7 +334,15 @@ frappe.ui.form.on("Material Receipt Package Detail", {
 
 	packages_remove: function(frm, cdt, cdn){
 		frm.events.cal_total_package_net_wt(frm)
-	}
+	},
+	packages_add: function(frm, cdt, cdn){
+		var row = locals[cdt][cdn];
+		row.package_item = frm.doc.package_item;
+		row.package_type = frm.doc.package_type;
+		row.is_returnable = frm.doc.is_returnable;
+		row.returnable_by = frm.doc.returnable_by;
+		frm.refresh_field("packages");
+	},
 });
 
 erpnext.stock.MaterialReceipt = erpnext.stock.StockController.extend({

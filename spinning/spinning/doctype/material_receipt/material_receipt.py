@@ -18,8 +18,13 @@ class MaterialReceipt(Document):
 	def validate(self):
 		if self._action == 'submit':
 			self.validate_weights()
+			#self.create_packages()
 		set_batches(self, 't_warehouse')
-
+		
+	def before_save(self):
+		pass
+		#self.update_pallet_item()
+		
 	def get_item_details(self, args=None, for_update=False):
 		item = frappe.db.sql("""select i.name, i.stock_uom, i.description, i.image, i.item_name, i.item_group,
 				i.has_batch_no, i.sample_quantity, i.has_serial_no,
@@ -83,8 +88,11 @@ class MaterialReceipt(Document):
 		return ret
 			
 	def on_submit(self):
-		self.create_packages()
+		self.validate_gate_pass()
 		self.create_stock_entry()
+		self.create_packages()
+		
+		#frappe.db.commit()
 		
 	def on_cancel(self):
 		self.delete_packages()
@@ -126,16 +134,17 @@ class MaterialReceipt(Document):
 
 			doc = frappe.new_doc("Package")
 			doc.package_no = pkg.package
-			doc.package_type = self.package_type
-			doc.package_item = self.package_item
+			doc.package_type = pkg.package_type
+			doc.package_item = pkg.package_item
 			doc.company = self.company
 
-			if self.package_type == "Pallet":
-				doc.is_returnable = self.is_returnable
-				doc.returnable_by = self.returnable_by
+			if pkg.package_type == "Pallet":
+				doc.is_returnable = pkg.is_returnable
+				doc.returnable_by = pkg.returnable_by
 
 			doc.gross_weight = pkg.gross_weight
 			doc.net_weight = pkg.net_weight
+			doc.spools = pkg.spools
 			
 			doc.batch_no = row.batch_no
 			doc.item_code = row.item_code
@@ -148,19 +157,19 @@ class MaterialReceipt(Document):
 			doc.purchase_date = self.posting_date
 			doc.purchase_time = self.posting_time
 			doc.incoming_rate = row.basic_rate
-			doc.warehouse = row.t_warehouse
+			doc.warehouse = row.t_warehouse or self.warehouse
 			
 			doc.save(ignore_permissions=True)
 
 	def delete_packages(self):
-		for row in self.packages:
-			doc = frappe.get_doc("Package", row.package)
-			if doc:
-				if cint(doc.get('is_delivered')):
-					frappe.throw(_("#Row {}: This Package is already delivered with document reference {}.".format(row.idx, frappe.bold(doc.delivery_document_no))))
+		package_list = frappe.get_list("Package",filters={'purchase_document_type':self.doctype,'purchase_document_no':self.name})		
+		for row in package_list:		
+			doc = frappe.get_doc("Package", row.name)	
+			if doc.status != "In Stock":
+				frappe.throw(_("#Row {}: This Package is Partial Stock or Out of Stock.".format(row.idx)))
 
-				check_if_doc_is_linked(doc)
-				frappe.delete_doc("Package", doc.name)
+			check_if_doc_is_linked(doc)
+			frappe.delete_doc("Package", doc.name)
 
 		else:
 			frappe.db.commit()
@@ -172,28 +181,85 @@ class MaterialReceipt(Document):
 		se.is_opening = self.is_opening
 		se.posting_date = self.posting_date
 		se.posting_time = self.posting_time
+		se.set_posting_time = self.set_posting_time
 		se.company = self.company
-		
+		se.reference_doctype = self.doctype
+		se.reference_docname = self.name
+		abbr = frappe.db.get_value('Company',self.company,'abbr')
+
 		for row in self.items:
-			se.append("items",{
-				'item_code': row.item_code,
-				'qty': row.qty,
-				'basic_rate': row.basic_rate,
-				't_warehouse': row.t_warehouse or self.warehouse,
-				'merge': row.merge,
-				'grade': row.grade,
-				'batch_no': row.batch_no
-			})
-			
-		se.save(ignore_permissions=True)
-		se.submit()
-		self.db_set('stock_entry',se.name)
-		frappe.db.commit()
-		
+			if self.is_opening == "Yes":
+				se.append("items",{
+					'item_code': row.item_code,
+					'qty': row.qty,
+					'basic_rate': row.basic_rate,
+					't_warehouse': row.t_warehouse or self.warehouse,
+					'expense_account': 'Temporary Opening - %s' % abbr,
+					'merge': row.merge,
+					'grade': row.grade,
+					'batch_no': row.batch_no
+				})
+			else:
+				se.append("items",{
+					'item_code': row.item_code,
+					'qty': row.qty,
+					'basic_rate': row.basic_rate,
+					't_warehouse': row.t_warehouse or self.warehouse,
+					'merge': row.merge,
+					'grade': row.grade,
+					'batch_no': row.batch_no
+				})
+		if self.pallet_item:
+			for d in self.pallet_item:
+				if self.is_opening == "Yes":
+					se.append("items",{
+						'item_code': d.pallet_item,
+						'qty': d.qty,
+						'basic_rate': 0,
+						'expense_account': 'Temporary Opening - %s' % abbr,
+						't_warehouse': 'Zero Rated Pallet - %s' % abbr,
+						'allow_zero_valuation_rate': 1
+					})
+				else:
+					se.append("items",{
+						'item_code': d.pallet_item,
+						'qty': d.qty,
+						'basic_rate': 0,
+						't_warehouse': 'Zero Rated Pallet - %s' % abbr,
+						'allow_zero_valuation_rate': 1
+					})
+		try:
+			se.save(ignore_permissions=True)
+			se.submit()
+		except Exception as e:
+			frappe.throw(str(e))
+				
 	def cancel_stock_entry(self):
-		if self.stock_entry:
-			se = frappe.get_doc("Stock Entry",self.stock_entry)
-			se.cancel()
-			self.db_set('stock_entry','')
+			se = frappe.get_doc("Stock Entry",{'reference_doctype': self.doctype,'reference_docname':doc.name})
+			se.db_set('reference_doctype','')
+			se.db_set('reference_docname','')
+			se.cancel()	
 			frappe.db.commit()
-			
+
+	def update_pallet_item(self):
+		count = 0
+		if self.package_type == 'Pallet' and self.package_item:
+			for d in self.packages:
+				if d.package_item == self.package_item:
+					count +=1
+			if count > 0:
+				if self.is_new() and not self.amended_from:				
+					self.append("pallet_item",{
+						'pallet_item': self.package_item,
+						'qty': count
+					})
+				else:
+					for d in self.packages:
+						for r in self.pallet_item:
+							if d.package_item == r.pallet_item:
+								r.qty = count
+								break
+								
+	def validate_gate_pass(self):
+		if self.gate_entry_no == 0:
+			frappe.throw(_("Please Enter Gate Pass No"))

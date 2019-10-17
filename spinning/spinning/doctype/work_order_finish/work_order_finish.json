@@ -15,21 +15,24 @@
   "is_returnable",
   "fg_completed_qty",
   "package_item",
+  "spool_weight",
   "column_break_5",
   "company",
   "posting_date",
   "posting_time",
   "paper_tube",
+  "package_warehouse",
   "source_warehouse",
   "target_warehouse",
   "batch_no",
   "section_break_9",
   "returnable_by",
-  "spool_weight",
-  "work_station",
+  "workstation",
+  "package_series",
   "column_break_12",
   "grade",
-  "series",
+  "series_value",
+  "update_series_number",
   "section_break_15",
   "package_details",
   "section_break_20",
@@ -52,6 +55,7 @@
   {
    "fieldname": "work_order",
    "fieldtype": "Link",
+   "in_list_view": 1,
    "label": "Work Order",
    "options": "Work Order",
    "read_only": 1
@@ -59,6 +63,7 @@
   {
    "fieldname": "item_code",
    "fieldtype": "Link",
+   "in_standard_filter": 1,
    "label": "Item Code",
    "options": "Item",
    "read_only": 1
@@ -73,6 +78,7 @@
   {
    "fieldname": "merge",
    "fieldtype": "Link",
+   "in_list_view": 1,
    "label": "Merge",
    "options": "Merge",
    "read_only": 1
@@ -105,6 +111,7 @@
   {
    "fieldname": "company",
    "fieldtype": "Link",
+   "in_standard_filter": 1,
    "label": "Company",
    "options": "Company",
    "read_only": 1
@@ -123,6 +130,7 @@
   {
    "fieldname": "target_warehouse",
    "fieldtype": "Link",
+   "in_standard_filter": 1,
    "label": "Target Warehouse",
    "options": "Warehouse",
    "read_only": 1
@@ -137,15 +145,6 @@
    "fieldtype": "Float",
    "label": "Paper Tube Weight",
    "read_only": 1
-  },
-  {
-   "fieldname": "series",
-   "fieldtype": "Link",
-   "in_list_view": 1,
-   "label": "Series",
-   "options": "Package Series",
-   "read_only": 1,
-   "reqd": 1
   },
   {
    "fieldname": "column_break_12",
@@ -240,15 +239,9 @@
   {
    "fieldname": "source_warehouse",
    "fieldtype": "Link",
+   "in_standard_filter": 1,
    "label": "Source Warehouse",
    "options": "Warehouse",
-   "read_only": 1
-  },
-  {
-   "fieldname": "work_station",
-   "fieldtype": "Link",
-   "label": "Work Station",
-   "options": "Workstation",
    "read_only": 1
   },
   {
@@ -262,12 +255,44 @@
    "fieldname": "package_details",
    "fieldtype": "Table",
    "label": "Package Details",
-   "options": "Work Order Finish Detail",
+   "options": "Work Order Finish Detail"
+  },
+  {
+   "fieldname": "workstation",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "Workstation",
+   "options": "Workstation",
+   "read_only": 1
+  },
+  {
+   "depends_on": "eval: doc.docstatus == 0",
+   "fieldname": "update_series_number",
+   "fieldtype": "Button",
+   "label": "Update Series Number"
+  },
+  {
+   "fieldname": "package_series",
+   "fieldtype": "Data",
+   "label": "Package Series",
+   "read_only": 1
+  },
+  {
+   "fieldname": "series_value",
+   "fieldtype": "Int",
+   "label": "Series Value",
    "reqd": 1
+  },
+  {
+   "fieldname": "package_warehouse",
+   "fieldtype": "Link",
+   "label": "Package Warehouse",
+   "options": "Warehouse",
+   "read_only": 1
   }
  ],
  "is_submittable": 1,
- "modified": "2019-08-22 14:37:11.245751",
+ "modified": "2019-10-15 14:27:27.937147",
  "modified_by": "Administrator",
  "module": "Spinning",
  "name": "Work Order Finish",

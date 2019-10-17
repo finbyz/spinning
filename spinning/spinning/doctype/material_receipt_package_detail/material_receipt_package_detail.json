@@ -8,7 +8,12 @@
   "gross_weight",
   "net_weight",
   "spools",
-  "row_ref"
+  "row_ref",
+  "column_break_6",
+  "package_type",
+  "package_item",
+  "is_returnable",
+  "returnable_by"
  ],
  "fields": [
   {
@@ -22,8 +27,7 @@
    "fieldname": "gross_weight",
    "fieldtype": "Float",
    "in_list_view": 1,
-   "label": "Gross Weight",
-   "reqd": 1
+   "label": "Gross Weight"
   },
   {
    "fieldname": "net_weight",
@@ -36,18 +40,46 @@
    "fieldname": "row_ref",
    "fieldtype": "Select",
    "in_list_view": 1,
-   "label": "Row Ref",
-   "options": "1"
+   "label": "Row Ref"
   },
   {
    "default": "0",
    "fieldname": "spools",
    "fieldtype": "Int",
    "label": "Spools"
+  },
+  {
+   "fieldname": "column_break_6",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "package_type",
+   "fieldtype": "Select",
+   "label": "Package Type",
+   "options": "\nBox\nPallet"
+  },
+  {
+   "fieldname": "package_item",
+   "fieldtype": "Link",
+   "label": "Package Item",
+   "options": "Item"
+  },
+  {
+   "default": "0",
+   "depends_on": "eval: doc.package_type == \"Pallet\"",
+   "fieldname": "is_returnable",
+   "fieldtype": "Check",
+   "label": "Is Returnable"
+  },
+  {
+   "depends_on": "eval: doc.is_returnable",
+   "fieldname": "returnable_by",
+   "fieldtype": "Date",
+   "label": "Returnable By"
   }
  ],
  "istable": 1,
- "modified": "2019-08-14 12:34:02.986404",
+ "modified": "2019-10-09 17:26:34.773549",
  "modified_by": "Administrator",
  "module": "Spinning",
  "name": "Material Receipt Package Detail",

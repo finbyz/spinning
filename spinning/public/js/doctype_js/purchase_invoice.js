@@ -8,13 +8,13 @@ cur_frm.fields_dict['items'].grid.get_field("merge").get_query = function(doc, c
 	}
 };
 
-cur_frm.fields_dict['items'].grid.get_field("grade").get_query = function(doc) {
+/* cur_frm.fields_dict['items'].grid.get_field("grade").get_query = function(doc) {
 	return {
 		filters: {
 			"supplier": doc.supplier
 		}
 	}
-};
+}; */
 
 this.frm.fields_dict.taxes_and_charges.get_query = function(doc){
 	return {

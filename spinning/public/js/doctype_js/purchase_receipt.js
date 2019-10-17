@@ -1,3 +1,7 @@
+/* this.frm.dashboard.add_transactions({
+	'label': "Stock Entry",
+	'items': ['Stock Entry']
+}); */
 cur_frm.fields_dict['items'].grid.get_field("merge").get_query = function(doc, cdt, cdn) {
 	let d = locals[cdt][cdn];
 
@@ -7,8 +11,16 @@ cur_frm.fields_dict['items'].grid.get_field("merge").get_query = function(doc, c
 		}
 	}
 };
+/* cur_frm.fields_dict['items'].grid.get_field("grade").get_query = function(doc, cdt, cdn) {
+	let d = locals[cdt][cdn];
 
-this.frm.fields_dict.taxes_and_charges.get_query = function(doc){
+	return {
+		filters: {
+			"supplier": doc.supplier
+		}
+	}
+}; */
+cur_frm.fields_dict.taxes_and_charges.get_query = function(doc){
 	return {
 		"filters": {
 			'company': doc.company
@@ -30,11 +42,30 @@ cur_frm.fields_dict.package_item.get_query = function (doc) {
         }
     }
 };
+
 frappe.ui.form.on('Purchase Receipt', {
 	onload: function(frm){
 		frm.trigger('override_merge_new_doc');
 		frm.trigger('override_grade_new_doc');
 		frm.trigger('set_options_for_row_ref');
+	},
+
+	validate: function(frm){
+		frm.trigger('set_total_qty');
+	},
+
+	set_total_qty: function(frm){
+		frm.doc.items.forEach(function(row){
+			frappe.db.get_value("Item", row.item_code, 'has_batch_no', function(r){
+				if(r.has_batch_no){
+					let qty = frappe.utils.sum(
+						(frm.doc.packages || []).map(function(c){ return c.row_ref == row.idx ? c.net_weight : 0}));
+
+					frappe.model.set_value(row.doctype, row.name, 'qty', qty);
+					frappe.model.set_value(row.doctype, row.name, 'received_qty', qty);
+				}
+			})
+		});
 	},
 	
 	override_merge_new_doc: function(frm){
@@ -77,9 +108,30 @@ frappe.ui.form.on('Purchase Receipt', {
 		const total_net_wt = frappe.utils.sum((frm.doc.packages || []).map(function(i){ return i.net_weight }));
 		frm.set_value("total_package_net_weight", flt(total_net_wt));
 	},
-	add_packages: function(frm){
-		select_packages({frm: frm, merge: frm.doc.merge});
-	}
+	package_item: function(frm) {
+		$.each(frm.doc.packages || [], function(i, d) {
+			d.package_item = frm.doc.package_item;
+		});
+		refresh_field("packages");
+	},
+	package_type: function(frm) {
+		$.each(frm.doc.packages || [], function(i, d) {
+			d.package_type = frm.doc.package_type;
+		});
+		refresh_field("packages");
+	},
+	is_returnable: function(frm) {
+		$.each(frm.doc.packages || [], function(i, d) {
+			d.is_returnable = frm.doc.is_returnable;
+		});
+		refresh_field("packages");
+	},
+	returnable_by: function(frm) {
+		$.each(frm.doc.packages || [], function(i, d) {
+			d.returnable_by = frm.doc.returnable_by;
+		});
+		refresh_field("packages");
+	},
 });
 
 frappe.ui.form.on('Purchase Receipt Item', {
@@ -89,12 +141,6 @@ frappe.ui.form.on('Purchase Receipt Item', {
 
 	items_remove: function(frm, cdt, cdn){
 		frm.events.set_options_for_row_ref(frm);
-	},
-	item_code: function(frm, cdt, cdn){
-		let d = locals[cdt][cdn];
-		if(d.has_batch_no){
-			select_packages({frm: frm, item_code: d.item_code, merge: d.merge});
-		}
 	}
 });
 
@@ -109,10 +155,14 @@ frappe.ui.form.on("Purchase Receipt Package Detail", {
 
 	packages_remove: function(frm, cdt, cdn){
 		frm.events.cal_total_package_net_wt(frm)
-	}
+	},
+	packages_add: function(frm, cdt, cdn){
+		var row = locals[cdt][cdn];
+		row.package_item = frm.doc.package_item;
+		row.package_type = frm.doc.package_type;
+		row.is_returnable = frm.doc.is_returnable;
+		row.returnable_by = frm.doc.returnable_by;
+		frm.refresh_field("packages");
+	},
+
 });
-const select_packages = (args) => {
-	frappe.require("assets/spinning/js/utils/package_selector.js", function() {
-		new PackageSelector(args)
-	})
-}

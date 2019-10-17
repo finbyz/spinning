@@ -35,14 +35,16 @@ frappe.ui.form.on('Material Transfer', {
 			return {
 				filters: {
 					'status': "In Process",
-					"work_station": doc.work_station
+					"workstation": doc.workstation
 				}
 			}
 		}
 
 		frm.add_fetch('work_order', 'wip_warehouse', 't_warehouse');
 	},
-
+	refresh: function(frm){
+		$('*[data-fieldname="packages"]').find('.grid-add-row').hide();
+	},
 	s_warehouse: function(frm, cdt, cdn){
 		erpnext.utils.copy_value_in_all_rows(frm.doc, cdt, cdn, "items", "s_warehouse");
 	},
@@ -181,7 +183,10 @@ frappe.ui.form.on('Material Transfer', {
 	},
 
 	add_packages: function(frm){
-		select_packages({frm: frm, merge: frm.doc.merge});
+		frappe.db.get_value("Company", frm.doc.company, 'default_source_warehouse', function(r){
+			let warehouse = frm.doc.s_warehouse ? frm.doc.s_warehouse : r.default_source_warehouse;
+			select_packages({frm: frm, warehouse: warehouse});
+		})
 	}
 });
 
@@ -233,7 +238,7 @@ frappe.ui.form.on('Material Transfer Item', {
 		if(d.item_code) {
 			var args = {
 				'item_code'			: d.item_code,
-				'warehouse'			: cstr(d.s_warehouse) || cstr(d.t_warehouse),
+				'warehouse'			: cstr(frm.doc.s_warehouse),
 				'transfer_qty'		: d.transfer_qty,
 				'expense_account'	: d.expense_account,
 				'cost_center'		: d.cost_center,
@@ -250,12 +255,20 @@ frappe.ui.form.on('Material Transfer Item', {
 				args: args,
 				callback: function(r) {
 					if(r.message) {
+						// console.log("IDX : " + d.idx);
 						$.each(r.message, function(k, v) {
 							d[k] = v;
+							// console.log(k + " : " + v);
 						});
+
+						frm.events.set_basic_rate(frm, cdt, cdn);
+						
 						refresh_field("items");
+						
 						if(d.has_batch_no){
-							select_packages({frm: frm, item_code: d.item_code, merge: d.merge});
+							setTimeout(function(){
+								select_packages({frm: frm, item_code: d.item_code, merge: d.merge, warehouse: frm.doc.s_warehouse});
+							}, 500);
 						}
 					}
 				}
