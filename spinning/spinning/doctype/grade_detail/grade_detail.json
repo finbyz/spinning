@@ -1,5 +1,5 @@
 {
- "creation": "2019-10-15 11:57:28.632112",
+ "creation": "2019-10-22 12:15:32.305712",
  "doctype": "DocType",
  "editable_grid": 1,
  "engine": "InnoDB",
@@ -10,29 +10,19 @@
   {
    "fieldname": "grade_detail",
    "fieldtype": "Link",
+   "in_list_view": 1,
    "label": "Grade Detail",
-   "options": "Grade"
+   "options": "Grade",
+   "reqd": 1
   }
  ],
- "modified": "2019-10-15 12:14:05.892055",
+ "istable": 1,
+ "modified": "2019-12-07 15:24:36.054542",
  "modified_by": "Administrator",
  "module": "Spinning",
  "name": "Grade Detail",
  "owner": "Administrator",
- "permissions": [
-  {
-   "create": 1,
-   "delete": 1,
-   "email": 1,
-   "export": 1,
-   "print": 1,
-   "read": 1,
-   "report": 1,
-   "role": "System Manager",
-   "share": 1,
-   "write": 1
-  }
- ],
+ "permissions": [],
  "quick_entry": 1,
  "sort_field": "modified",
  "sort_order": "DESC",

@@ -1,0 +1,41 @@
+{
+ "autoname": "hash",
+ "creation": "2019-12-08 16:30:14.867869",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "specification",
+  "value"
+ ],
+ "fields": [
+  {
+   "fieldname": "specification",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Parameter",
+   "oldfieldname": "specification",
+   "oldfieldtype": "Data",
+   "print_width": "200px",
+   "reqd": 1,
+   "width": "200px"
+  },
+  {
+   "fieldname": "value",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Acceptance Criteria",
+   "oldfieldname": "value",
+   "oldfieldtype": "Data"
+  }
+ ],
+ "istable": 1,
+ "modified": "2019-12-08 16:30:14.867869",
+ "modified_by": "Administrator",
+ "module": "Spinning",
+ "name": "Merge Quality Inspection Parameter",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC"
+}

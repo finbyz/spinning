@@ -37,8 +37,9 @@
   "column_break_23",
   "total_tare_weight",
   "total_spool",
+  "consumed_qty",
   "more_information_section",
-  "stock_entry",
+  "consumed_packages",
   "column_break_35",
   "amended_from"
  ],
@@ -51,6 +52,7 @@
    "options": "MR-.YYYY.-"
   },
   {
+   "fetch_from": "material_unpack.item_code",
    "fieldname": "item_code",
    "fieldtype": "Link",
    "in_standard_filter": 1,
@@ -59,13 +61,14 @@
    "read_only": 1
   },
   {
-   "fetch_from": "item_code.item_name",
+   "fetch_from": "material_unpack.item_name",
    "fieldname": "item_name",
    "fieldtype": "Data",
    "label": "Item Name",
    "read_only": 1
   },
   {
+   "fetch_from": "material_unpack.merge",
    "fieldname": "merge",
    "fieldtype": "Link",
    "in_standard_filter": 1,
@@ -114,6 +117,7 @@
    "fieldtype": "Section Break"
   },
   {
+   "default": "Repack",
    "fieldname": "workstation",
    "fieldtype": "Link",
    "label": "Workstation",
@@ -185,13 +189,6 @@
    "read_only": 1
   },
   {
-   "fieldname": "stock_entry",
-   "fieldtype": "Link",
-   "label": "Stock Entry",
-   "options": "Stock Entry",
-   "read_only": 1
-  },
-  {
    "fieldname": "amended_from",
    "fieldtype": "Link",
    "label": "Amended From",
@@ -213,11 +210,13 @@
    "options": "Item"
   },
   {
+   "fetch_from": "material_unpack.t_warehouse",
    "fieldname": "s_warehouse",
    "fieldtype": "Link",
    "in_standard_filter": 1,
    "label": "Source Warehouse",
-   "options": "Warehouse"
+   "options": "Warehouse",
+   "read_only": 1
   },
   {
    "fieldname": "t_warehouse",
@@ -227,12 +226,12 @@
    "options": "Warehouse"
   },
   {
+   "fetch_from": "material_unpack.name",
    "fieldname": "material_unpack",
    "fieldtype": "Link",
    "label": "Material Unpack",
    "no_copy": 1,
    "options": "Material Unpack",
-   "read_only": 1,
    "reqd": 1
   },
   {
@@ -262,10 +261,26 @@
   {
    "fieldname": "column_break_35",
    "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "consumed_packages",
+   "fieldtype": "Small Text",
+   "hidden": 1,
+   "label": "Consumed Packages",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "allow_on_submit": 1,
+   "default": "0",
+   "fieldname": "consumed_qty",
+   "fieldtype": "Float",
+   "label": "Consumed Qty",
+   "read_only": 1
   }
  ],
  "is_submittable": 1,
- "modified": "2019-10-15 14:09:19.596880",
+ "modified": "2019-12-07 15:11:41.484053",
  "modified_by": "Administrator",
  "module": "Spinning",
  "name": "Material Repack",

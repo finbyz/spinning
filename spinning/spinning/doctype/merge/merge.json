@@ -7,7 +7,8 @@
  "engine": "InnoDB",
  "field_order": [
   "merge",
-  "item_code"
+  "item_code",
+  "merge_quality_inspection_parameter"
  ],
  "fields": [
   {
@@ -26,10 +27,17 @@
    "in_standard_filter": 1,
    "label": "Item Code",
    "options": "Item",
+   "read_only": 1,
    "reqd": 1
+  },
+  {
+   "fieldname": "merge_quality_inspection_parameter",
+   "fieldtype": "Table",
+   "label": "Merge Quality Inspection Parameter",
+   "options": "Merge Quality Inspection Parameter"
   }
  ],
- "modified": "2019-10-07 10:58:07.942180",
+ "modified": "2019-12-08 16:35:48.057261",
  "modified_by": "Administrator",
  "module": "Spinning",
  "name": "Merge",

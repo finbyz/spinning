@@ -42,6 +42,8 @@ cur_frm.fields_dict.s_warehouse.get_query = function (doc) {
         }
     }
 };
+cur_frm.add_fetch('workstation',  'package_series',  'package_series');
+
 cur_frm.fields_dict.t_warehouse.get_query = function (doc) {
     return {
         filters: {
@@ -49,8 +51,22 @@ cur_frm.fields_dict.t_warehouse.get_query = function (doc) {
         }
     }
 };
+cur_frm.fields_dict.material_unpack.get_query = function(doc){
+    return{
+        filters:{
+            "docstatus": 1,
+            "status": ['!=', "Repacked"]
+        }
+    } 
+}
+
 frappe.ui.form.on('Material Repack', {
 	onload: function(frm){
+		if(frm.doc.__islocal){
+			frappe.db.get_value("Company", frm.doc.company, 'abbr', function(r){
+				frm.set_value('package_warehouse','Work In Progress - ' + r.abbr)
+			});
+		}
 		frm.events.set_package_series(frm);
 	},
 	before_save: function(frm){
@@ -97,6 +113,46 @@ frappe.ui.form.on('Material Repack', {
 		frm.set_value("total_gross_weight",gross_weight);
 		frm.set_value("total_tare_weight",total_tare_weight);
 	},
+	grade: function (frm) {
+		if(frm.doc.merge){
+			frappe.call({
+				method: "spinning.controllers.batch_controller.get_batch_no",
+				args: {
+					'args': {
+						'item_code': frm.doc.item_code,
+						'merge': frm.doc.merge,
+						'grade':frm.doc.grade
+					},
+				},
+				callback: function(r) {
+					if(r.message){
+						frm.set_value('batch_no',r.message)
+					}
+					
+				 }
+			});
+		}
+    },
+	merge: function (frm) {
+		if(frm.doc.grade){
+			frappe.call({
+				method: "spinning.controllers.batch_controller.get_batch_no",
+				args: {
+					'args': {
+						'item_code': frm.doc.item_code,
+						'merge': frm.doc.merge,
+						'grade':frm.doc.grade
+					},
+				},
+				callback: function(r) {
+					if(r.message){
+						frm.set_value('batch_no',r.message)
+					}
+					
+				 }			 
+			});
+		}
+    },
 });
 frappe.ui.form.on("Material Repack Package Detail", {
 	gross_weight: function (frm, cdt, cdn) {
@@ -130,14 +186,19 @@ frappe.ui.form.on("Material Repack Package Detail", {
 			},
 			callback: function(r) {
 				frm.reload_doc();
+				console.log(frappe.urllib.get_full_url("/printview?"
+						+ "doctype=" + encodeURIComponent("Material Repack Package Detail")
+						+ "&name=" + r.message
+						+ ("&trigger_print=1")
+						+ "&format=" + encodeURIComponent("Repack Packing Sticker")
+					));
+				return false;
 				var w = window.open(frappe.urllib.get_full_url("/printview?"
-						+ "doctype=" + encodeURIComponent("Material Repack Package Detaill")
+						+ "doctype=" + encodeURIComponent("Material Repack Package Detail")
 						+ "&name=" + encodeURIComponent(r.message)
 						+ ("&trigger_print=1")
-						+ "&format=" + encodeURIComponent("Single Packing Sticker")
-						//+ "&no_letterhead=" + (cur_frm.with_letterhead() ? "0" : "1")
-						//+ (cur_frm.lang_code ? ("&_lang=" + cur_frm.lang_code) : "")
-						));
+						+ "&format=" + encodeURIComponent("Repack Packing Sticker")
+					));
 					if (!w) {
 						frappe.msgprint(__("Please enable pop-ups")); return;
 					}

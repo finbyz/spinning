@@ -67,3 +67,11 @@ def make_workorder_finish(work_order_id):
 	# wof.series = work_order.series
 	
 	return wof
+
+@frappe.whitelist()
+def get_merge_wise_package_details(batch_no, warehouse):
+	return frappe.get_list("Package", filters={
+		'batch_no': batch_no, 
+		'warehouse': warehouse, 
+		'status': ['!=', "Out of Stock"]
+	}, fields = ['name', 'package_type', 'gross_weight', 'net_weight', 'spools', 'remaining_qty', 'status'])

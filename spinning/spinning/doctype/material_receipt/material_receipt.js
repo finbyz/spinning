@@ -11,7 +11,16 @@ cur_frm.fields_dict['items'].grid.get_field("merge").get_query = function(doc, c
 		}
 	}
 };
+cur_frm.fields_dict['items'].grid.get_field("grade").get_query = function(doc, cdt, cdn) {
+	let d = locals[cdt][cdn];
 
+	return {
+		query: 'spinning.controllers.queries.grade_query',
+		filters: {
+			"item_code": d.item_code
+		}
+	}
+};
 cur_frm.fields_dict['items'].grid.get_field("t_warehouse").get_query = function(doc) {
 	return {
 		filters: {
@@ -308,8 +317,8 @@ frappe.ui.form.on('Material Receipt Item', {
 						$.each(r.message, function(k, v) {
 							d[k] = v;
 						});
+						frm.events.calculate_amount(frm);
 						refresh_field("items");
-						erpnext.stock.select_batch_and_serial_no(frm, d);
 					}
 				}
 			});

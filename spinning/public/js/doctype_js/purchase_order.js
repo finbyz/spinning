@@ -4,10 +4,11 @@ frappe.ui.form.on("Purchase Order", {
 		cur_frm.remove_custom_button('Material to Supplier', 'Transfer');
 	},
 	refresh: function (frm) {
+		cur_frm.remove_custom_button('Material to Supplier', 'Transfer');
 		var me = this;
 		if(frm.doc.status != "Closed") {
 			if (frm.doc.status != "On Hold") {
-				if(frm.doc.is_subcontracted === "Yes") {
+				if(frm.doc.is_subcontracted === "Yes" && frm.doc.docstatus == 1) {
 					cur_frm.add_custom_button(__('Material to Supplier'),
 						function() { frm.trigger('make_transfer'); }, __("Subcontract"));
 				}

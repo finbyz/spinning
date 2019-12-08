@@ -7,22 +7,39 @@ import frappe
 from frappe.model.document import Document
 from frappe import _
 from frappe.utils import nowdate, flt, cint
+from erpnext.stock.utils import get_incoming_rate
 from frappe.model.delete_doc import check_if_doc_is_linked
-
+from erpnext.stock.stock_ledger import get_previous_sle
 from spinning.controllers.batch_controller import set_batches
 from erpnext.stock.get_item_details import get_bin_details, get_default_cost_center, get_conversion_factor, get_reserved_qty_for_so
 from erpnext.setup.doctype.item_group.item_group import get_item_group_defaults
 from erpnext.setup.doctype.brand.brand import get_brand_defaults
+from six import string_types
+from datetime import datetime
 
 class MaterialReceipt(Document):
 	def validate(self):
+		date = datetime.strptime(self.posting_date, '%Y-%m-%d').date()
+		cd   = datetime.date(datetime.now())
+		if date > cd:
+			frappe.throw(_('Posting Date Cannot Be After Today Date'))
 		if self._action == 'submit':
 			self.validate_weights()
 			#self.create_packages()
 		set_batches(self, 't_warehouse')
+		self.calculate_amount()
+
+	def calculate_amount(self):
+		for row in self.items:
+			row.amount = flt(row.basic_amount)
 		
 	def before_save(self):
-		pass
+		if self.is_opening == 'Yes':
+			abbr = frappe.db.get_value('Company',self.company,'abbr')
+			for row in self.items:
+				row.expense_account = 'Temporary Opening - %s' %abbr
+		for row in self.packages:
+			row.tare_weight = row.gross_weight - row.net_weight
 		#self.update_pallet_item()
 		
 	def get_item_details(self, args=None, for_update=False):
@@ -88,14 +105,14 @@ class MaterialReceipt(Document):
 		return ret
 			
 	def on_submit(self):
-		self.validate_gate_pass()
+		#self.validate_gate_pass()
 		self.create_stock_entry()
 		self.create_packages()
 		
 		#frappe.db.commit()
 		
 	def on_cancel(self):
-		self.delete_packages()
+		self.clear_package_weight()
 		self.cancel_stock_entry()
 		
 	def validate_weights(self):
@@ -144,6 +161,7 @@ class MaterialReceipt(Document):
 
 			doc.gross_weight = pkg.gross_weight
 			doc.net_weight = pkg.net_weight
+			doc.tare_weight = pkg.tare_weight
 			doc.spools = pkg.spools
 			
 			doc.batch_no = row.batch_no
@@ -161,15 +179,21 @@ class MaterialReceipt(Document):
 			
 			doc.save(ignore_permissions=True)
 
-	def delete_packages(self):
+	def clear_package_weight(self):
 		package_list = frappe.get_list("Package",filters={'purchase_document_type':self.doctype,'purchase_document_no':self.name})		
 		for row in package_list:		
 			doc = frappe.get_doc("Package", row.name)	
 			if doc.status != "In Stock":
 				frappe.throw(_("#Row {}: This Package is Partial Stock or Out of Stock.".format(row.idx)))
 
-			check_if_doc_is_linked(doc)
-			frappe.delete_doc("Package", doc.name)
+			#check_if_doc_is_linked(doc)
+			#frappe.delete_doc("Package", doc.name)
+			doc.net_weight = 0
+			doc.gross_weight = 0
+			doc.spool_weight = 0
+			doc.tare_weight = 0
+			doc.purchase_document_no = ''
+			doc.save(ignore_permissions=True)
 
 		else:
 			frappe.db.commit()
@@ -235,11 +259,16 @@ class MaterialReceipt(Document):
 			frappe.throw(str(e))
 				
 	def cancel_stock_entry(self):
-			se = frappe.get_doc("Stock Entry",{'reference_doctype': self.doctype,'reference_docname':doc.name})
-			se.db_set('reference_doctype','')
-			se.db_set('reference_docname','')
-			se.cancel()	
-			frappe.db.commit()
+		se = frappe.get_doc("Stock Entry",{'reference_doctype': self.doctype,'reference_docname':self.name})
+		se.flags.ignore_permissions = True
+		try:
+			se.cancel()
+		except Exception as e:
+			raise e
+
+		se.db_set('reference_doctype','')
+		se.db_set('reference_docname','')
+		frappe.db.commit()
 
 	def update_pallet_item(self):
 		count = 0
@@ -263,3 +292,22 @@ class MaterialReceipt(Document):
 	def validate_gate_pass(self):
 		if self.gate_entry_no == 0:
 			frappe.throw(_("Please Enter Gate Pass No"))
+
+@frappe.whitelist()
+def get_warehouse_details(args):
+	if isinstance(args, string_types):
+		args = json.loads(args)
+
+	args = frappe._dict(args)
+
+	ret = {}
+	if args.warehouse and args.item_code:
+		args.update({
+			"posting_date": args.posting_date,
+			"posting_time": args.posting_time,
+		})
+		ret = {
+			"actual_qty" : get_previous_sle(args).get("qty_after_transaction") or 0,
+			"basic_rate" : get_incoming_rate(args)
+		}
+	return ret

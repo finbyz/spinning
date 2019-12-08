@@ -51,7 +51,11 @@ def get_data():
 			"items": [
 				{
 					"type": "doctype",
-					"name": "Work Order Finish"
+					"name": "Work Order Finish",
+				},
+				{
+					"type": "doctype",
+					"name": "Other Production",
 				}
 			]
 		},
@@ -61,8 +65,15 @@ def get_data():
 				{
 					"type": "report",
 					"is_query_report": True,
-					"name": "Merge-Wise Balance History",
+					"name": "Merge Wise Balance History",
 					"doctype": "Stock Ledger Entry",
+					"onboard": 1,
+				},
+				{
+					"type": "report",
+					"is_query_report": True,
+					"name": "Sales Order Delivery Details",
+					"doctype": "Sales Order",
 					"onboard": 1,
 				},
 			]

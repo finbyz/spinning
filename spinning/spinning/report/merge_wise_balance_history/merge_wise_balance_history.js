@@ -2,7 +2,7 @@
 // For license information, please see license.txt
 /* eslint-disable */
 
-frappe.query_reports["Merge-Wise Balance History"] = {
+frappe.query_reports["Merge Wise Balance History"] = {
 	"filters": [
 		{
 			"fieldname":"from_date",
@@ -19,10 +19,10 @@ frappe.query_reports["Merge-Wise Balance History"] = {
 			"default": frappe.datetime.get_today()
 		},
 		{
-			"fieldname":"company",
-			"label": __("Company"),
+			"fieldname":"item_code",
+			"label": __("Item Code"),
 			"fieldtype": "Link",
-			"options": 'Company',
+			"options": 'Item',
 			"width": "80"
 		},
 		{
@@ -31,6 +31,7 @@ frappe.query_reports["Merge-Wise Balance History"] = {
 			"fieldtype": "Link",
 			"options": 'Warehouse',
 			"width": "80",
+			"default": "Texturising Divison - HI",
 			get_query: () => {
 				let company = frappe.query_report.get_filter_value('company');
 				if (company != ""){
@@ -48,6 +49,14 @@ frappe.query_reports["Merge-Wise Balance History"] = {
 			"fieldtype": "Link",
 			"options": 'Item Group',
 			"width": "80"
-		}
+		},
+		{
+			"fieldname":"company",
+			"label": __("Company"),
+			"fieldtype": "Link",
+			"options": 'Company',
+			"width": "80",
+			"default": frappe.defaults.get_default('company'),
+		},
 	]
 };

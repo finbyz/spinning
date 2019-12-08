@@ -7,6 +7,7 @@
   "package",
   "gross_weight",
   "net_weight",
+  "tare_weight",
   "spools",
   "row_ref",
   "column_break_6",
@@ -76,10 +77,16 @@
    "fieldname": "returnable_by",
    "fieldtype": "Date",
    "label": "Returnable By"
+  },
+  {
+   "fieldname": "tare_weight",
+   "fieldtype": "Float",
+   "label": "Tare Weight",
+   "read_only": 1
   }
  ],
  "istable": 1,
- "modified": "2019-10-09 17:26:34.773549",
+ "modified": "2019-12-07 15:19:37.501848",
  "modified_by": "Administrator",
  "module": "Spinning",
  "name": "Material Receipt Package Detail",

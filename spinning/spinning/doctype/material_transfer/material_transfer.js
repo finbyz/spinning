@@ -46,11 +46,13 @@ frappe.ui.form.on('Material Transfer', {
 		$('*[data-fieldname="packages"]').find('.grid-add-row').hide();
 	},
 	s_warehouse: function(frm, cdt, cdn){
-		erpnext.utils.copy_value_in_all_rows(frm.doc, cdt, cdn, "items", "s_warehouse");
+		// erpnext.utils.copy_value_in_all_rows(frm.doc, cdt, cdn, "items", "s_warehouse");
+		erpnext.utils.copy_parent_value_in_all_row(frm.doc, cdt, cdn, "items", "s_warehouse", "s_warehouse");
 	},
 
 	t_warehouse: function(frm, cdt, cdn){
-		erpnext.utils.copy_value_in_all_rows(frm.doc, cdt, cdn, "items", "t_warehouse");
+		// erpnext.utils.copy_value_in_all_rows(frm.doc, cdt, cdn, "items", "t_warehouse");
+		erpnext.utils.copy_parent_value_in_all_row(frm.doc, cdt, cdn, "items", "t_warehouse", "t_warehouse");
 	},
 
 	company: function(frm) {

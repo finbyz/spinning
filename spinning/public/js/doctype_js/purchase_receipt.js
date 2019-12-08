@@ -11,15 +11,16 @@ cur_frm.fields_dict['items'].grid.get_field("merge").get_query = function(doc, c
 		}
 	}
 };
-/* cur_frm.fields_dict['items'].grid.get_field("grade").get_query = function(doc, cdt, cdn) {
+cur_frm.fields_dict['items'].grid.get_field("grade").get_query = function(doc, cdt, cdn) {
 	let d = locals[cdt][cdn];
 
 	return {
+		query: 'spinning.controllers.queries.grade_query',
 		filters: {
-			"supplier": doc.supplier
+			"item_code": d.item_code
 		}
 	}
-}; */
+};
 cur_frm.fields_dict.taxes_and_charges.get_query = function(doc){
 	return {
 		"filters": {
@@ -48,9 +49,10 @@ frappe.ui.form.on('Purchase Receipt', {
 		frm.trigger('override_merge_new_doc');
 		frm.trigger('override_grade_new_doc');
 		frm.trigger('set_options_for_row_ref');
+		frm.trigger('duplicate_row_button_add');
 	},
 
-	validate: function(frm){
+	/* validate: function(frm){
 		frm.trigger('set_total_qty');
 	},
 
@@ -66,7 +68,7 @@ frappe.ui.form.on('Purchase Receipt', {
 				}
 			})
 		});
-	},
+	}, */
 	
 	override_merge_new_doc: function(frm){
 		let merge_field = cur_frm.get_docfield("items", "merge")
@@ -132,6 +134,10 @@ frappe.ui.form.on('Purchase Receipt', {
 		});
 		refresh_field("packages");
 	},
+	duplicate_row_button_add: function(frm){
+		var parent_div = cur_frm.fields_dict.items.$wrapper.find(".grid-buttons")
+		$(parent_div).append('<button type="reset" class="btn btn-xs btn-default grid-duplicate-rows hidden">Duplicate</button>')
+	}
 });
 
 frappe.ui.form.on('Purchase Receipt Item', {
@@ -165,4 +171,17 @@ frappe.ui.form.on("Purchase Receipt Package Detail", {
 		frm.refresh_field("packages");
 	},
 
+});
+
+let $item_wrapper = cur_frm.fields_dict.items.$wrapper
+$item_wrapper.on('click', '.grid-row-check:checkbox', (e) => {
+	let duplicate_rows_button = cur_frm.$wrapper.find('.grid-duplicate-rows')
+		duplicate_rows_button.toggleClass('hidden',cur_frm.fields_dict.items.$wrapper.find('.grid-body .grid-row-check:checked:first').length ? false : true);
+})
+
+$item_wrapper.on('click','.grid-duplicate-rows', function() {
+	cur_frm.get_field('items').grid.get_selected_children().forEach((doc) => {
+		cur_frm.get_field('items').grid.add_new_row(doc.idx+1, null, null, doc);
+	});
+	cur_frm.refresh_field("items");
 });

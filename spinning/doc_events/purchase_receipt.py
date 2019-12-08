@@ -10,6 +10,9 @@ from spinning.controllers.batch_controller import set_batches
 
 @frappe.whitelist()
 def validate(self, method):
+	if self._action == 'submit':
+		validate_package_qty(self)
+
 	set_batches(self, 'warehouse')
 	
 @frappe.whitelist()
@@ -22,12 +25,25 @@ def on_submit(self, method):
 	validate_gate_pass(self)
 	create_packages(self)
 	create_stock_entry(self)
-
+	add_package_consumption(self)
+	
 @frappe.whitelist()
 def on_cancel(self, method):
-	delete_packages(self)
+	clear_package_weight(self)
 	cancel_stock_entry(self)
-	
+	remove_package_consumption(self)
+
+
+def validate_package_qty(self):
+	for row in self.items:
+		has_batch_no = frappe.db.get_value('Item', row.item_code, 'has_batch_no')
+
+		if cint(has_batch_no):
+			total_net_weight = sum([d.net_weight for d in self.packages if row.idx == cint(d.row_ref)])
+
+			if flt(row.qty, 4) != flt(total_net_weight, 4):
+				frappe.throw(_("#Row {}: Total Net Weight for Item - {} in packages is {}, which doesn't match the Qty {} in Items.".format(row.idx, frappe.bold(row.item_code), total_net_weight, row.qty)), title = "Total Package Error!")
+
 def create_packages(self):
 	def validate_package_type():
 		if not self.get('package_type'):
@@ -84,15 +100,20 @@ def create_packages(self):
 
 		doc.save(ignore_permissions=True)
 
-def delete_packages(self):
+def clear_package_weight(self):
 	package_list = frappe.get_list("Package",filters={'purchase_document_type':self.doctype,'purchase_document_no':self.name})		
 	for row in package_list:		
 		doc = frappe.get_doc("Package", row.name)	
 		if doc.status != "In Stock":
 			frappe.throw(_("#Row {}: This Package is Partial Stock or Out of Stock.".format(row.idx)))
 
-		check_if_doc_is_linked(doc)
-		frappe.delete_doc("Package", doc.name)
+		#check_if_doc_is_linked(doc)
+		#frappe.delete_doc("Package", doc.name)
+		doc.net_weight = 0
+		doc.gross_weight = 0
+		doc.spool_weight = 0
+		doc.tare_weight = 0
+		doc.save(ignore_permissions=True)
 
 	else:
 		frappe.db.commit()
@@ -155,4 +176,36 @@ def update_pallet_item(self):
 def validate_gate_pass(self):
 	if self.gate_entry_no == 0:
 		frappe.throw(_("Please Enter Gate Pass No"))
+		
+def add_package_consumption(self):
+	if self.supplier_warehouse and self.supplied_items:
+		for row in self.supplied_items:
+			remaining_qty = row.required_qty
+			package_list = frappe.get_list("Package", {
+					'status': ["!=", "Out of Stock"],
+					'item_code': row.rm_item_code,
+					'batch_no': row.batch_no,
+					'warehouse': self.supplier_warehouse,
+				}, order_by = "creation DESC")
+
+			for pkg in package_list:
+				doc = frappe.get_doc("Package", pkg.name)
+				qty = doc.remaining_qty if remaining_qty > doc.remaining_qty else remaining_qty
+				doc.add_consumption(self.doctype, self.name, qty)
+				doc.save(ignore_permissions=True)
+				remaining_qty -= qty
+
+				if remaining_qty <= 0:
+					break
+
+def remove_package_consumption(self):
+	package_list = frappe.get_list("Package Consumption", filters = {
+			'reference_doctype': self.doctype,
+			'reference_docname': self.name
+		}, fields = 'parent')
+
+	for pkg in package_list:
+		doc = frappe.get_doc("Package", pkg.parent)
+		doc.remove_consumption(self.doctype, self.name)
+		doc.save(ignore_permissions=True)
 				

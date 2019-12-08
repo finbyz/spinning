@@ -18,6 +18,10 @@ app_license = "GPL 3.0"
 # app_include_css = "/assets/spinning/css/spinning.css"
 # app_include_js = "/assets/spinning/js/spinning.js"
 
+app_include_js = [
+	"/assets/spinning/js/report_actions.js"
+]
+
 # include js, css files in header of web template
 # web_include_css = "/assets/spinning/css/spinning.css"
 # web_include_js = "/assets/spinning/js/spinning.js"
@@ -144,11 +148,10 @@ doc_events = {
 	},
 
 	"Delivery Note": {
-		"validate": "spinning.doc_events.delivery_note.validate",
+		"before_validate": "spinning.doc_events.delivery_note.before_validate",
 		"before_save": "spinning.doc_events.delivery_note.before_save",
 		"on_submit": "spinning.doc_events.delivery_note.on_submit",
 		"on_cancel": "spinning.doc_events.delivery_note.on_cancel",
-		"onload": "spinning.doc_events.delivery_note.onload"
 	},
 
 	"Work Order": {
@@ -159,11 +162,12 @@ doc_events = {
 	"Item": {
 		"validate": "spinning.doc_events.item.validate",
 	},
+
 	"Stock Reconciliation": {
 		"validate": "spinning.doc_events.stock_reconciliation.validate",
 		"on_submit": "spinning.doc_events.stock_reconciliation.on_submit",
-		"on_cancel": "spinning.doc_events.stock_reconciliation.on_cancel"
-	}
+		"on_cancel": "spinning.doc_events.stock_reconciliation.on_cancel",
+	},
 }
 
 

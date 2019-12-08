@@ -34,6 +34,10 @@ frappe.ui.form.on('Material Issue', {
 		}
 	},
 
+	refresh: function(frm){
+		$('*[data-fieldname="packages"]').find('.grid-add-row').hide();
+	},
+
 	warehouse: function(frm, cdt, cdn){
 		erpnext.utils.copy_value_in_all_rows(frm.doc, cdt, cdn, "items", "s_warehouse");
 	},
@@ -135,6 +139,13 @@ frappe.ui.form.on('Material Issue', {
 	calculate_weights: function(frm){
 		frm.doc.total_gross_weight = frappe.utils.sum((frm.doc.packages || []).map(function(i){ return i.gross_weight }));
 		frm.doc.total_net_weight = frappe.utils.sum((frm.doc.packages || []).map(function(i){ return i.net_weight }));
+	},
+
+	add_packages: function(frm){
+		frappe.db.get_value("Company", frm.doc.company, 'default_source_warehouse', function(r){
+			let warehouse = frm.doc.warehouse ? frm.doc.warehouse : r.default_source_warehouse;
+			select_packages({frm: frm, warehouse: warehouse});
+		})
 	}
 });
 
@@ -202,6 +213,12 @@ frappe.ui.form.on('Material Issue Item', {
 							d[k] = v;
 						});
 						refresh_field("items");
+
+						if(d.has_batch_no){
+							setTimeout(function(){
+								select_packages({frm: frm, item_code: d.item_code, warehouse: frm.doc.warehouse});
+							}, 500);
+						}
 					}
 				}
 			});
@@ -230,7 +247,7 @@ erpnext.stock.MaterialIssue = erpnext.stock.StockController.extend({
 		this.setup_posting_date_time_check();
 
 		this.frm.fields_dict.items.grid.get_field('item_code').get_query = function() {
-			return erpnext.queries.item({is_stock_item: 1, has_batch_no: 1});
+			return erpnext.queries.item({is_stock_item: 1});
 		};
 
 		this.frm.fields_dict.items.grid.get_field('expense_account').get_query = function() {
@@ -294,5 +311,11 @@ erpnext.stock.MaterialIssue = erpnext.stock.StockController.extend({
 		if(!row.s_warehouse) row.s_warehouse = this.frm.doc.warehouse;
 	},
 });
+
+const select_packages = (args) => {
+	frappe.require("assets/spinning/js/utils/package_selector.js", function() {
+		new PackageSelector(args)
+	})
+}
 
 $.extend(cur_frm.cscript, new erpnext.stock.MaterialIssue({frm: cur_frm}));

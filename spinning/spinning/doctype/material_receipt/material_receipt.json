@@ -36,6 +36,12 @@
   "total_package_net_weight",
   "pallet_detail_section",
   "pallet_item",
+  "transporter_details_section",
+  "transporter_name",
+  "vehicle_no",
+  "column_break_34",
+  "lr_no",
+  "lr_date",
   "printing_settings_section",
   "print_heading",
   "column_break_28",
@@ -51,7 +57,7 @@
    "fieldname": "naming_series",
    "fieldtype": "Select",
    "label": "Series",
-   "options": "MR-.YYYY.-"
+   "options": "MR-.YYYY.-\nMR-TEST-"
   },
   {
    "default": "No",
@@ -270,12 +276,40 @@
    "fieldname": "gate_entry_no",
    "fieldtype": "Int",
    "in_standard_filter": 1,
-   "label": "Gate Entry No",
-   "reqd": 1
+   "label": "Gate Entry No"
+  },
+  {
+   "fieldname": "transporter_details_section",
+   "fieldtype": "Section Break",
+   "label": "Transporter Details"
+  },
+  {
+   "fieldname": "vehicle_no",
+   "fieldtype": "Data",
+   "label": "Vehicle No"
+  },
+  {
+   "fieldname": "transporter_name",
+   "fieldtype": "Data",
+   "label": "Transporter Name"
+  },
+  {
+   "fieldname": "column_break_34",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "lr_no",
+   "fieldtype": "Data",
+   "label": "LR Number"
+  },
+  {
+   "fieldname": "lr_date",
+   "fieldtype": "Date",
+   "label": "LR Date"
   }
  ],
  "is_submittable": 1,
- "modified": "2019-10-15 14:01:35.776781",
+ "modified": "2019-12-07 15:14:55.738863",
  "modified_by": "Administrator",
  "module": "Spinning",
  "name": "Material Receipt",
@@ -344,5 +378,6 @@
   }
  ],
  "sort_field": "modified",
- "sort_order": "DESC"
+ "sort_order": "DESC",
+ "track_changes": 1
 }

@@ -14,24 +14,27 @@
    "fieldtype": "Link",
    "in_list_view": 1,
    "label": "Reference Doctype",
-   "options": "DocType"
+   "options": "DocType",
+   "read_only": 1
   },
   {
    "fieldname": "reference_docname",
    "fieldtype": "Dynamic Link",
    "in_list_view": 1,
    "label": "Reference DocName",
-   "options": "reference_doctype"
+   "options": "reference_doctype",
+   "read_only": 1
   },
   {
    "fieldname": "consumed_qty",
    "fieldtype": "Float",
    "in_list_view": 1,
-   "label": "Consumed Qty"
+   "label": "Consumed Qty",
+   "read_only": 1
   }
  ],
  "istable": 1,
- "modified": "2019-08-21 16:59:36.475551",
+ "modified": "2019-12-07 15:19:15.799452",
  "modified_by": "Administrator",
  "module": "Spinning",
  "name": "Package Consumption",

@@ -1,13 +1,13 @@
 // Copyright (c) 2019, FinByz Tech Pvt Ltd and contributors
 // For license information, please see license.txt
-/* 
-cur_frm.fields_dict.grade.get_query = function(doc) {
+ 
+cur_frm.fields_dict.work_order.get_query = function(doc) {
 	return {
 		filters: {
-			"supplier": doc.company
+			"docstatus": 1,
 		}
 	}
-}; */
+}; 
 cur_frm.fields_dict.package_item.get_query = function(doc) {
 	return {
 		filters: {
@@ -15,13 +15,13 @@ cur_frm.fields_dict.package_item.get_query = function(doc) {
 		}
 	}
 };
-cur_frm.fields_dict.package_warehouse.get_query = function (doc) {
-    return {
-        filters: {
-            "company": doc.company
-        }
-    }
-};
+// cur_frm.fields_dict.package_warehouse.get_query = function (doc) {
+//     return {
+//         filters: {
+//             "company": doc.company
+//         }
+//     }
+// };
 cur_frm.fields_dict.source_warehouse.get_query = function (doc) {
     return {
         filters: {
@@ -36,12 +36,27 @@ cur_frm.fields_dict.target_warehouse.get_query = function (doc) {
         }
     }
 };
-
+cur_frm.fields_dict.work_order.get_query = function (doc) {
+    return {
+        filters: {
+			"docstatus": 1,
+			"status":["not in",["Completed","Stopped"]]
+        }
+    }
+};
+cur_frm.fields_dict.grade.get_query = function(doc) {
+	return{
+		query: "spinning.controllers.queries.grade_query",
+		filters: {
+			'item_code': doc.item_code
+		}
+	}
+}
 frappe.ui.form.on("Work Order Finish", {
 	onload: function(frm){
 		if(frm.doc.__islocal){
 			frappe.db.get_value("Company", frm.doc.company, 'abbr', function(r){
-				frm.set_value('package_warehouse','Carton Warehouse - ' + r.abbr)
+				frm.set_value('package_warehouse','Work In Progress - ' + r.abbr)
 			});
 		}
 		frm.events.set_package_series(frm);
@@ -62,7 +77,63 @@ frappe.ui.form.on("Work Order Finish", {
 			}
 		})
 	},
-
+	work_order: function (frm) {
+		if(frm.doc.merge&&frm.doc.grade){
+			frappe.call({
+				method: "spinning.controllers.batch_controller.get_batch_no",
+				args: {
+					'args': {
+						'item_code': frm.doc.item_code,
+						'merge': frm.doc.merge,
+						'grade':frm.doc.grade
+					},
+				},
+				callback: function(r) {
+					if(r.message){
+						frm.set_value('batch_no',r.message)
+					}
+				 }
+			});
+		}
+    },
+	grade: function (frm) {
+		if(frm.doc.merge){
+			frappe.call({
+				method: "spinning.controllers.batch_controller.get_batch_no",
+				args: {
+					'args': {
+						'item_code': frm.doc.item_code,
+						'merge': frm.doc.merge,
+						'grade':frm.doc.grade
+					},
+				},
+				callback: function(r) {
+					if(r.message){
+						frm.set_value('batch_no',r.message)
+					}
+				 }
+			});
+		}
+    },
+	merge: function (frm) {
+		if(frm.doc.grade){
+			frappe.call({
+				method: "spinning.controllers.batch_controller.get_batch_no",
+				args: {
+					'args': {
+						'item_code': frm.doc.item_code,
+						'merge': frm.doc.merge,
+						'grade':frm.doc.grade
+					},
+				},
+				callback: function(r) {
+					if(r.message){
+						frm.set_value('batch_no',r.message)
+					}
+				 }			 
+			});
+		}
+    },
 	update_series_number: function(frm){
 		return frappe.call({
 			doc: frm.doc,

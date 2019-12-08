@@ -11,6 +11,7 @@
   "item_code",
   "item_name",
   "column_break_4",
+  "status",
   "posting_date",
   "posting_time",
   "company",
@@ -21,8 +22,15 @@
   "pkg_section_break",
   "add_packages",
   "packages",
+  "section_break",
   "total_gross_weight",
   "total_net_weight",
+  "total_spools",
+  "total_tare_weight",
+  "total_packages",
+  "column_break_5",
+  "consumed_qty",
+  "outstanding_qty",
   "printing_settings_section",
   "print_heading",
   "letter_head",
@@ -96,7 +104,8 @@
    "fieldtype": "Link",
    "in_standard_filter": 1,
    "label": "Merge",
-   "options": "Merge"
+   "options": "Merge",
+   "reqd": 1
   },
   {
    "fieldname": "section_break_7",
@@ -108,6 +117,7 @@
    "label": "Packages"
   },
   {
+   "depends_on": "eval:doc.docstatus==0",
    "fieldname": "add_packages",
    "fieldtype": "Button",
    "label": "Add Packages"
@@ -120,12 +130,14 @@
    "options": "Material Unpack Package"
   },
   {
+   "default": "0",
    "fieldname": "total_gross_weight",
    "fieldtype": "Float",
    "label": "Total Gross Weight",
    "read_only": 1
   },
   {
+   "default": "0",
    "fieldname": "total_net_weight",
    "fieldtype": "Float",
    "label": "Total Net Weight",
@@ -177,7 +189,8 @@
    "fieldname": "grade",
    "fieldtype": "Link",
    "label": "Grade",
-   "options": "Grade"
+   "options": "Grade",
+   "reqd": 1
   },
   {
    "fieldname": "batch_no",
@@ -186,10 +199,62 @@
    "no_copy": 1,
    "options": "Batch",
    "read_only": 1
+  },
+  {
+   "allow_on_submit": 1,
+   "default": "Unpacked",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "label": "Status",
+   "options": "\nUnpacked\nPartially Repacked\nRepacked",
+   "read_only": 1
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "consumed_qty",
+   "fieldtype": "Float",
+   "label": "Consumed Qty",
+   "read_only": 1
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "outstanding_qty",
+   "fieldtype": "Float",
+   "label": "Outstanding Qty",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_5",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "section_break",
+   "fieldtype": "Section Break"
+  },
+  {
+   "default": "0",
+   "fieldname": "total_spools",
+   "fieldtype": "Float",
+   "label": "Total Spools",
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "total_tare_weight",
+   "fieldtype": "Float",
+   "label": "Total Tare Weight",
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "total_packages",
+   "fieldtype": "Int",
+   "label": "Total Packages",
+   "read_only": 1
   }
  ],
  "is_submittable": 1,
- "modified": "2019-10-15 14:04:57.296548",
+ "modified": "2019-12-07 15:11:35.526660",
  "modified_by": "Administrator",
  "module": "Spinning",
  "name": "Material Unpack",

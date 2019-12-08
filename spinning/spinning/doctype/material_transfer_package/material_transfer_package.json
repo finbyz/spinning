@@ -26,7 +26,8 @@
    "fieldtype": "Link",
    "in_list_view": 1,
    "label": "Package",
-   "options": "Package"
+   "options": "Package",
+   "read_only": 1
   },
   {
    "columns": 1,
@@ -127,7 +128,7 @@
   }
  ],
  "istable": 1,
- "modified": "2019-08-13 14:21:18.480555",
+ "modified": "2019-12-07 15:14:07.741842",
  "modified_by": "Administrator",
  "module": "Spinning",
  "name": "Material Transfer Package",

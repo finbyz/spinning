@@ -7,6 +7,16 @@ cur_frm.fields_dict['items'].grid.get_field("merge").get_query = function(doc, c
 		}
 	}
 };
+cur_frm.fields_dict['items'].grid.get_field("grade").get_query = function(doc, cdt, cdn) {
+	let d = locals[cdt][cdn];
+
+	return {
+		query: 'spinning.controllers.queries.grade_query',
+		filters: {
+			"item_code": d.item_code
+		}
+	}
+};
 frappe.ui.form.on("Stock Reconciliation Item", {
 	grade: function (frm, cdt, cdn) {
 		let d = locals[cdt][cdn];

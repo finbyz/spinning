@@ -16,7 +16,7 @@ cur_frm.fields_dict.grade.get_query = function(doc) {
 		filters: {
 			'item_code': doc.item_code
 		}
-	}	
+	}
 }
 cur_frm.fields_dict.item_code.get_query = function (doc) {
     return {
@@ -56,7 +56,7 @@ frappe.ui.form.on('Material Unpack', {
 			frm.trigger('set_t_warehouse');
 		}
 		
-        if (!frm.doc.__is_local && frm.doc.docstatus == 1) {
+        if (!frm.doc.__is_local && frm.doc.docstatus == 1 && frm.doc.status != 'Repacked') {
             frm.add_custom_button(__("Material Repack"), function () {
                 frappe.model.open_mapped_doc({
                     method: "spinning.spinning.doctype.material_unpack.material_unpack.make_repack",
@@ -82,9 +82,9 @@ frappe.ui.form.on('Material Unpack', {
 		})
 	},
 	item_code: function(frm){
-		if(!frm.doc.merge){
+		/* if(!frm.doc.merge){
 			frappe.throw("Please select Merge")
-		}
+		} */
 		frappe.db.get_value("Company", frm.doc.company, 'default_source_warehouse', function(r){
 			let warehouse = frm.doc.s_warehouse ? frm.doc.s_warehouse : r.default_source_warehouse;
 			select_packages({frm: frm, warehouse: warehouse,item_code: frm.doc.item_code});

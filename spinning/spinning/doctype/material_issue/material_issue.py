@@ -8,7 +8,7 @@ from frappe import _
 from frappe.utils import nowdate, flt, cint
 from frappe.model.document import Document
 from frappe.model.mapper import get_mapped_doc
-
+from datetime import datetime
 from erpnext.stock.get_item_details import get_bin_details, get_default_cost_center, get_conversion_factor, get_reserved_qty_for_so
 from erpnext.stock.doctype.stock_entry.stock_entry import get_uom_details, get_warehouse_details
 from erpnext.setup.doctype.item_group.item_group import get_item_group_defaults
@@ -18,14 +18,21 @@ from erpnext.stock.doctype.batch.batch import get_batch_no
 
 class MaterialIssue(Document):
 	def validate(self):
+		date = datetime.strptime(self.posting_date, '%Y-%m-%d').date()
+		cd   = datetime.date(datetime.now())
+		if date > cd:
+			frappe.throw(_('Posting Date Cannot Be After Today Date'))
 		self.validate_packages()
 
 	def validate_packages(self):
 		for row in self.packages:
-			is_delivered = cint(frappe.db.get_value("Package", row.package, 'is_delivered'))
+			doc = frappe.get_doc("Package", row.package)
 
-			if is_delivered:
+			if cint(doc.is_delivered):
 				frappe.throw(_("Row {}: Package {} is already delivered. Please select another package.".format(row.idx, frappe.bold(row.package))))
+
+			if self.warehouse != doc.warehouse:
+				frappe.throw(_("Row {}: Package {} does not belong to source warehouse {}. Please select another package.".format(row.idx, frappe.bold(row.package), frappe.bold(self.warehouse))))
 
 	def calculate_totals(self):
 		self.total_qty = sum([row.qty for row in self.items])
@@ -63,7 +70,7 @@ class MaterialIssue(Document):
 				'net_weight': 0,
 			}))
 			package_items[key].update(item_row)
-			package_items[key].s_warehouse = self.warehouse
+			# package_items[key].s_warehouse = self.warehouse
 			package_items[key].net_weight += row.net_weight
 		
 		for (item_code, merge, grade, batch_no), args in package_items.items():
@@ -140,9 +147,9 @@ class MaterialIssue(Document):
 		ret.update(stock_and_rate)
 
 		# automatically select batch for outgoing item
-		if (args.get('s_warehouse', None) and args.get('qty') and
+		if (args.get('warehouse', None) and args.get('qty') and
 			ret.get('has_batch_no') and not args.get('batch_no')):
-			args.batch_no = get_batch_no(args['item_code'], args['s_warehouse'], args['qty'])
+			args.batch_no = get_batch_no(args['item_code'], args['warehouse'], args['qty'])
 
 		return ret
 
@@ -153,11 +160,14 @@ class MaterialIssue(Document):
 		self.cancel_stock_entry()
 
 	def create_stock_entry(self):
-		def get_stock_entry_doc(source_name, target_doc=None):
+		def get_stock_entry_doc(source_name, target_doc=None, ignore_permissions= True):
 			def set_missing_values(source, target):
 				target.stock_entry_type = "Material Issue"
 				target.purpose = "Material Issue"
-
+				target.set_posting_time = 1
+				target.reference_doctype = self.doctype
+				target.reference_docname = self.name
+		
 				target.calculate_rate_and_amount()
 				target.set_missing_values()
 
@@ -166,6 +176,8 @@ class MaterialIssue(Document):
 					"doctype": "Stock Entry",
 					"field_map": {
 						"warehouse": "from_warehouse",
+						"posting_date": "posting_date",
+						"posting_time": "posting_time",
 					},
 				},
 				"Material Issue Item": {
@@ -174,7 +186,7 @@ class MaterialIssue(Document):
 						"batch_no": "batch_no"
 					},
 				}
-			}, target_doc, set_missing_values)
+			}, target_doc, set_missing_values, ignore_permissions=ignore_permissions)
 
 			return doclist
 
@@ -182,31 +194,37 @@ class MaterialIssue(Document):
 		try:
 			se.save(ignore_permissions=True)
 			se.calculate_rate_and_amount()
-			se.submit(ignore_permissions=True)
+			se.submit()
 		except Exception as e:
 			frappe.db.rollback()
 			frappe.throw(e)
 		else:
 			self.update_packages()
-			self.db_set('stock_entry_ref', se.name)
-			frappe.db.commit()
+			# #self.db_set('stock_entry_ref', se.name)
+			# frappe.db.commit()
 
 	def cancel_stock_entry(self):
-		if self.stock_entry_ref:
-			se = frappe.get_doc("Stock Entry", self.stock_entry_ref)
+		se = frappe.get_doc("Stock Entry",{'reference_doctype': self.doctype,'reference_docname':self.name})
+		se.flags.ignore_permissions = True
+		try:
 			se.cancel()
-			self.db_set('stock_entry_ref', None)
+		except Exception as e:
+			raise e
 
+		se.db_set('reference_doctype','')
+		se.db_set('reference_docname','')
+		
 		self.update_packages()
+		# frappe.db.commit()
 
-	def update_packages(self,method):
-		if method == "on_submit":
+	def update_packages(self):
+		if self._action == "submit":
 			for row in self.packages:
 				doc = frappe.get_doc("Package", row.package)
 				doc.add_consumption(self.doctype, self.name, row.net_weight)
 				doc.save(ignore_permissions=True)
 
-		elif method == "on_cancel":
+		elif self._action == "cancel":
 			for row in self.packages:
 				doc = frappe.get_doc("Package", row.package)
 				doc.remove_consumption(self.doctype, self.name)

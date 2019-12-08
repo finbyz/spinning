@@ -41,7 +41,6 @@
   "column_break_23",
   "total_tare_weight",
   "total_spool",
-  "stock_entry",
   "amended_from"
  ],
  "fields": [
@@ -58,9 +57,10 @@
    "in_list_view": 1,
    "label": "Work Order",
    "options": "Work Order",
-   "read_only": 1
+   "reqd": 1
   },
   {
+   "fetch_from": "work_order.production_item",
    "fieldname": "item_code",
    "fieldtype": "Link",
    "in_standard_filter": 1,
@@ -69,13 +69,14 @@
    "read_only": 1
   },
   {
-   "fetch_from": "item_code.item_name",
+   "fetch_from": "work_order.item_name",
    "fieldname": "item_name",
    "fieldtype": "Data",
    "label": "Item Name",
    "read_only": 1
   },
   {
+   "fetch_from": "work_order.merge",
    "fieldname": "merge",
    "fieldtype": "Link",
    "in_list_view": 1,
@@ -84,6 +85,7 @@
    "read_only": 1
   },
   {
+   "fetch_from": "work_order.package_type",
    "fieldname": "package_type",
    "fieldtype": "Select",
    "label": "Package Type",
@@ -93,11 +95,13 @@
   {
    "default": "0",
    "depends_on": "eval: doc.package_type == \"Pallet\"",
+   "fetch_from": "work_order.is_returnable",
    "fieldname": "is_returnable",
    "fieldtype": "Check",
    "label": "Is Returnable"
   },
   {
+   "fetch_from": "work_order.qty",
    "fieldname": "fg_completed_qty",
    "fieldtype": "Float",
    "hidden": 1,
@@ -128,6 +132,7 @@
    "label": "Posting Time"
   },
   {
+   "fetch_from": "work_order.fg_warehouse",
    "fieldname": "target_warehouse",
    "fieldtype": "Link",
    "in_standard_filter": 1,
@@ -140,7 +145,7 @@
    "fieldtype": "Section Break"
   },
   {
-   "fetch_from": "paper_tube.weight_per_unit",
+   "fetch_from": "work_order.spool_weight",
    "fieldname": "spool_weight",
    "fieldtype": "Float",
    "label": "Paper Tube Weight",
@@ -202,13 +207,6 @@
    "read_only": 1
   },
   {
-   "fieldname": "stock_entry",
-   "fieldtype": "Link",
-   "label": "Stock Entry",
-   "options": "Stock Entry",
-   "read_only": 1
-  },
-  {
    "fetch_from": "work_order.bom_no",
    "fieldname": "from_bom",
    "fieldtype": "Link",
@@ -230,6 +228,7 @@
    "label": "Returnable By"
   },
   {
+   "fetch_from": "work_order.package_item",
    "fieldname": "package_item",
    "fieldtype": "Link",
    "label": "Package Item",
@@ -237,6 +236,7 @@
    "read_only": 1
   },
   {
+   "fetch_from": "work_order.source_warehouse",
    "fieldname": "source_warehouse",
    "fieldtype": "Link",
    "in_standard_filter": 1,
@@ -245,6 +245,7 @@
    "read_only": 1
   },
   {
+   "fetch_from": "work_order.paper_tube",
    "fieldname": "paper_tube",
    "fieldtype": "Link",
    "label": "Paper Tube",
@@ -258,6 +259,7 @@
    "options": "Work Order Finish Detail"
   },
   {
+   "fetch_from": "work_order.workstation",
    "fieldname": "workstation",
    "fieldtype": "Link",
    "in_standard_filter": 1,
@@ -284,15 +286,16 @@
    "reqd": 1
   },
   {
+   "fetch_from": "work_order.package_warehouse",
+   "fetch_if_empty": 1,
    "fieldname": "package_warehouse",
    "fieldtype": "Link",
    "label": "Package Warehouse",
-   "options": "Warehouse",
-   "read_only": 1
+   "options": "Warehouse"
   }
  ],
  "is_submittable": 1,
- "modified": "2019-10-15 14:27:27.937147",
+ "modified": "2019-12-07 15:11:29.261102",
  "modified_by": "Administrator",
  "module": "Spinning",
  "name": "Work Order Finish",
@@ -359,7 +362,9 @@
    "write": 1
   }
  ],
+ "search_fields": "item_code",
  "sort_field": "modified",
  "sort_order": "DESC",
+ "title_field": "item_code",
  "track_changes": 1
 }

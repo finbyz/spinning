@@ -13,6 +13,7 @@ from frappe.desk.reportview import get_filters_cond
 from spinning.controllers.batch_controller import get_batch_no
 
 import json
+from datetime import datetime
 from six import string_types
 
 class Package(Document):
@@ -41,41 +42,50 @@ class Package(Document):
 			self.name = new_package_no			
 
 	def validate(self):
+		if isinstance(self.purchase_date, string_types):
+			date = datetime.strptime(self.purchase_date, '%Y-%m-%d').date()
+
+		else:
+			date = self.purchase_date
+
+		cd   = datetime.date(datetime.now())
+		if date > cd:
+			frappe.throw(_('Posting Date Cannot Be After Today Date'))
 		self.set_batch_no()
 		self.calculate_consumption()
 
 	def set_batch_no(self):
-		if not self.batch_no:
-			args = frappe._dict()
-			args.item_code = self.item_code
-			args.grade = self.grade
-			args.merge = self.merge
+		
+		args = frappe._dict()
+		args.item_code = self.item_code
+		args.grade = self.grade
+		args.merge = self.merge
 
-			batch_no = get_batch_no(args)
+		batch_no = get_batch_no(args)
 
-			if not batch_no:
-				frappe.throw(_("No related batch found for Grade {} and Merge {}".format(frappe.bold(self.grade), frappe.bold(self.merge))))
+		if not batch_no:
+			frappe.throw(_("No related batch found for Grade {} and Merge {}".format(frappe.bold(self.grade), frappe.bold(self.merge))))
 
-			self.batch_no = batch_no
-			
+		self.batch_no = batch_no
+		
 	def before_save(self):
 		self.update_status()
 
 	def calculate_consumption(self):
 		self.total_consumed_qty = sum([flt(row.consumed_qty) for row in self.consumptions])
-		self.remaining_qty = flt(self.net_weight - self.total_consumed_qty)
+		self.remaining_qty = flt(flt(self.net_weight) - flt(self.total_consumed_qty), 4)
 		
 	def update_status(self):
 		if self.remaining_qty < 0:
-			frappe.throw(_("Remaining Qty cannot be less than 0 in Package."))
+			frappe.throw(_("Remaining Qty cannot be less than 0 in Package {} for Item {}.").format(self.name,self.item_code))
 
 		status = None
-
-		if self.remaining_qty >= self.net_weight:
-			status = "In Stock"
-
-		elif self.remaining_qty == 0:
+		
+		if self.remaining_qty == 0:
 			status = "Out of Stock"
+		
+		elif self.remaining_qty >= self.net_weight:
+			status = "In Stock"
 
 		else:
 			status = "Partial Stock"
@@ -91,7 +101,7 @@ class Package(Document):
 		self.append('consumptions', {
 			'reference_doctype': doctype,
 			'reference_docname': docname,
-			'consumed_qty': flt(qty)
+			'consumed_qty': flt(qty, 4)
 		})
 
 	def remove_consumption(self, doctype, docname):
@@ -105,6 +115,13 @@ class Package(Document):
 			[self.remove(d) for d in to_remove]
 
 		self.calculate_consumption()
+		
+	def on_trash(self):
+		if self.remaining_qty != 0.0:
+			frappe.throw(_("Not allowed to delete any packages which are in Stock"))
+		else:
+			self.purchase_document_type = ""
+			self.purchase_document_no = ""
 
 # @frappe.whitelist()
 # def get_packages(filters):
@@ -125,7 +142,7 @@ class Package(Document):
 
 @frappe.whitelist()
 def get_packages(filters, raw_filters = None):
-	fields = ('name', 'spools', 'item_code', 'item_name', 'warehouse', 'batch_no', 'merge', 'grade', 'gross_weight', 'net_weight', 'tare_weight')
+	fields = ('name as package', 'spools', 'item_code', 'item_name', 'warehouse', 'batch_no', 'merge', 'grade', 'gross_weight', 'remaining_qty as net_weight', 'tare_weight')
 
 	if isinstance(filters, string_types):
 		filters = json.loads(filters)
@@ -147,8 +164,8 @@ def get_packages(filters, raw_filters = None):
 
 	# data = frappe.get_list("Package", filters = filters, fields = fields)
 
-	for row in data:
-		row.package = row.pop('name')
+	# for row in data:
+	# 	row.package = row.pop('name')
 
 	return data
 

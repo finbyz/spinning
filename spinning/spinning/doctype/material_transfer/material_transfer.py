@@ -8,7 +8,7 @@ from frappe import _
 from frappe.utils import nowdate, flt, cint, cstr
 from frappe.model.document import Document
 from frappe.model.mapper import get_mapped_doc
-
+from datetime import datetime
 from erpnext.stock.get_item_details import get_bin_details, get_default_cost_center, get_conversion_factor, get_reserved_qty_for_so
 from erpnext.stock.doctype.stock_entry.stock_entry import get_uom_details, get_warehouse_details
 from erpnext.setup.doctype.item_group.item_group import get_item_group_defaults
@@ -20,18 +20,24 @@ from spinning.doc_events.work_order import override_work_order_functions
 
 class MaterialTransfer(Document):
 	def validate(self):
+		date = datetime.strptime(self.posting_date, '%Y-%m-%d').date()
+		cd   = datetime.date(datetime.now())
+		if date > cd:
+			frappe.throw(_('Posting Date Cannot Be After Today Date'))
 		self.validate_packages()
 		self.validate_transfer()
 
 	def validate_packages(self):
 		for row in self.packages:
-			is_delivered = cint(frappe.db.get_value("Package", row.package, 'is_delivered'))
+			doc = frappe.get_doc("Package", row.package)
 
-			if is_delivered:
+			if cint(doc.is_delivered):
 				frappe.throw(_("Row {}: Package {} is already delivered. Please select another package.".format(row.idx, frappe.bold(row.package))))
 
-			if self.s_warehouse != row.warehouse:
+			if self.s_warehouse != doc.warehouse:
 				frappe.throw(_("Row {}: Package {} does not belong to source warehouse {}. Please select another package.".format(row.idx, frappe.bold(row.package), frappe.bold(self.s_warehouse))))
+
+			row.net_weight = doc.remaining_qty
 
 	def validate_transfer(self):
 		if cint(self.is_material_transfer_for_manufacture):
@@ -206,13 +212,14 @@ class MaterialTransfer(Document):
 		self.create_stock_entry()
 
 	def on_cancel(self):
+		self.consumption_validation()
 		self.cancel_stock_entry()
 
 	def create_stock_entry(self):
-		def get_stock_entry_doc(source_name, target_doc=None):
+		def get_stock_entry_doc(source_name, target_doc=None,ignore_permissions= True):
 			def set_missing_values(source, target):
 				purpose = "Material Transfer"
-
+			
 				if cint(self.is_material_transfer_for_manufacture):
 					purpose = "Material Transfer for Manufacture"
 					target.from_bom = 1
@@ -229,6 +236,9 @@ class MaterialTransfer(Document):
 				
 				target.stock_entry_type = purpose
 				target.purpose = purpose
+				target.set_posting_time = 1
+				target.reference_doctype = self.doctype
+				target.reference_docname = self.name
 
 				target.calculate_rate_and_amount()
 				target.set_missing_values()
@@ -239,6 +249,8 @@ class MaterialTransfer(Document):
 					"field_map": {
 						"s_warehouse": "from_warehouse",
 						"t_warehouse": "to_warehouse",
+						"posting_date": "posting_date",
+						"posting_time": "posting_time",
 					},
 				},
 				"Material Transfer Item": {
@@ -248,7 +260,7 @@ class MaterialTransfer(Document):
 						'subcontracted_item': 'subcontracted_item'
 					},
 				}
-			}, target_doc, set_missing_values)
+			}, target_doc, set_missing_values,ignore_permissions=ignore_permissions)
 
 			return doclist
 
@@ -257,18 +269,30 @@ class MaterialTransfer(Document):
 		se.save(ignore_permissions=True)
 		se.calculate_rate_and_amount()
 		se.submit()
-		self.db_set('stock_entry_ref', se.name)
+		#self.db_set('stock_entry_ref', se.name)
 		self.update_packages()
 		frappe.db.commit()
 
 	def cancel_stock_entry(self):
-		if self.stock_entry_ref:
-			se = frappe.get_doc("Stock Entry", self.stock_entry_ref)
+		se = frappe.get_doc("Stock Entry",{'reference_doctype': self.doctype,'reference_docname':self.name})
+		se.flags.ignore_permissions = True
+		try:
 			se.cancel()
-			self.db_set('stock_entry_ref', None)
+		except Exception as e:
+			raise e
+
+		se.db_set('reference_doctype','')
+		se.db_set('reference_docname','')
 
 		self.update_packages()
-
+		frappe.db.commit()
+		
+	def consumption_validation(self):
+		for row in self.packages:
+			remaining_qty = frappe.db.get_value("Package",row.package,'remaining_qty')
+			if flt(remaining_qty) != flt(row.net_weight):
+				frappe.throw("Row: {} <b>{}</b> Package is already consumed".format(row.idx,row.package))
+	
 	def update_packages(self):
 		if self._action == "submit":
 			for row in self.packages:

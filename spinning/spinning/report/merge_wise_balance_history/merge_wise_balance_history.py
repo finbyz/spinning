@@ -20,12 +20,20 @@ def execute(filters=None):
 		for wh in sorted(iwb_map[item]):
 			for batch in sorted(iwb_map[item][wh]):
 				qty_dict = iwb_map[item][wh][batch]
+				color = item_map[item]["item_name"].split('-')[-1]
 				if qty_dict.opening_qty or qty_dict.in_qty or qty_dict.out_qty or qty_dict.bal_qty:
-					data.append([item, item_map[item]["item_name"],item_map[item]["item_group"],
+					details_button = """
+					<button style='margin-left:5px;border:none;color: #fff; background-color: #5e64ff; padding: 3px 5px;border-radius: 5px;' 
+						type='button' batch-data='{}' warehouse-data='{}' onClick='get_merge_wise_package_details(this.getAttribute("batch-data"), this.getAttribute("warehouse-data"))'>View</button>""".format(batch, wh)
+
+					diff = flt(qty_dict.bal_qty, float_precision) - flt(qty_dict.remaining_qty, float_precision)
+
+					data.append([item, item_map[item]["item_name"],color,item_map[item]["item_group"],
 						qty_dict.merge, qty_dict.grade, wh, batch,
 						flt(qty_dict.opening_qty, float_precision), flt(qty_dict.in_qty, float_precision),
 						flt(qty_dict.out_qty, float_precision), flt(qty_dict.bal_qty, float_precision),
-						qty_dict.packages, item_map[item]["stock_uom"]
+						qty_dict.packages, details_button, flt(qty_dict.remaining_qty, float_precision), diff, 
+						item_map[item]["stock_uom"]
 					])
 
 	return columns, data
@@ -34,6 +42,7 @@ def get_columns():
 	return [
 		_("Item") + ":Link/Item:100",
 		_("Item Name") + "::150", 
+		_("Color") + "::100", 
 		_("Item Group") + "::150",
 		_("Merge") + ":Link/Merge:100",
 		_("Grade") + ":Link/Grade:100",
@@ -44,7 +53,10 @@ def get_columns():
 		_("Out Qty") + ":Float:80",
 		_("Balance Qty") + ":Float:90",
 		_("Packages") + ":Int:80",
-		_("UOM") + "::90"
+		_("Package Details") + "::100",
+		_("Package Remaining Qty") + ":Float:100",
+		_("Difference") + ":Float:80",
+		_("UOM") + "::90",
 	]
 
 
@@ -58,11 +70,42 @@ def get_conditions(filters):
 		conditions += " and SLE.posting_date <= '%s'" % filters["to_date"]
 	else:
 		frappe.throw(_("'To Date' is required"))
+
+	if filters.get("item_code"):
+		conditions += " and SLE.item_code = '%s' " % filters['item_code']
 		
 	if filters.get("company"): conditions += " and SLE.company = '%s'" % filters["company"]
-	if filters.get("warehouse"): conditions += " and SLE.warehouse = '%s'" % filters["warehouse"]
+	# if filters.get("warehouse"): conditions += " and SLE.warehouse = '%s'" % filters["warehouse"]
 	if filters.get("item_group"): conditions += " and I.item_group = '%s'" % filters["item_group"]
+
+	if filters.get("warehouse"):
+		warehouse_details = frappe.db.get_value("Warehouse",
+			filters.get("warehouse"), ["lft", "rgt"], as_dict=1)
+		if warehouse_details:
+			conditions += " and exists (select name from `tabWarehouse` wh \
+				where wh.lft >= %s and wh.rgt <= %s and SLE.warehouse = wh.name)"%(warehouse_details.lft,
+				warehouse_details.rgt)
 	
+	return conditions
+
+def get_package_conditions(filters):
+	conditions = ""
+
+	if filters.get("to_date"):
+		conditions += " and purchase_date <= '%s'" % filters["to_date"]
+
+	if filters.get("item_code"): conditions += " and item_code = '%s' " % filters['item_code']
+	if filters.get("company"): conditions += " and company = '%s'" % filters["company"]
+	# if filters.get("warehouse"): conditions += " and warehouse = '%s'" % filters["warehouse"]
+
+	if filters.get("warehouse"):
+		warehouse_details = frappe.db.get_value("Warehouse",
+			filters.get("warehouse"), ["lft", "rgt"], as_dict=1)
+		if warehouse_details:
+			conditions += " and exists (select name from `tabWarehouse` wh \
+				where wh.lft >= %s and wh.rgt <= %s and warehouse = wh.name)"%(warehouse_details.lft,
+				warehouse_details.rgt)
+
 	return conditions
 
 def get_stock_ledger_entries(filters):
@@ -81,6 +124,14 @@ def get_item_warehouse_batch_map(filters, float_precision):
 	from_date = getdate(filters["from_date"])
 	to_date = getdate(filters["to_date"])
 
+	conditions = get_package_conditions(filters)
+
+	packages = frappe.db.sql("""
+		SELECT name, batch_no, warehouse, remaining_qty 
+		FROM `tabPackage` 
+		WHERE 
+			status != 'Out Of Stock' %s """ % conditions, as_dict = True)
+
 	for d in sle:
 		iwb_map.setdefault(d.item_code, {}).setdefault(d.warehouse, {})\
 			.setdefault(d.batch_no, frappe._dict({
@@ -88,9 +139,11 @@ def get_item_warehouse_batch_map(filters, float_precision):
 				"merge": "", "grade": "", "packages": 0
 			}))
 		qty_dict = iwb_map[d.item_code][d.warehouse][d.batch_no]
+		
 		if d.posting_date < from_date:
 			qty_dict.opening_qty = flt(qty_dict.opening_qty, float_precision) \
 				+ flt(d.actual_qty, float_precision)
+				
 		elif d.posting_date >= from_date and d.posting_date <= to_date:
 			if flt(d.actual_qty) > 0:
 				qty_dict.in_qty = flt(qty_dict.in_qty, float_precision) + flt(d.actual_qty, float_precision)
@@ -100,7 +153,11 @@ def get_item_warehouse_batch_map(filters, float_precision):
 
 		qty_dict.bal_qty = flt(qty_dict.bal_qty, float_precision) + flt(d.actual_qty, float_precision)
 		qty_dict.merge, qty_dict.grade = frappe.db.get_value("Batch", d.batch_no, ['merge', 'grade'])
-		qty_dict.packages = frappe.db.sql_list("select count(name) from `tabPackage` where batch_no = %s", d.batch_no)[0]
+		pkgs = [x for x in packages if x.batch_no == d.batch_no and x.warehouse == d.warehouse]
+		qty_dict.packages = len(pkgs)
+		qty_dict.remaining_qty = sum([x.remaining_qty for x in pkgs])
+
+		# qty_dict.packages = frappe.db.sql_list("select count(name) from `tabPackage` where batch_no = %s and warehouse = %s and status != 'Out of Stock' ", (d.batch_no, d.warehouse))[0]
 
 
 	return iwb_map

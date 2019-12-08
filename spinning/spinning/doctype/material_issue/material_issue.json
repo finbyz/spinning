@@ -18,9 +18,13 @@
   "total_qty",
   "total_amount",
   "pkg_section_break",
+  "add_packages",
   "packages",
   "total_gross_weight",
   "total_net_weight",
+  "total_spools",
+  "total_tare_weight",
+  "total_packages",
   "section_break_12",
   "print_heading",
   "letter_head",
@@ -99,8 +103,7 @@
    "fieldname": "packages",
    "fieldtype": "Table",
    "label": "Packages",
-   "options": "Material Issue Package",
-   "reqd": 1
+   "options": "Material Issue Package"
   },
   {
    "collapsible": 1,
@@ -164,20 +167,49 @@
    "read_only": 1
   },
   {
+   "default": "0",
    "fieldname": "total_gross_weight",
    "fieldtype": "Float",
    "label": "Total Gross Weight",
    "read_only": 1
   },
   {
+   "default": "0",
    "fieldname": "total_net_weight",
    "fieldtype": "Float",
    "label": "Total Net Weight",
    "read_only": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "total_spools",
+   "fieldtype": "Float",
+   "label": "Total Spools",
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "total_tare_weight",
+   "fieldtype": "Float",
+   "label": "Total Tare Weight",
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "total_packages",
+   "fieldtype": "Int",
+   "label": "Total Packages",
+   "read_only": 1
+  },
+  {
+   "depends_on": "eval: doc.docstatus == 0",
+   "fieldname": "add_packages",
+   "fieldtype": "Button",
+   "label": "Add Packages"
   }
  ],
  "is_submittable": 1,
- "modified": "2019-10-15 13:52:43.516263",
+ "modified": "2019-12-07 15:13:40.710352",
  "modified_by": "Administrator",
  "module": "Spinning",
  "name": "Material Issue",

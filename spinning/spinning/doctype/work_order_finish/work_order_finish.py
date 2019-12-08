@@ -9,15 +9,22 @@ from frappe.utils import flt, cstr, cint
 from frappe.model.document import Document
 from frappe.model.mapper import get_mapped_doc
 from frappe.model.naming import parse_naming_series, getseries
-
+from datetime import datetime
 from spinning.doc_events.work_order import override_work_order_functions
 from spinning.controllers.batch_controller import get_batch_no, get_fifo_batches
-
+from datetime import datetime
 import json
 from six import string_types
 
 
 class WorkOrderFinish(Document):
+
+	def validate(self):
+		date = datetime.strptime(self.posting_date, '%Y-%m-%d').date()
+		cd   = datetime.date(datetime.now())
+		if date > cd:
+			frappe.throw(_('Posting Date Cannot Be After Today Date'))
+
 	def before_save(self):
 		if not self.is_new():
 			self.set_batch()
@@ -26,8 +33,8 @@ class WorkOrderFinish(Document):
 		self.calculate_totals()
 
 	def set_batch(self):
-		if self.get('batch_no'):
-			return
+		# if self.get('batch_no'):
+			# return
 
 		has_batch_no = frappe.db.get_value('Item', self.item_code, 'has_batch_no')
 
@@ -51,7 +58,7 @@ class WorkOrderFinish(Document):
 				batch.item = self.item_code
 				batch.grade = cstr(self.grade)
 				batch.merge = cstr(self.merge)
-				batch.insert()
+				batch.insert(ignore_permissions=True)
 				batch_no = batch.name
 
 			self.db_set('batch_no', batch_no)
@@ -81,11 +88,15 @@ class WorkOrderFinish(Document):
 		self.db_set('total_tare_weight', flt(totals.tare_weight, 3))
 
 	def print_row_package(self, child_row, commit=True):
-		def get_package_doc(source_name, target_doc=None):
+		def get_package_doc(source_name, target_doc=None, ignore_permissions = True):
 			def set_missing_values(source, target):
 				if source.package_type == "Pallet":
 					target.ownership_type = "Company"
 					target.ownership = source.company
+
+				target.merge = self.merge
+				target.grade = self.grade
+				target.package_type = self.package_type
 
 			return get_mapped_doc("Work Order Finish", source_name, {
 				"Work Order Finish": {
@@ -96,7 +107,7 @@ class WorkOrderFinish(Document):
 						"posting_time" : "purchase_time",
 					}
 				}
-			}, target_doc, set_missing_values)
+			}, target_doc, set_missing_values, ignore_permissions=ignore_permissions)
 
 		self.set_batch()
 		update_series = False
@@ -118,13 +129,9 @@ class WorkOrderFinish(Document):
 			update_series = True
 			package = get_package_doc(self.name)
 
-		package.gross_weight = child_row.gross_weight
-		package.net_weight = child_row.net_weight
-		package.tare_weight = child_row.tare_weight
-		package.spools = child_row.no_of_spool
-		package.package_weight = child_row.package_weight
+		package.purchase_document_type = self.doctype
+		package.purchase_document_no = self.name
 		package.package_series = self.get_series()
-		package.save(ignore_permissions=True)
 
 		try:
 			package.save(ignore_permissions=True)
@@ -163,10 +170,47 @@ class WorkOrderFinish(Document):
 		return doc
 
 	def on_submit(self):
+		self.update_package_details()
 		self.create_stock_entry()
 
 	def on_cancel(self):
+		self.clear_package_details()
 		self.cancel_stock_entry()
+
+	def update_package_details(self):
+		for row in self.package_details:
+			doc = frappe.get_doc("Package",row.package)
+			doc.company = self.company
+			doc.merge = self.merge
+			doc.grade = self.grade
+			doc.item_code = self.item_code
+			doc.item_name = self.item_name
+			doc.package_item = self.package_item
+			doc.package_type = self.package_type
+			doc.paper_tube = self.paper_tube
+			doc.purchase_date = self.posting_date
+			doc.purchase_time = self.posting_time
+			doc.warehouse = self.target_warehouse
+			doc.spool_weight = self.spool_weight
+			doc.gross_weight = row.gross_weight
+			doc.net_weight = row.net_weight
+			doc.tare_weight = row.tare_weight
+			doc.spools = row.no_of_spool
+			doc.package_weight = row.package_weight
+			doc.purchase_document_type = self.doctype
+			doc.purchase_document_no = self.name
+			doc.save(ignore_permissions=True)
+
+	def clear_package_details(self):
+		for row in self.package_details:
+			doc = frappe.get_doc("Package",row.package)
+			doc.gross_weight = 0.0
+			doc.net_weight = 0.0
+			doc.tare_weight = 0.0
+			doc.spools = 0.0
+			doc.package_weight = 0.0
+			doc.purchase_document_no = ''
+			doc.save(ignore_permissions=True)
 
 	def create_stock_entry(self):
 		wo = frappe.get_doc("Work Order", self.work_order)
@@ -179,6 +223,8 @@ class WorkOrderFinish(Document):
 		se.set_posting_time = 1
 		se.posting_date = self.posting_date
 		se.posting_time = self.posting_time
+		se.reference_doctype = self.doctype
+		se.reference_docname = self.name
 		se.from_bom = 1
 		se.company = self.company
 		se.fg_completed_qty = self.total_net_weight
@@ -239,7 +285,7 @@ class WorkOrderFinish(Document):
 
 					else:
 						if len(batches) == 1:
-							frappe.throw(_("Sufficient quantity for item {} is not available in {} warehouse.".format(frappe.bold(d.item_code), frappe.bold(d.s_warehouse))))
+							frappe.throw(_("Sufficient quantity for item {} is not available in {} warehouse for merge {}.".format(frappe.bold(d.item_code), frappe.bold(d.s_warehouse), frappe.bold(d.merge))))
 
 						remaining_qty -= flt(batch.qty)
 						d.qty = batch.qty
@@ -279,7 +325,7 @@ class WorkOrderFinish(Document):
 
 			else:
 				if remaining_qty:
-					frappe.throw(_("Sufficient quantity for item {} is not available in {} warehouse.".format(frappe.bold(d.item_code), frappe.bold(d.s_warehouse))))
+					frappe.throw(_("Sufficient quantity for item {} is not available in {} warehouse for merge {}.".format(frappe.bold(d.item_code), frappe.bold(d.s_warehouse), frappe.bold(d.merge))))
 
 		se.extend('items', items)
 
@@ -289,17 +335,20 @@ class WorkOrderFinish(Document):
 
 		se.save(ignore_permissions=True)
 		se.submit()
-		self.db_set('stock_entry', se.name)
 		self.add_package_consumption(se)
 
 	def cancel_stock_entry(self):
-		if self.stock_entry:
-			se = frappe.get_doc("Stock Entry", self.stock_entry)
-			override_work_order_functions()
+		se = frappe.get_doc("Stock Entry",{'reference_doctype': self.doctype,'reference_docname':self.name})
+		override_work_order_functions()
+		se.flags.ignore_permissions = True
+		try:
 			se.cancel()
-			self.remove_package_consumption(se)
-			self.db_set('stock_entry','')
-			frappe.db.commit()
+		except Exception as e:
+			raise e
+		
+		self.remove_package_consumption(se)
+		se.db_set('reference_doctype','')
+		se.db_set('reference_docname','')
 
 	def add_package_consumption(self, se):
 		for row in se.items:
@@ -318,7 +367,7 @@ class WorkOrderFinish(Document):
 					doc.add_consumption(self.doctype, self.name, qty)
 					doc.save(ignore_permissions=True)
 					remaining_qty -= qty
-
+					
 					if remaining_qty <= 0:
 						break
 
@@ -365,7 +414,8 @@ class WorkOrderFinish(Document):
 		if not machine_series:
 			frappe.throw(_("Please set Package Series in Workstation: %s." % frappe.bold(self.workstation)))
 
-		return "{company_series}.YY.{machine_series}.#####".format(company_series = company_series, machine_series = machine_series)
+		#return "{company_series}.YY.{machine_series}.#####".format(company_series = company_series, machine_series = machine_series)
+		return "{machine_series}.#####".format(machine_series = machine_series)
 
 	@staticmethod
 	def parse_series(series):
