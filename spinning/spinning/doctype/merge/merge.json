@@ -8,7 +8,7 @@
  "field_order": [
   "merge",
   "item_code",
-  "merge_quality_inspection_parameter"
+  "quality_inspection_template"
  ],
  "fields": [
   {
@@ -31,13 +31,13 @@
    "reqd": 1
   },
   {
-   "fieldname": "merge_quality_inspection_parameter",
-   "fieldtype": "Table",
-   "label": "Merge Quality Inspection Parameter",
-   "options": "Merge Quality Inspection Parameter"
+   "fieldname": "quality_inspection_template",
+   "fieldtype": "Link",
+   "label": "Quality Inspection Template",
+   "options": "Quality Inspection Template"
   }
  ],
- "modified": "2019-12-08 16:35:48.057261",
+ "modified": "2019-12-08 18:22:00.617705",
  "modified_by": "Administrator",
  "module": "Spinning",
  "name": "Merge",
