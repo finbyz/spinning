@@ -34,10 +34,14 @@ class MaterialReceipt(Document):
 			row.amount = flt(row.basic_amount)
 		
 	def before_save(self):
+
+		abbr = frappe.db.get_value('Company',self.company,'abbr')
 		if self.is_opening == 'Yes':
-			abbr = frappe.db.get_value('Company',self.company,'abbr')
 			for row in self.items:
 				row.expense_account = 'Temporary Opening - %s' %abbr
+		if self.adjustment_entry:
+			for row in self.items:
+				row.expense_account = 'Stock Adjustment - %s' %abbr
 		for row in self.packages:
 			row.tare_weight = row.gross_weight - row.net_weight
 		#self.update_pallet_item()

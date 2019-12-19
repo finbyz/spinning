@@ -117,11 +117,44 @@ class Package(Document):
 		self.calculate_consumption()
 		
 	def on_trash(self):
-		if self.remaining_qty != 0.0:
-			frappe.throw(_("Not allowed to delete any packages which are in Stock"))
+		if self.net_weight != 0.0:
+			frappe.throw(_("Not allowed to delete any packages where net_weight is not 0"))
 		else:
-			self.purchase_document_type = ""
-			self.purchase_document_no = ""
+			# self.purchase_document_type = ""
+			# self.purchase_document_no = ""
+			doc_dict={'Work Order Finish':'Work Order Finish Detail','Other Production':'Other Production Package Details','Material Repack':'Material Repack Package Detail'}
+			child_doctype = doc_dict[self.purchase_document_type]
+			child_table_name = frappe.db.sql_list("""select name from `tab{0}` where package = {1}""".format(child_doctype,self.name))
+			for r in child_table_name:
+				frappe.db.set_value(child_doctype,r,"package","")
+			frappe.db.commit()
+			
+			#frappe.db.sql("""update `tab{0}` set `package` = NULL where `name` = {1}""".format(child_doctype,r))
+			
+				# from frappe.desk.form.linked_with import get_linked_doctypes
+				# from frappe.desk.form.linked_with import get_linked_docs
+				
+				
+				
+				# linked_doctypes = get_linked_doctypes('Package')
+				# 
+				# for key in d:
+					# child_doctype = doc_dict[key]
+					# doc = d[key]
+					# doc_dict = doc[0]
+					# doc_pkg = doc_dict['name']
+					# if child_doctype:
+						# frappe.db.sql("""update `tab{0}` set package = NULL where name = {1}""".format((child_doctype,self.name))
+						
+					
+		#  remove reference here
+
+		# if self.purchase_document_no:
+		# 	wof_doc = frappe.get_doc("Work Order Finish",self.purchase_document_no)
+		# 	for pkg in wof_doc.package_details:
+		# 		if pkg.package == self.package_no:
+
+		# 	wof_doc.db_set('sales_order', '')	
 
 # @frappe.whitelist()
 # def get_packages(filters):

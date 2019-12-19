@@ -26,17 +26,21 @@ class MaterialTransfer(Document):
 			frappe.throw(_('Posting Date Cannot Be After Today Date'))
 		self.validate_packages()
 		self.validate_transfer()
-
+	
 	def validate_packages(self):
+		package_list = []
 		for row in self.packages:
+			if row.package in package_list:
+				frappe.throw(_("Row {}: Package {} selected twice".format(row.idx, frappe.bold(row.package))))
+			
 			doc = frappe.get_doc("Package", row.package)
-
+			
 			if cint(doc.is_delivered):
 				frappe.throw(_("Row {}: Package {} is already delivered. Please select another package.".format(row.idx, frappe.bold(row.package))))
 
 			if self.s_warehouse != doc.warehouse:
 				frappe.throw(_("Row {}: Package {} does not belong to source warehouse {}. Please select another package.".format(row.idx, frappe.bold(row.package), frappe.bold(self.s_warehouse))))
-
+			package_list.append(row.package)
 			row.net_weight = doc.remaining_qty
 
 	def validate_transfer(self):

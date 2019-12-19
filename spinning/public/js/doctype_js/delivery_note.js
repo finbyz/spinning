@@ -109,6 +109,7 @@ frappe.ui.form.on("Delivery Note", {
 	set_items_as_per_packages: function(frm) {
 
 		let to_remove = [];
+		let item_merge_grade_row_dict = {};
 		let item_row_dict = {};
 		let package_items = {};
 
@@ -128,13 +129,24 @@ frappe.ui.form.on("Delivery Note", {
 						callback: function(r){
 							if(r.message.has_batch_no){
 								to_remove.push(row.idx - 1);
+								if (row.merge && row.grade) {
+									let item_merge_grade = row.item_code.toString() + row.merge.toString() + row.grade.toString()
+									if(!(item_merge_grade in item_merge_grade_row_dict)){
+										console.log("Adding Item to Merge Dict" + item_merge_grade);
+										item_merge_grade_row_dict[item_merge_grade] = Object.assign({}, row);
+									}
+								}
 								if(!(row.item_code in item_row_dict)){
 									item_row_dict[row.item_code.toString()] = Object.assign({}, row);
 								}
+							
 							}
 						}
+						
 					})
 				});
+				console.log("item merge grade dict");
+				console.log(item_merge_grade_row_dict);
 			},
 			() => {
 				to_remove.reverse().forEach(function(i){
@@ -144,13 +156,24 @@ frappe.ui.form.on("Delivery Note", {
 			() => {
 				frm.doc.packages.forEach(function(row){
 					let key = [row.item_code, row.merge, row.grade, row.batch_no];
-
+					let item_merge_grade = row.item_code.toString() + row.merge.toString() + row.grade.toString()
 					if(!(key in package_items)){
-						package_items[key] = Object.assign({}, item_row_dict[row.item_code]);
+						if (item_merge_grade_row_dict[item_merge_grade]){
+							console.log("Merge Grade Item Received");
+							console.log(item_merge_grade_row_dict[item_merge_grade])
+							package_items[key] = Object.assign({}, item_merge_grade_row_dict[item_merge_grade]);
+						}
+						else{
+							package_items[key] = Object.assign({}, item_row_dict[row.item_code]);
+							console.log("Merge Grde Item Not Received");
+							console.log(item_row_dict[row.item_code]);
+
+						}
 						package_items[key]['net_weight'] = 0;
 						package_items[key]['gross_weight'] = 0;
 						package_items[key]['packages'] = 0;
 						package_items[key]['no_of_spools'] = 0;
+
 					}
 
 					package_items[key]['warehouse'] = row.warehouse;
@@ -158,6 +181,8 @@ frappe.ui.form.on("Delivery Note", {
 					package_items[key]['gross_weight'] += row.gross_weight;
 					package_items[key]['no_of_spools'] += row.spools;
 					package_items[key]['packages'] += 1;
+					console.log("final Package_item Dict")
+					console.log(package_items[key])
 				});
 			},
 			() => {

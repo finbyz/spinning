@@ -23,6 +23,8 @@ class MaterialIssue(Document):
 		if date > cd:
 			frappe.throw(_('Posting Date Cannot Be After Today Date'))
 		self.validate_packages()
+		if self._action == "submit":
+			self.calculate_totals()
 
 	def validate_packages(self):
 		for row in self.packages:
@@ -39,15 +41,25 @@ class MaterialIssue(Document):
 		self.total_amount = sum([row.amount for row in self.items])
 		self.total_gross_weight = sum([row.gross_weight for row in self.packages])
 		self.total_net_weight = sum([row.net_weight for row in self.packages])
+		self.total_packages = sum([row.no_of_packages for row in self.items])
 
 	def before_save(self):
-		self.set_items_as_per_packages()
 		self.calculate_totals()
-
+	
+		abbr = frappe.db.get_value('Company',self.company,'abbr')
+		if self.is_opening == 'Yes':
+			self.adjustment_entry = 0
+			for row in self.items:
+				row.expense_account = 'Temporary Opening - %s' %abbr
+		if self.adjustment_entry:
+			for row in self.items:
+				row.expense_account = 'Stock Adjustment - %s' %abbr
+				
 	def set_items_as_per_packages(self):
-		package_items = list(set(map(lambda x: (x.item_code, x.merge, x.grade, x.batch_no), self.packages)))
+		#package_items = list(set(map(lambda x: (x.item_code, x.merge, x.grade, x.batch_no), self.packages)))
 
 		to_remove = []
+		items_row_dict = {}
 		item_row = None
 
 		for row in self.items:
@@ -55,9 +67,9 @@ class MaterialIssue(Document):
 			
 			if has_batch_no:
 				to_remove.append(row)
-
-				if item_row is None:
-					item_row = row.as_dict()
+				items_row_dict.setdefault(row.item_code, row.as_dict())
+				# if item_row is None:
+					# item_row = row.as_dict()
 
 		else:
 			[self.remove(d) for d in to_remove]
@@ -68,10 +80,13 @@ class MaterialIssue(Document):
 			key = (row.item_code, row.merge, row.grade, row.batch_no)
 			package_items.setdefault(key, frappe._dict({
 				'net_weight': 0,
+				'packages': 0,
 			}))
-			package_items[key].update(item_row)
+			#package_items[key].update(item_row)
+			package_items[key].update(items_row_dict.get(row.item_code))
 			# package_items[key].s_warehouse = self.warehouse
 			package_items[key].net_weight += row.net_weight
+			package_items[key].packages += 1
 		
 		for (item_code, merge, grade, batch_no), args in package_items.items():
 			amount = flt(args.basic_rate * args.net_weight)
@@ -85,6 +100,7 @@ class MaterialIssue(Document):
 			_args.merge = merge
 			_args.grade = grade
 			_args.batch_no = batch_no
+			_args.no_of_packages = args.packages
 
 			self.append('items', _args)
 
@@ -153,7 +169,10 @@ class MaterialIssue(Document):
 
 		return ret
 
-	def on_submit(self):
+	def before_validate(self):
+		self.set_items_as_per_packages()
+
+	def on_submit(self):		
 		self.create_stock_entry()
 
 	def on_cancel(self):
@@ -183,7 +202,7 @@ class MaterialIssue(Document):
 				"Material Issue Item": {
 					"doctype": "Stock Entry Detail",
 					"field_map": {
-						"batch_no": "batch_no"
+						"batch_no": "batch_no",
 					},
 				}
 			}, target_doc, set_missing_values, ignore_permissions=ignore_permissions)

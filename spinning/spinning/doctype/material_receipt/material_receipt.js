@@ -44,6 +44,33 @@ cur_frm.fields_dict.package_item.get_query = function (doc) {
     }
 };
 frappe.ui.form.on('Material Receipt', {
+	validate: function(frm){
+		
+		$.each(frm.doc.items || [], function(i, d) {
+			if(d.merge){	
+				/* frappe.call({
+					method:"spinning.controllers.merge_validation.validate_merge_with_doc",
+					args:{
+						doc: d,
+						merge: d.merge,
+						item_code:d.item_code
+					},
+					callback: function(r){
+						console.log(r)
+						frappe.validated = false;
+					}
+				})  */
+				 frappe.db.get_value("Merge",d.merge,'item_code',function(r){
+					if(r){
+						if(r.item_code!=d.item_code){
+							frappe.msgprint(__("Please select correct merge for the item"))
+							frappe.validated = false;
+						}
+					}
+				}) 
+			}
+		});
+	},
 	company: function(frm) {
 		if(frm.doc.company) {
 			var company_doc = frappe.get_doc(":Company", frm.doc.company);

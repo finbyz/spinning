@@ -25,7 +25,16 @@ PackageSelector = Class.extend({
 				fieldname: 'warehouse',
 				options: 'Warehouse',
 				default: me.warehouse,
-				read_only: 1,
+				read_only: 0,
+				reqd: 1,
+				get_query: function(){
+					return {
+						filters: {
+							"is_group": 0,
+							"company" : me.frm.doc.company
+						}
+					}
+				},
 			},
 
 			{fieldtype:'Column Break'},
@@ -72,7 +81,7 @@ PackageSelector = Class.extend({
 					let merge = this.get_value();
 					let item_code = this.layout.get_value('item_code');
 
-					let filters = {'warehouse': me.warehouse}
+					let filters = {'warehouse': this.warehouse}
 
 					if(me.merge == merge)
 						return;

@@ -51,7 +51,33 @@ frappe.ui.form.on('Purchase Receipt', {
 		frm.trigger('set_options_for_row_ref');
 		frm.trigger('duplicate_row_button_add');
 	},
-
+	validate: function(frm){
+		
+		$.each(frm.doc.items || [], function(i, d) {
+			if(d.merge){	
+				/* frappe.call({
+					method:"spinning.controllers.merge_validation.validate_merge_with_doc",
+					args:{
+						doc: d,
+						merge: d.merge,
+						item_code:d.item_code
+					},
+					callback: function(r){
+						console.log(r)
+						frappe.validated = false;
+					}
+				})  */
+				 frappe.db.get_value("Merge",d.merge,'item_code',function(r){
+					if(r){
+						if(r.item_code!=d.item_code){
+							frappe.msgprint(__("Please select correct merge for the item"))
+							frappe.validated = false;
+						}
+					}
+				}) 
+			}
+		});
+	}, 
 	/* validate: function(frm){
 		frm.trigger('set_total_qty');
 	},

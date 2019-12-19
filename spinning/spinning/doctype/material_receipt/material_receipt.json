@@ -8,6 +8,7 @@
  "field_order": [
   "naming_series",
   "is_opening",
+  "adjustment_entry",
   "company",
   "warehouse",
   "column_break_4",
@@ -306,10 +307,17 @@
    "fieldname": "lr_date",
    "fieldtype": "Date",
    "label": "LR Date"
+  },
+  {
+   "default": "0",
+   "depends_on": "eval:doc.is_opening==\"No\"",
+   "fieldname": "adjustment_entry",
+   "fieldtype": "Check",
+   "label": "Adjustment Entry"
   }
  ],
  "is_submittable": 1,
- "modified": "2019-12-07 15:14:55.738863",
+ "modified": "2019-12-17 11:27:31.219758",
  "modified_by": "Administrator",
  "module": "Spinning",
  "name": "Material Receipt",

@@ -15,11 +15,13 @@ from spinning.controllers.batch_controller import get_batch_no, get_fifo_batches
 from datetime import datetime
 import json
 from six import string_types
+from spinning.controllers.merge_validation import validate_merge
 
 
 class WorkOrderFinish(Document):
 
 	def validate(self):
+		validate_merge(self)
 		date = datetime.strptime(self.posting_date, '%Y-%m-%d').date()
 		cd   = datetime.date(datetime.now())
 		if date > cd:
@@ -271,7 +273,7 @@ class WorkOrderFinish(Document):
 				continue
 
 			batches = get_fifo_batches(d.item_code, d.s_warehouse, d.merge)
-
+			
 			if not batches:
 				frappe.throw(_("Sufficient quantity for item {} is not available in {} warehouse for merge {}.".format(frappe.bold(d.item_code), frappe.bold(d.s_warehouse), frappe.bold(d.merge))))
 

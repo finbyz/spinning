@@ -4,6 +4,11 @@ from __future__ import unicode_literals
 import frappe
 from frappe import _
 from frappe.utils import flt
+from frappe.contacts.doctype.address.address import get_company_address
+
+@frappe.whitelist()
+def company_address(company):
+	return get_company_address(company)
 
 @frappe.whitelist()
 def make_stock_entry(work_order_id, purpose, qty=None):

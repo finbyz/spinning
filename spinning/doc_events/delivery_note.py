@@ -10,8 +10,8 @@ from spinning.controllers.batch_controller import set_batches
 
 
 def before_validate(self, method):
-	if self._action == 'submit':
-		set_items_as_per_packages(self)
+	# if self._action == 'submit':
+		# set_items_as_per_packages(self)
 	# set_items_as_per_packages(self)
 	validate_packages(self)
 

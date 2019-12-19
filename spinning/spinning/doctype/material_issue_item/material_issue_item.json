@@ -9,10 +9,12 @@
   "column_break_3",
   "item_name",
   "item_group",
+  "gst_hsn_code",
   "section_break_6",
   "description",
   "quantity_and_rate_section",
   "qty",
+  "no_of_packages",
   "basic_rate",
   "basic_amount",
   "amount",
@@ -38,8 +40,7 @@
    "fieldname": "s_warehouse",
    "fieldtype": "Link",
    "label": "Source Warehouse",
-   "options": "Warehouse",
-   "read_only": 1
+   "options": "Warehouse"
   },
   {
    "columns": 2,
@@ -208,10 +209,24 @@
    "fieldtype": "Float",
    "label": "Actual Qty (at source/target)",
    "read_only": 1
+  },
+  {
+   "fieldname": "no_of_packages",
+   "fieldtype": "Int",
+   "label": "No of Packages"
+  },
+  {
+   "allow_on_submit": 1,
+   "fetch_from": "item_code.gst_hsn_code",
+   "fetch_if_empty": 1,
+   "fieldname": "gst_hsn_code",
+   "fieldtype": "Data",
+   "label": "HSN/SAC",
+   "print_hide": 1
   }
  ],
  "istable": 1,
- "modified": "2019-12-07 15:19:48.934798",
+ "modified": "2019-12-18 18:32:01.913372",
  "modified_by": "Administrator",
  "module": "Spinning",
  "name": "Material Issue Item",

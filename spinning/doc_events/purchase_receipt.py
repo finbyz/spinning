@@ -5,15 +5,20 @@ import frappe
 from frappe import _
 from frappe.utils import flt, cint
 from frappe.model.delete_doc import check_if_doc_is_linked
-
+from spinning.controllers.merge_validation import validate_merge
 from spinning.controllers.batch_controller import set_batches
 
 @frappe.whitelist()
 def validate(self, method):
 	if self._action == 'submit':
 		validate_package_qty(self)
-
+		#validate_merge_in_item(self)
+		
 	set_batches(self, 'warehouse')
+	
+def validate_merge_in_item(self):
+	for row in self.items:
+		validate_merge(self,row.merge,row.item_code)
 	
 @frappe.whitelist()
 def before_save(self, method):

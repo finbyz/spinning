@@ -15,7 +15,7 @@ def get_conditions(filters):
 	conditions = ""
 
 	if filters.get('pending_so'):
-		conditions += " AND so.status not in ('Stopped', 'Closed')"
+		conditions += " AND so.status not in ('Completed', 'Stopped', 'Closed')"
 
 	if filters.get('sales_order'):
 		conditions += " AND so.name = '%s'" % filters.get('sales_order')
@@ -40,6 +40,8 @@ def get_data(filters):
 			`tabSales Order` as so LEFT JOIN `tabSales Order Item` as soi ON (so.name = soi.parent)
 		WHERE
 			so.docstatus = 1 %s
+		ORDER BY
+			so.transaction_date
 		""" % conditions, as_dict = True)
 
 	data_copy = data[:]
@@ -53,26 +55,29 @@ def get_data(filters):
 def insert_delivery_note(data, row, idx):
 
 	dn_data = frappe.db.sql("""
-		SELECT dni.parent as delivery_note, dn.posting_date, dni.qty as delivered_qty
+		SELECT dni.parent as delivery_note, dn.posting_date, dni.qty as delivery_qty
 		FROM `tabDelivery Note` as dn LEFT JOIN `tabDelivery Note Item` as dni ON (dn.name = dni.parent)
 		WHERE 
 			dn.docstatus = 1
 			AND dni.so_detail = '%s' 
+		ORDER BY
+			dn.posting_date
 		""" % row.so_detail, as_dict = 1)
 
 	total_qty_delivered = 0.0
 	if dn_data:
 		row.delivery_note = dn_data[0].delivery_note
 		row.posting_date = dn_data[0].posting_date
-		row.delivered_qty = dn_data[0].delivered_qty
-		total_qty_delivered += dn_data[0].delivered_qty
+		row.delivery_qty = dn_data[0].delivery_qty
+		total_qty_delivered += dn_data[0].delivery_qty
 
 	for i in dn_data[1:]:
 		data.insert(idx, i)
-		total_qty_delivered += i.delivered_qty
+		total_qty_delivered += i.delivery_qty
 		idx += 1
 
-	row.total_qty_delivered = total_qty_delivered
+	row.delivered_qty = total_qty_delivered
+	row.pending_qty = row.qty - total_qty_delivered
 
 	return idx
 
@@ -84,13 +89,13 @@ def get_columns():
 			"label": _("Sales Order"),
 			"fieldtype": "Link",
 			"options": "Sales Order",
-			"width": 150
+			"width": 100
 		},
 		{
 			"fieldname": "transaction_date",
-			"label": _("Date"),
+			"label": _("SO Date"),
 			"fieldtype": "Date",
-			"width": 100
+			"width": 80
 		},
 		{
 			"fieldname": "customer",
@@ -110,7 +115,7 @@ def get_columns():
 			"fieldname": "item_name",
 			"label": _("Item Name"),
 			"fieldtype": "Data",
-			"width": 150
+			"width": 180
 		},
 		{
 			"fieldname": "qty",
@@ -131,10 +136,16 @@ def get_columns():
 			"width": 100
 		},
 		{
-			"fieldname": "total_qty_delivered",
-			"label": _("Total Qty Delivered"),
+			"fieldname": "delivered_qty",
+			"label": _("Delivered Qty"),
 			"fieldtype": "Float",
-			"width": 100
+			"width": 80
+		},
+		{
+			"fieldname": "pending_qty",
+			"label": _("Pending Qty"),
+			"fieldtype": "Float",
+			"width": 80
 		},
 		{
 			"fieldname": "delivery_note",
@@ -147,14 +158,15 @@ def get_columns():
 			"fieldname": "posting_date",
 			"label": _("Delivery Date"),
 			"fieldtype": "Date",
-			"width": 100
+			"width": 90
 		},
 		{
-			"fieldname": "delivered_qty",
-			"label": _("Delivered Qty"),
+			"fieldname": "delivery_qty",
+			"label": _("Delivery Qty"),
 			"fieldtype": "Float",
-			"width": 100
+			"width": 80
 		},
+	
 	]
 
 	return columns
@@ -169,7 +181,8 @@ def _get_columns():
 		_("Qty") + ":Float:100",
 		_("Rate") + ":Currency:100",
 		_("Amount") + ":Currency:100",
-		_("Total Qty Delivered") + ":Float:100",
+		_("Delivered Qty") + ":Float:100",
+		_("Pending Qty") + ":Float:100",
 		_("Delivery Note") + ":Link/Delivery Note:100",
 		_("Delivery Date") + ":Date:100",
 		_("Delivery Qty") + ":Float:100",

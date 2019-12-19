@@ -10,9 +10,11 @@ from frappe.model.document import Document
 from frappe.model.mapper import get_mapped_doc
 from spinning.controllers.batch_controller import get_batch_no
 from datetime import datetime
+from spinning.controllers.merge_validation import validate_merge
 
 class MaterialUnpack(Document):
 	def validate(self):	
+		validate_merge(self)
 		date = datetime.strptime(self.posting_date, '%Y-%m-%d').date()
 		cd   = datetime.date(datetime.now())
 		if date > cd:

@@ -41,7 +41,8 @@ doctype_js = {
 	"Sales Invoice": "public/js/doctype_js/sales_invoice.js",
 	"Delivery Note": "public/js/doctype_js/delivery_note.js",
 	"Stock Reconciliation": "public/js/doctype_js/stock_reconciliation.js",
-	"Purchase Order": "public/js/doctype_js/purchase_order.js"
+	"Purchase Order": "public/js/doctype_js/purchase_order.js",
+	"Quality Inspection": "public/js/doctype_js/quality_inspection.js"
 }
 
 # Home Pages
@@ -144,6 +145,7 @@ doc_events = {
 
 	"BOM": {
 		"before_naming": "spinning.doc_events.bom.before_naming",
+		"validate": "spinning.controllers.merge_validation.validate_merge",
 		"on_submit":  "spinning.doc_events.bom.on_submit",
 	},
 
@@ -155,6 +157,7 @@ doc_events = {
 	},
 
 	"Work Order": {
+		"validate": "spinning.controllers.merge_validation.validate_merge",
 		"before_save": "spinning.doc_events.work_order.before_save",
 		"on_submit": "spinning.doc_events.work_order.on_submit",
 	},
@@ -168,6 +171,7 @@ doc_events = {
 		"on_submit": "spinning.doc_events.stock_reconciliation.on_submit",
 		"on_cancel": "spinning.doc_events.stock_reconciliation.on_cancel",
 	},
+
 }
 
 
