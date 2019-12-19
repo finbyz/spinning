@@ -210,8 +210,8 @@ class MaterialRepack(Document):
 			doc.purchase_date =  self.posting_date
 			doc.purchase_time = self.posting_time			
 			doc.gross_weight = row.gross_weight
-		 	doc.net_weight = row.net_weight
-		 	doc.tare_weight = row.tare_weight
+			doc.net_weight = row.net_weight
+			doc.tare_weight = row.tare_weight
 			doc.spools = row.no_of_spool
 			doc.package_weight = row.package_weight		
 			doc.purchase_document_type = self.doctype
@@ -222,8 +222,8 @@ class MaterialRepack(Document):
 		for row in self.package_details:
 			doc = frappe.get_doc("Package",row.package)
 			doc.gross_weight = 0.0
-		 	doc.net_weight = 0.0
-		 	doc.tare_weight = 0.0
+			doc.net_weight = 0.0
+			doc.tare_weight = 0.0
 			doc.spools = 0.0
 			doc.package_weight = 0.0
 			doc.purchase_document_no = ''
