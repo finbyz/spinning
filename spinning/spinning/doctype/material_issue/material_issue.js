@@ -2,7 +2,8 @@
 // For license information, please see license.txt
 
 frappe.provide("erpnext.stock");
-/* Start Party Detail */
+
+
 frappe.ui.form.on('Material Issue', {
 	"party": function(frm) {
 		frappe.call({
@@ -20,10 +21,6 @@ frappe.ui.form.on('Material Issue', {
 			}
 		})
 	},
-})
-/*End Party Detail */
-
-frappe.ui.form.on('Material Issue', {
 	setup: function(frm) {
 		frm.set_query('batch_no', 'items', function(doc, cdt, cdn) {
 			var item = locals[cdt][cdn];

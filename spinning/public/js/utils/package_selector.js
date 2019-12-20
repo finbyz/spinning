@@ -81,7 +81,7 @@ PackageSelector = Class.extend({
 					let merge = this.get_value();
 					let item_code = this.layout.get_value('item_code');
 
-					let filters = {'warehouse': this.warehouse}
+					let filters = {'warehouse': this.layout.get_value('warehouse')};
 
 					if(me.merge == merge)
 						return;

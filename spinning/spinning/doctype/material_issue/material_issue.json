@@ -322,7 +322,7 @@
   },
   {
    "fieldname": "mobile_no",
-   "fieldtype": "Small Text",
+   "fieldtype": "Data",
    "label": "Mobile No",
    "read_only": 1
   },
@@ -474,7 +474,7 @@
   }
  ],
  "is_submittable": 1,
- "modified": "2019-12-18 18:09:22.103984",
+ "modified": "2019-12-20 10:44:35.183000",
  "modified_by": "Administrator",
  "module": "Spinning",
  "name": "Material Issue",

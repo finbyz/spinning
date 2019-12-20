@@ -11,10 +11,14 @@
   "is_send_to_subcontractor",
   "purchase_order",
   "is_material_transfer_for_manufacture",
+  "party_type",
+  "party",
+  "party_name",
   "column_break_4",
   "posting_date",
   "posting_time",
   "set_posting_time",
+  "send_to_party",
   "company",
   "work_order_details_section",
   "workstation",
@@ -42,6 +46,37 @@
   "printing_settings_section",
   "print_heading",
   "letter_head",
+  "address_and_contact_section",
+  "shipping_address_name",
+  "customer_gstin",
+  "place_of_supply",
+  "shipping_address",
+  "contact_person",
+  "contact",
+  "mobile_no",
+  "contact_email",
+  "column_break_51",
+  "consignee_name",
+  "billing_address_name",
+  "address_display",
+  "billing_address_gstin",
+  "tax_id",
+  "billing_address",
+  "company_address_name",
+  "company_gstin",
+  "company_address",
+  "transporter_information_section",
+  "transporter",
+  "gst_transporter_id",
+  "driver",
+  "lr_no",
+  "lr_date",
+  "column_break_67",
+  "vehicle_no",
+  "distance",
+  "gate_pass_no",
+  "gate_pass_date",
+  "remarks",
   "section_break_12",
   "amended_from"
  ],
@@ -300,10 +335,218 @@
    "fieldtype": "Int",
    "label": "Total Packages",
    "read_only": 1
+  },
+  {
+   "default": "Customer",
+   "depends_on": "eval:doc.party_type && doc.send_to_party",
+   "fieldname": "party_type",
+   "fieldtype": "Select",
+   "in_standard_filter": 1,
+   "label": "Party Type",
+   "options": "Customer\nSupplier"
+  },
+  {
+   "bold": 1,
+   "depends_on": "eval:doc.party_type && doc.send_to_party",
+   "fieldname": "party",
+   "fieldtype": "Dynamic Link",
+   "in_standard_filter": 1,
+   "label": "Party",
+   "options": "party_type"
+  },
+  {
+   "allow_on_submit": 1,
+   "depends_on": "eval:doc.party_type && doc.send_to_party",
+   "fieldname": "party_name",
+   "fieldtype": "Data",
+   "in_global_search": 1,
+   "label": "Party Name"
+  },
+  {
+   "default": "0",
+   "fieldname": "send_to_party",
+   "fieldtype": "Check",
+   "label": "Send To Party"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "address_and_contact_section",
+   "fieldtype": "Section Break",
+   "label": "ADDRESS AND CONTACT"
+  },
+  {
+   "fieldname": "shipping_address_name",
+   "fieldtype": "Link",
+   "label": "Shipping Address",
+   "options": "Address"
+  },
+  {
+   "fetch_from": "shipping_address_name.gstin",
+   "fieldname": "customer_gstin",
+   "fieldtype": "Data",
+   "label": "Customer GSTIN",
+   "translatable": 1
+  },
+  {
+   "fieldname": "place_of_supply",
+   "fieldtype": "Data",
+   "label": "Place of Supply",
+   "translatable": 1
+  },
+  {
+   "fieldname": "shipping_address",
+   "fieldtype": "Small Text",
+   "label": "Shipping Address"
+  },
+  {
+   "fieldname": "contact_person",
+   "fieldtype": "Data",
+   "label": "Contact Person",
+   "options": "Contact"
+  },
+  {
+   "fieldname": "contact",
+   "fieldtype": "Small Text",
+   "in_global_search": 1,
+   "label": "Contact",
+   "read_only": 1
+  },
+  {
+   "fieldname": "mobile_no",
+   "fieldtype": "Data",
+   "label": "Mobile No",
+   "read_only": 1
+  },
+  {
+   "fieldname": "contact_email",
+   "fieldtype": "Data",
+   "label": "Contact Email",
+   "options": "Email",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_51",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fetch_from": "customer.customer_name",
+   "fetch_if_empty": 1,
+   "fieldname": "consignee_name",
+   "fieldtype": "Data",
+   "label": "Consignee Name",
+   "translatable": 1
+  },
+  {
+   "fieldname": "billing_address_name",
+   "fieldtype": "Link",
+   "label": "Billing Address Name",
+   "options": "Address"
+  },
+  {
+   "fieldname": "address_display",
+   "fieldtype": "Small Text",
+   "label": "Address Display"
+  },
+  {
+   "fieldname": "billing_address_gstin",
+   "fieldtype": "Data",
+   "label": "Billing Address GSTIN",
+   "translatable": 1
+  },
+  {
+   "fieldname": "tax_id",
+   "fieldtype": "Data",
+   "label": "Tax Id"
+  },
+  {
+   "fieldname": "billing_address",
+   "fieldtype": "Small Text",
+   "label": "Billing Address",
+   "read_only": 1
+  },
+  {
+   "fieldname": "company_address_name",
+   "fieldtype": "Link",
+   "label": "Company Address Name",
+   "options": "Address"
+  },
+  {
+   "fieldname": "company_gstin",
+   "fieldtype": "Data",
+   "label": "Company GSTIN",
+   "translatable": 1
+  },
+  {
+   "fieldname": "company_address",
+   "fieldtype": "Data",
+   "label": "Company Address",
+   "read_only": 1
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "transporter_information_section",
+   "fieldtype": "Section Break",
+   "label": "TRANSPORTER INFORMATION"
+  },
+  {
+   "fieldname": "transporter",
+   "fieldtype": "Link",
+   "label": "Transporter",
+   "options": "Supplier"
+  },
+  {
+   "fieldname": "gst_transporter_id",
+   "fieldtype": "Data",
+   "label": "GST Transporter ID"
+  },
+  {
+   "fieldname": "driver",
+   "fieldtype": "Link",
+   "label": "Driver",
+   "options": "Driver"
+  },
+  {
+   "fieldname": "lr_no",
+   "fieldtype": "Data",
+   "label": "Lr No"
+  },
+  {
+   "fieldname": "lr_date",
+   "fieldtype": "Date",
+   "label": "Lr Date"
+  },
+  {
+   "fieldname": "column_break_67",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "vehicle_no",
+   "fieldtype": "Data",
+   "label": "Vehicle No"
+  },
+  {
+   "fieldname": "distance",
+   "fieldtype": "Data",
+   "label": "Distance"
+  },
+  {
+   "fieldname": "gate_pass_no",
+   "fieldtype": "Data",
+   "label": "Gate Pass No"
+  },
+  {
+   "fieldname": "gate_pass_date",
+   "fieldtype": "Data",
+   "label": "Gate Pass Date"
+  },
+  {
+   "fieldname": "remarks",
+   "fieldtype": "Small Text",
+   "label": "Remarks"
   }
  ],
  "is_submittable": 1,
- "modified": "2019-12-07 15:13:49.620015",
+ "modified": "2019-12-20 11:33:49.138866",
  "modified_by": "Administrator",
  "module": "Spinning",
  "name": "Material Transfer",

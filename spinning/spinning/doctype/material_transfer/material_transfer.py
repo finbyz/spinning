@@ -19,13 +19,17 @@ from spinning.doc_events.work_order import override_work_order_functions
 
 
 class MaterialTransfer(Document):
+	def before_validate(self):
+		self.validate_packages()
+	
 	def validate(self):
 		date = datetime.strptime(self.posting_date, '%Y-%m-%d').date()
 		cd   = datetime.date(datetime.now())
 		if date > cd:
 			frappe.throw(_('Posting Date Cannot Be After Today Date'))
-		self.validate_packages()
 		self.validate_transfer()
+		self.set_items_as_per_packages()
+		self.calculate_totals()		
 	
 	def validate_packages(self):
 		package_list = []
@@ -53,9 +57,7 @@ class MaterialTransfer(Document):
 			self.bom_no = None
 			self.merge = None
 
-	def before_save(self):
-		self.set_items_as_per_packages()
-		self.calculate_totals()
+
 
 	def set_items_as_per_packages(self):
 
@@ -96,14 +98,15 @@ class MaterialTransfer(Document):
 			package_items[key].s_warehouse = self.s_warehouse
 			package_items[key].t_warehouse = self.t_warehouse
 			package_items[key].net_weight += row.net_weight
+			package_items[key].no_of_packages += 1
 
 		else:
 			[self.remove(d) for d in to_remove]
 		
 		for (item_code, merge, grade, batch_no), args in package_items.items():
 			amount = flt(args.basic_rate * args.net_weight)
-
 			_args = args.copy()
+			_args.no_of_packages = args.no_of_packages
 			_args.pop('idx')
 			_args.pop('name')
 			_args.qty = args.net_weight
@@ -243,7 +246,8 @@ class MaterialTransfer(Document):
 				target.set_posting_time = 1
 				target.reference_doctype = self.doctype
 				target.reference_docname = self.name
-
+				target.posting_date = source.posting_date
+				target.posting_time = source.posting_time
 				target.calculate_rate_and_amount()
 				target.set_missing_values()
 
@@ -253,8 +257,6 @@ class MaterialTransfer(Document):
 					"field_map": {
 						"s_warehouse": "from_warehouse",
 						"t_warehouse": "to_warehouse",
-						"posting_date": "posting_date",
-						"posting_time": "posting_time",
 					},
 				},
 				"Material Transfer Item": {

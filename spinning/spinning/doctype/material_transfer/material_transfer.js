@@ -3,6 +3,108 @@
 frappe.provide("erpnext.stock");
 
 frappe.ui.form.on('Material Transfer', {
+
+	
+	set_items_as_per_packages: function(frm) {
+
+		let to_remove = [];
+		let item_row_dict = {};
+		let package_items = {};
+
+		frappe.run_serially([
+			() => {
+				frm.doc.items.forEach(function(row){
+					frappe.call({
+						method: 'frappe.client.get_value',
+						args: {
+							doctype: "Item",
+							filters: {
+								name: row.item_code,
+							},
+							fieldname: 'has_batch_no'
+						},
+						async: false,
+						callback: function(r){
+							if(r.message.has_batch_no){
+								to_remove.push(row.idx - 1);
+								if(!(row.item_code in item_row_dict)){
+									item_row_dict[row.item_code.toString()] = Object.assign({}, row);
+								}
+							}
+						}
+					})
+				});
+			},
+			() => {
+				to_remove.reverse().forEach(function(i){
+					frm.get_field('items').grid.grid_rows[i].remove();
+				});
+			},
+			() => {
+				frm.doc.packages.forEach(function(row){
+					let key = [row.item_code, row.merge, row.grade, row.batch_no];
+
+					if(!(key in package_items)){
+						package_items[key] = Object.assign({},item_row_dict[row.item_code]);
+						package_items[key]['net_weight'] = 0;
+						package_items[key]['gross_weight'] = 0;
+						package_items[key]['packages'] = 0;
+						package_items[key]['no_of_spools'] = 0;
+					}
+
+					package_items[key]['warehouse'] = row.warehouse;
+					package_items[key]['net_weight'] += row.net_weight;
+					package_items[key]['gross_weight'] += row.gross_weight;
+					package_items[key]['no_of_spools'] += row.spools;
+					package_items[key]['packages'] += 1;
+				});
+			},
+			() => {
+				$.each(package_items || {}, function(key, args){
+					let keys = key.split(",");
+					let values = Object.assign({}, args);
+
+					delete values['idx'];
+					delete values['name'];
+
+					values.amount = flt(args.rate) * flt(args.net_weight);
+					values.merge = keys[1];
+					values.grade = keys[2];
+					values.batch_no = keys[3];
+					values.qty = args.net_weight
+					values.gross_wt = args.gross_weight
+					values.spools = args.no_of_spools
+					values.no_of_packages = args.packages
+
+					frm.add_child('items', values);
+				});
+			}, 
+
+			() => frm.refresh_field('items'),
+		]);
+	},
+	"party": function(frm) {
+		frappe.call({
+			method:"erpnext.accounts.party.get_party_details",
+			args:{
+				party: frm.doc.party,
+				party_type: frm.doc.party_type
+			},
+			callback: function(r){
+				if(r.message){
+					frm.set_value('contact_person', r.message.contact_person)
+					frm.set_value('contact_email', r.message.contact_email)
+					frm.set_value('mobile_no', r.message.contact_mobile)
+					frm.set_value('contact', r.message.contact_dispaly)
+					frm.set_value('billing_address_name', r.message.customer_address)
+					frm.set_value('billing_address', r.message.address_display)
+					frm.set_value('shipping_address', r.message.shipping_address)
+					frm.set_value('shipping_address_name', r.message.shipping_address_name)
+					frm.set_value ('party_name', frm.doc.party);
+				}
+			}
+		})
+	},
 	setup: function(frm) {
 		frm.set_query('batch_no', 'items', function(doc, cdt, cdn) {
 			var item = locals[cdt][cdn];

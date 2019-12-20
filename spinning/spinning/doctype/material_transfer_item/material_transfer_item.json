@@ -16,6 +16,7 @@
   "description",
   "quantity_and_rate_section",
   "qty",
+  "no_of_packages",
   "basic_rate",
   "basic_amount",
   "amount",
@@ -242,10 +243,15 @@
    "fieldtype": "Link",
    "label": "Subcontracted Item",
    "options": "Item"
+  },
+  {
+   "fieldname": "no_of_packages",
+   "fieldtype": "Int",
+   "label": "No of Packages"
   }
  ],
  "istable": 1,
- "modified": "2019-12-07 15:24:25.315641",
+ "modified": "2019-12-20 12:09:42.020964",
  "modified_by": "Administrator",
  "module": "Spinning",
  "name": "Material Transfer Item",

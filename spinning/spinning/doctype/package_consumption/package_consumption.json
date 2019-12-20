@@ -6,7 +6,9 @@
  "field_order": [
   "reference_doctype",
   "reference_docname",
-  "consumed_qty"
+  "consumed_qty",
+  "posting_date",
+  "posting_time"
  ],
  "fields": [
   {
@@ -31,10 +33,20 @@
    "in_list_view": 1,
    "label": "Consumed Qty",
    "read_only": 1
+  },
+  {
+   "fieldname": "posting_date",
+   "fieldtype": "Date",
+   "label": "Posting Date"
+  },
+  {
+   "fieldname": "posting_time",
+   "fieldtype": "Time",
+   "label": "Posting Time"
   }
  ],
  "istable": 1,
- "modified": "2019-12-07 15:19:15.799452",
+ "modified": "2019-12-20 17:49:17.986995",
  "modified_by": "Administrator",
  "module": "Spinning",
  "name": "Package Consumption",

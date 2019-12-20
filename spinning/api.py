@@ -80,3 +80,10 @@ def get_merge_wise_package_details(batch_no, warehouse):
 		'warehouse': warehouse, 
 		'status': ['!=', "Out of Stock"]
 	}, fields = ['name', 'package_type', 'gross_weight', 'net_weight', 'spools', 'remaining_qty', 'status'])
+
+@frappe.whitelist()
+def get_package_wise_package_details(batch_no):
+	return frappe.get_list("Package", filters={
+		'batch_no': batch_no,
+		'status': ['!=', "Out of Stock"]
+	}, fields = ['name', 'package_type', 'gross_weight', 'net_weight', 'spools', 'remaining_qty', 'status'])
