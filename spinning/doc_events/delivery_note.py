@@ -92,7 +92,7 @@ def update_packages(self, method):
 	if method == "on_submit":
 		for row in self.packages:
 			doc = frappe.get_doc("Package", row.package)
-			doc.add_consumption(self.doctype, self.name, row.net_weight)
+			doc.add_consumption(self.doctype, self.name, row.net_weight, self.posting_date, self.posting_time)
 			doc.save(ignore_permissions=True)
 
 	elif method == "on_cancel":

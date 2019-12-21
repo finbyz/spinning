@@ -53,7 +53,7 @@ def update_packages(self,method):
 								
 							remaining_qty += qty
 
-						doc.add_consumption(self.doctype, self.name, qty)
+						doc.add_consumption(self.doctype, self.name, qty, self.posting_date, self.posting_time)
 						doc.save(ignore_permissions=True)
 						
 						# Loop will break on first loop if row.quantity_difference is positive

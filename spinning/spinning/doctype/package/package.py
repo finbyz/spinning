@@ -93,7 +93,7 @@ class Package(Document):
 		if self.status != status:
 			self.db_set("status", status)
 
-	def add_consumption(self, doctype, docname, qty):
+	def add_consumption(self, doctype, docname, qty, posting_date, posting_time):
 		for row in self.consumptions:
 			if row.reference_doctype == doctype and row.reference_docname == docname:
 				frappe.throw(_("Package already consumed for %s : %s" % (doctype, docname)))
@@ -101,7 +101,9 @@ class Package(Document):
 		self.append('consumptions', {
 			'reference_doctype': doctype,
 			'reference_docname': docname,
-			'consumed_qty': flt(qty, 4)
+			'consumed_qty': flt(qty, 4),
+			'posting_date': posting_date,
+			'posting_time': posting_time
 		})
 
 	def remove_consumption(self, doctype, docname):

@@ -319,7 +319,7 @@ class MaterialRepack(Document):
 				continue
 
 			qty = pkg.net_weight if remaining_qty > pkg.net_weight else remaining_qty
-			package.add_consumption(self.doctype, self.name, qty)
+			package.add_consumption(self.doctype, self.name, qty, self.posting_date, self.posting_time)
 			package.save(ignore_permissions=True)
 			remaining_qty -= qty
 

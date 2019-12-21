@@ -129,8 +129,8 @@ frappe.ui.form.on("Delivery Note", {
 						callback: function(r){
 							if(r.message.has_batch_no){
 								to_remove.push(row.idx - 1);
-								if (row.merge && row.grade) {
-									let item_merge_grade = row.item_code.toString() + row.merge.toString() + row.grade.toString()
+								if (row.merge && row.grade && row.warehouse) {
+									let item_merge_grade = row.item_code.toString() + row.merge.toString() + row.grade.toString() + row.grade.toString()
 									if(!(item_merge_grade in item_merge_grade_row_dict)){
 										console.log("Adding Item to Merge Dict" + item_merge_grade);
 										item_merge_grade_row_dict[item_merge_grade] = Object.assign({}, row);
@@ -155,8 +155,8 @@ frappe.ui.form.on("Delivery Note", {
 			},
 			() => {
 				frm.doc.packages.forEach(function(row){
-					let key = [row.item_code, row.merge, row.grade, row.batch_no];
-					let item_merge_grade = row.item_code.toString() + row.merge.toString() + row.grade.toString()
+					let key = [row.item_code, row.merge, row.grade, row.batch_no, row.warehouse];
+					let item_merge_grade = row.item_code.toString() + row.merge.toString() + row.grade.toString() + row.warehouse.toString()
 					if(!(key in package_items)){
 						if (item_merge_grade_row_dict[item_merge_grade]){
 							console.log("Merge Grade Item Received");
@@ -176,7 +176,7 @@ frappe.ui.form.on("Delivery Note", {
 
 					}
 
-					package_items[key]['warehouse'] = row.warehouse;
+					//package_items[key]['warehouse'] = row.warehouse;
 					package_items[key]['net_weight'] += row.net_weight;
 					package_items[key]['gross_weight'] += row.gross_weight;
 					package_items[key]['no_of_spools'] += row.spools;
@@ -197,6 +197,7 @@ frappe.ui.form.on("Delivery Note", {
 					values.merge = keys[1];
 					values.grade = keys[2];
 					values.batch_no = keys[3];
+					values.warehouse = keys[4];
 					values.qty = args.net_weight
 					values.gross_wt = args.gross_weight
 					values.spools = args.no_of_spools

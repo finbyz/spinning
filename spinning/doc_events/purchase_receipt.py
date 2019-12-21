@@ -196,7 +196,7 @@ def add_package_consumption(self):
 			for pkg in package_list:
 				doc = frappe.get_doc("Package", pkg.name)
 				qty = doc.remaining_qty if remaining_qty > doc.remaining_qty else remaining_qty
-				doc.add_consumption(self.doctype, self.name, qty)
+				doc.add_consumption(self.doctype, self.name, qty, self.posting_date, self.posting_time)
 				doc.save(ignore_permissions=True)
 				remaining_qty -= qty
 
