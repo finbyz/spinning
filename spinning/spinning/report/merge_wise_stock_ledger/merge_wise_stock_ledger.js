@@ -51,7 +51,7 @@ frappe.query_reports["Merge Wise Stock Ledger"] = {
 		},
 		{
 			"fieldname":"batch_no",
-			"label": __("Batch No"),
+			"label": __("Merge/Grade"),
 			"fieldtype": "MultiSelectList",
 			"get_data": function(text){
 				return frappe.db.get_link_options('Batch',text)
