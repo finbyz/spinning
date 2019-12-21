@@ -56,7 +56,7 @@ frappe.query_reports["Merge Wise Stock Ledger"] = {
 			"get_data": function(text){
 				return frappe.db.get_link_options('Batch',text)
 			},
-			"onchange": function(e){
+			"change": function(){
 				frappe.query_report.refresh();
 			},
 			
