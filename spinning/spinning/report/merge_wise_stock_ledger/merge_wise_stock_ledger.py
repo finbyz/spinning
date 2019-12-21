@@ -49,27 +49,24 @@ def execute(filters=None):
 
 def get_columns():
 	columns = [
-		{"label": _("Date"), "fieldname": "date", "fieldtype": "Datetime", "width": 95},
-		{"label": _("Item"), "fieldname": "item_code", "fieldtype": "Link", "options": "Item", "width": 130},
-		{"label": _("Item Name"), "fieldname": "item_name", "width": 100},
+		{"label": _("Date"), "fieldname": "date", "fieldtype": "Datetime", "width": 130},
+		{"label": _("Item"), "fieldname": "item_code", "fieldtype": "Link", "options": "Item", "width": 200},
 		{"label": _("Item Group"), "fieldname": "item_group", "fieldtype": "Link", "options": "Item Group", "width": 100},
-		{"label": _("Brand"), "fieldname": "brand", "fieldtype": "Link", "options": "Brand", "width": 100},
-		{"label": _("Description"), "fieldname": "description", "width": 200},
 		{"label": _("Warehouse"), "fieldname": "warehouse", "fieldtype": "Link", "options": "Warehouse", "width": 100},
-		{"label": _("Stock UOM"), "fieldname": "stock_uom", "fieldtype": "Link", "options": "UOM", "width": 100},
-		{"label": _("Qty"), "fieldname": "actual_qty", "fieldtype": "Float", "width": 50, "convertible": "qty"},
+		{"label": _("UOM"), "fieldname": "stock_uom", "fieldtype": "Link", "options": "UOM", "width": 50},
+		{"label": _("Qty"), "fieldname": "actual_qty", "fieldtype": "Float", "width": 80, "convertible": "qty"},
 		{"label": _("Balance Qty"), "fieldname": "qty_after_transaction", "fieldtype": "Float", "width": 100, "convertible": "qty"},
-		{"label": _("Incoming Rate"), "fieldname": "incoming_rate", "fieldtype": "Currency", "width": 110,
+		{"label": _("Incoming Rate"), "fieldname": "incoming_rate", "fieldtype": "Currency", "width": 100,
 			"options": "Company:company:default_currency", "convertible": "rate"},
-		{"label": _("Valuation Rate"), "fieldname": "valuation_rate", "fieldtype": "Currency", "width": 110,
+		{"label": _("Valuation Rate"), "fieldname": "valuation_rate", "fieldtype": "Currency", "width": 100,
 			"options": "Company:company:default_currency", "convertible": "rate"},
 		{"label": _("Balance Value"), "fieldname": "stock_value", "fieldtype": "Currency", "width": 110,
 			"options": "Company:company:default_currency"},
 		{"label": _("Voucher Type"), "fieldname": "voucher_type", "width": 110},
 		{"label": _("Voucher #"), "fieldname": "voucher_no", "fieldtype": "Dynamic Link", "options": "voucher_type", "width": 100},
-		{"label": _("Batch"), "fieldname": "batch_no", "fieldtype": "Link", "options": "Batch", "width": 100},
-		{"label": _("Serial #"), "fieldname": "serial_no", "width": 100},
-		{"label": _("Project"), "fieldname": "project", "fieldtype": "Link", "options": "Project", "width": 100},
+		{"label": _("Batch"), "fieldname": "batch_no", "fieldtype": "Link", "options": "Batch", "width": 120},
+		{"label": _("Merge"), "fieldname": "merge", "fieldtype": "Link", "options": "Merge", "width": 80},
+		{"label": _("Grade"), "fieldname": "grade", "fieldtype": "Link", "options": "Grade", "width": 50},
 		{"label": _("Company"), "fieldname": "company", "fieldtype": "Link", "options": "Company", "width": 110}
 	]
 
@@ -81,15 +78,16 @@ def get_stock_ledger_entries(filters, items):
 		item_conditions_sql = 'and sle.item_code in ({})'\
 			.format(', '.join([frappe.db.escape(i) for i in items]))
 
-	return frappe.db.sql("""select concat_ws(" ", posting_date, posting_time) as date,
-			item_code, warehouse, actual_qty, qty_after_transaction, incoming_rate, valuation_rate,
-			stock_value, voucher_type, voucher_no, batch_no, serial_no, company, project, stock_value_difference
+	return frappe.db.sql("""select concat_ws(" ", sle.posting_date, sle.posting_time) as date,
+			sle.item_code, sle.warehouse, sle.actual_qty, sle.qty_after_transaction, sle.incoming_rate, sle.valuation_rate,
+			sle.stock_value, sle.voucher_type, sle.voucher_no, sle.batch_no, bt.merge, bt.grade, sle.company, sle.stock_value_difference
 		from `tabStock Ledger Entry` sle
-		where company = %(company)s and
-			posting_date between %(from_date)s and %(to_date)s
+		Join `tabBatch` bt on sle.batch_no = bt.name
+		where sle.company = %(company)s and
+			sle.posting_date between %(from_date)s and %(to_date)s
 			{sle_conditions}
 			{item_conditions_sql}
-			order by posting_date asc, posting_time asc, creation asc"""\
+			order by sle.posting_date asc, sle.posting_time asc, sle.creation asc"""\
 		.format(
 			sle_conditions=get_sle_conditions(filters),
 			item_conditions_sql = item_conditions_sql
@@ -100,8 +98,6 @@ def get_items(filters):
 	if filters.get("item_code"):
 		conditions.append("item.name=%(item_code)s")
 	else:
-		if filters.get("brand"):
-			conditions.append("item.brand=%(brand)s")
 		if filters.get("item_group"):
 			conditions.append(get_item_group_condition(filters.get("item_group")))
 
@@ -127,7 +123,7 @@ def get_item_details(items, sl_entries, include_uom):
 
 	res = frappe.db.sql("""
 		select
-			item.name, item.item_name, item.description, item.item_group, item.brand, item.stock_uom {cf_field}
+			item.name, item.item_group, item.stock_uom {cf_field}
 		from
 			`tabItem` item
 			{cf_join}
@@ -140,6 +136,36 @@ def get_item_details(items, sl_entries, include_uom):
 
 	return item_details
 
+def get_item_details(items, sl_entries, include_uom):
+	item_details = {}
+	if not items:
+		items = list(set([d.item_code for d in sl_entries]))
+
+	if not items:
+		return item_details
+
+	cf_field = cf_join = ""
+	if include_uom:
+		cf_field = ", ucd.conversion_factor"
+		cf_join = "left join `tabUOM Conversion Detail` ucd on ucd.parent=item.name and ucd.uom=%s" \
+			% frappe.db.escape(include_uom)
+
+	res = frappe.db.sql("""
+		select
+			item.name, item.item_group, item.stock_uom {cf_field}
+		from
+			`tabItem` item
+			{cf_join}
+		where
+			item.name in ({item_codes})
+	""".format(cf_field=cf_field, cf_join=cf_join, item_codes=','.join(['%s'] *len(items))), items, as_dict=1)
+
+	for item in res:
+		item_details.setdefault(item.name, item)
+
+	return item_details
+
+
 def get_sle_conditions(filters):
 	conditions = []
 	if filters.get("warehouse"):
@@ -147,11 +173,10 @@ def get_sle_conditions(filters):
 		if warehouse_condition:
 			conditions.append(warehouse_condition)
 	if filters.get("voucher_no"):
-		conditions.append("voucher_no=%(voucher_no)s")
+		conditions.append("sle.voucher_no=%(voucher_no)s")
 	if filters.get("batch_no"):
-		conditions.append("batch_no in %(batch_no)s")
-	if filters.get("project"):
-		conditions.append("project=%(project)s")
+		conditions.append("sle.batch_no in %(batch_no)s")
+
 
 	return "and {}".format(" and ".join(conditions)) if conditions else ""
 

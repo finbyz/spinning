@@ -58,26 +58,13 @@ frappe.query_reports["Merge Wise Stock Ledger"] = {
 			},
 			"onchange": function(e){
 				frappe.query_report.refresh();
-				console.log('call')
 			},
 			
-		},
-		{
-			"fieldname":"brand",
-			"label": __("Brand"),
-			"fieldtype": "Link",
-			"options": "Brand"
 		},
 		{
 			"fieldname":"voucher_no",
 			"label": __("Voucher #"),
 			"fieldtype": "Data"
-		},
-		{
-			"fieldname":"project",
-			"label": __("Project"),
-			"fieldtype": "Link",
-			"options": "Project"
 		},
 		{
 			"fieldname":"include_uom",
