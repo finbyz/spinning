@@ -98,8 +98,8 @@ class Package(Document):
 			if row.reference_doctype == doctype and row.reference_docname == docname:
 				frappe.throw(_("Package already consumed for %s : %s" % (doctype, docname)))
 		
-		if posting_date < self.purchase_date:
-			frappe.throw(_("Package {0} can't be consume before incoming date {1}").format(self.name, self.purchase_date))
+		# if posting_date < self.purchase_date:
+		# 	frappe.throw(_("Package {0} can't be consume before incoming date {1}").format(self.name, self.purchase_date))
 
 
 		self.append('consumptions', {
