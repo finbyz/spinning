@@ -237,7 +237,7 @@ class WorkOrderFinish(Document):
 		if self.paper_tube:
 			se.append("items",{
 				'item_code': self.paper_tube,
-				's_warehouse': wo.wip_warehouse,
+				's_warehouse': self.package_warehouse or wo.wip_warehouse,
 				'qty': self.total_spool,
 			})
 		if self.package_item:

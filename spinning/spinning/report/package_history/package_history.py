@@ -19,19 +19,21 @@ def execute(filters=None):
 	for item in sorted(iwb_map):
 		for batch in sorted(iwb_map[item]):
 			qty_dict = iwb_map[item][batch]
+			msg_print = []
 			color = item_map[item]["item_name"].split('-')[-1]
 			if qty_dict.opening_qty or qty_dict.in_qty or qty_dict.out_qty or qty_dict.bal_qty:
 				details_button = """
 				<button style='margin-left:5px;border:none;color: #fff; background-color: #5e64ff; padding: 3px 5px;border-radius: 5px;' 
-					type='button' batch-data='{}' onClick='get_package_wise_package_details(this.getAttribute("batch-data"))'>View</button>""".format(batch)
-
-				diff = flt(qty_dict.bal_qty, float_precision) - flt(qty_dict.remaining_qty, float_precision)
-
+					type='button' batch-data='{}' onClick='get_package_details(this.getAttribute("batch-data"))'>View</button>""".format(batch)
+				remaining_qty =  flt(qty_dict.net_weight, float_precision) - flt(qty_dict.consumed, float_precision)
+				diff = flt(qty_dict.bal_qty, float_precision) - remaining_qty
+				
 				data.append([item, item_map[item]["item_name"],color,item_map[item]["item_group"],
 					qty_dict.merge, qty_dict.grade, batch,
 					flt(qty_dict.opening_qty, float_precision), flt(qty_dict.in_qty, float_precision),
 					flt(qty_dict.out_qty, float_precision), flt(qty_dict.bal_qty, float_precision),
-					qty_dict.packages, details_button, flt(qty_dict.remaining_qty, float_precision), diff, 
+					qty_dict.packages, details_button, flt(qty_dict.net_weight, float_precision),
+					flt(qty_dict.consumed, float_precision),remaining_qty, diff, 
 					item_map[item]["stock_uom"]
 				])
 
@@ -53,6 +55,8 @@ def get_columns():
 		_("Balance Qty") + ":Float:90",
 		_("Packages") + ":Int:80",
 		_("Package Details") + "::100",
+		_("Package NETWT") + "::100",
+		_("Package Consumption") + "::100",
 		_("Package Remaining Qty") + ":Float:100",
 		_("Difference") + ":Float:80",
 		_("UOM") + "::90",
@@ -91,10 +95,10 @@ def get_package_conditions(filters):
 	conditions = ""
 
 	if filters.get("to_date"):
-		conditions += " and purchase_date <= '%s'" % filters["to_date"]
+		conditions += " and p.purchase_date <= '%s'" % filters["to_date"]
 
-	if filters.get("item_code"): conditions += " and item_code = '%s' " % filters['item_code']
-	if filters.get("company"): conditions += " and company = '%s'" % filters["company"]
+	if filters.get("item_code"): conditions += " and p.item_code = '%s' " % filters['item_code']
+	if filters.get("company"): conditions += " and p.company = '%s'" % filters["company"]
 	# if filters.get("warehouse"): conditions += " and warehouse = '%s'" % filters["warehouse"]
 
 	# if filters.get("warehouse"):
@@ -126,10 +130,12 @@ def get_item_batch_map(filters, float_precision):
 	conditions = get_package_conditions(filters)
 
 	packages = frappe.db.sql("""
-		SELECT name, batch_no, remaining_qty 
-		FROM `tabPackage` 
+		SELECT p.name, p.batch_no, p.net_weight, pc.consumed_qty as consumed, p.remaining_qty
+		FROM `tabPackage` as p
+		JOIN `tabPackage Consumption` as pc ON pc.parent = p.name
 		WHERE 
-			status != 'Out Of Stock' %s """ % conditions, as_dict = True)
+			pc.posting_date <= {0} {1}
+		GROUP BY p.name""".format(filters["to_date"],conditions) , as_dict = True)
 
 	for d in sle:
 		iwb_map.setdefault(d.item_code, {})\
@@ -154,6 +160,8 @@ def get_item_batch_map(filters, float_precision):
 		qty_dict.merge, qty_dict.grade = frappe.db.get_value("Batch", d.batch_no, ['merge', 'grade'])
 		pkgs = [x for x in packages if x.batch_no == d.batch_no]
 		qty_dict.packages = len(pkgs)
+		qty_dict.net_weight = sum([x.net_weight for x in pkgs])
+		qty_dict.consumed = sum([x.consumed for x in pkgs])
 		qty_dict.remaining_qty = sum([x.remaining_qty for x in pkgs])
 
 		# qty_dict.packages = frappe.db.sql_list("select count(name) from `tabPackage` where batch_no = %s and warehouse = %s and status != 'Out of Stock' ", (d.batch_no, d.warehouse))[0]
