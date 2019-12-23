@@ -134,14 +134,14 @@ def get_item_batch_map(filters, float_precision):
 		FROM `tabPackage` as p
 		JOIN `tabPackage Consumption` as pc ON pc.parent = p.name
 		WHERE 
-			pc.posting_date <= {0} {1}
+			pc.posting_date <= '{0}' {1}
 		GROUP BY p.name""".format(filters["to_date"],conditions) , as_dict = True)
-
+	
 	for d in sle:
 		iwb_map.setdefault(d.item_code, {})\
 			.setdefault(d.batch_no, frappe._dict({
 				"opening_qty": 0.0, "in_qty": 0.0, "out_qty": 0.0, "bal_qty": 0.0,
-				"merge": "", "grade": "", "packages": 0
+				"merge": "", "grade": "", "packages": 0,'consumed':0.0,'remaining_qty':0.0
 			}))
 		qty_dict = iwb_map[d.item_code][d.batch_no]
 		
