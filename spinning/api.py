@@ -82,8 +82,20 @@ def get_merge_wise_package_details(batch_no, warehouse):
 	}, fields = ['name', 'package_type', 'gross_weight', 'net_weight', 'spools', 'remaining_qty', 'status'])
 
 @frappe.whitelist()
-def get_package_details(batch_no):
-	return frappe.get_list("Package", filters={
-		'batch_no': batch_no,
-		'status': ['!=', "Out of Stock"]
-	}, fields = ['name', 'package_type', 'gross_weight', 'net_weight', 'spools', 'remaining_qty', 'status'])
+def get_package_details(batch_no,to_date):
+	sql = frappe.db.sql("""
+	SELECT p.name, p.package_type, p.spools, p.gross_weight, p.net_weight, (p.net_weight - sum(IFNULL(case when pc.posting_date <= '{0}' then pc.consumed_qty end,0))) as remaining
+		FROM `tabPackage` as p
+		LEFT JOIN `tabPackage Consumption` as pc ON pc.parent = p.name
+		WHERE 
+			p.purchase_date <= '{0}' and p.batch_no = '{1}'
+		GROUP BY p.name
+		HAVING remaining > 0
+	""".format(to_date, batch_no))
+
+	return sql
+	
+	# return frappe.get_list("Package", filters={
+	# 	'batch_no': batch_no,
+	# 	'status': ['!=', "Out of Stock"]
+	# }, fields = ['name', 'package_type', 'gross_weight', 'net_weight', 'spools', 'remaining_qty', 'status'])
