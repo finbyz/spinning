@@ -29,7 +29,7 @@ def execute(filters=None):
 				details_button = """
 				<button style='margin-left:5px;border:none;color: #fff; background-color: #5e64ff; padding: 3px 5px;border-radius: 5px;' 
 					type='button' batch-data='{}' from-date='{}' to-date='{}' onClick='get_package_details(this.getAttribute("batch-data"),this.getAttribute("to-date"))'>View</button>""".format(batch, from_date, to_date)
-				remaining_qty =  flt(qty_dict.remaining, float_precision)
+				remaining_qty =  flt(qty_dict.remaining_qty, float_precision)
 				diff = flt(qty_dict.bal_qty, float_precision) - remaining_qty
 				
 				data.append([
@@ -146,7 +146,8 @@ def get_item_batch_map(filters, float_precision):
 	conditions = get_package_conditions(filters)
 
 	packages = frappe.db.sql("""
-		SELECT p.name, p.batch_no, p.net_weight, (p.net_weight - sum(IFNULL(case when pc.posting_date <= '{0}' then pc.consumed_qty end,0))) as remaining
+		SELECT p.name, p.batch_no, p.net_weight, 
+		(p.net_weight - sum(IFNULL(case when pc.posting_date <= '{0}' then pc.consumed_qty end,0))) as remaining
 		FROM `tabPackage` as p
 		LEFT JOIN `tabPackage Consumption` as pc ON pc.parent = p.name
 		WHERE 
