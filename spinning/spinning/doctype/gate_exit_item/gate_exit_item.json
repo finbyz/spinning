@@ -1,0 +1,72 @@
+{
+ "creation": "2019-12-27 13:39:10.143947",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "item_code",
+  "item_name",
+  "qty",
+  "merge",
+  "grade",
+  "no_of_packages"
+ ],
+ "fields": [
+  {
+   "columns": 2,
+   "fieldname": "item_code",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Item Code",
+   "options": "Item",
+   "reqd": 1
+  },
+  {
+   "fetch_from": "item_code.item_name",
+   "fieldname": "item_name",
+   "fieldtype": "Data",
+   "label": "Item Name"
+  },
+  {
+   "columns": 1,
+   "fieldname": "qty",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Qty"
+  },
+  {
+   "columns": 2,
+   "fieldname": "merge",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Merge",
+   "options": "Merge"
+  },
+  {
+   "columns": 1,
+   "fieldname": "grade",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Grade",
+   "options": "Grade"
+  },
+  {
+   "columns": 2,
+   "fieldname": "no_of_packages",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "No of Packages"
+  }
+ ],
+ "istable": 1,
+ "modified": "2019-12-27 16:05:36.163277",
+ "modified_by": "Administrator",
+ "module": "Spinning",
+ "name": "Gate Exit Item",
+ "owner": "Administrator",
+ "permissions": [],
+ "quick_entry": 1,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "track_changes": 1
+}

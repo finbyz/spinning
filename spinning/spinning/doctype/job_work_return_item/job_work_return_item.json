@@ -198,10 +198,10 @@
   }
  ],
  "istable": 1,
- "modified": "2019-12-07 15:24:20.019568",
+ "modified": "2019-12-27 14:08:41.018409",
  "modified_by": "Administrator",
  "module": "Spinning",
- "name": "Material Receipt Item",
+ "name": "Job Work Return Item",
  "owner": "Administrator",
  "permissions": [],
  "quick_entry": 1,
