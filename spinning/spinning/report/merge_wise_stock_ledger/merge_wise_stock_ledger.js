@@ -71,6 +71,12 @@ frappe.query_reports["Merge Wise Stock Ledger"] = {
 			"label": __("Include UOM"),
 			"fieldtype": "Link",
 			"options": "UOM"
+		},
+		{
+			"fieldname":"entry_type",
+			"label": __("Entry Type"),
+			"fieldtype": "Link",
+			"options": "Stock Entry Type"
 		}
 	]
 };

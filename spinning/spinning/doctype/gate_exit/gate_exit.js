@@ -1,7 +1,20 @@
 // Copyright (c) 2019, FinByz Tech Pvt Ltd and contributors
 // For license information, please see license.txt
 
+
 frappe.ui.form.on('Gate Exit', {
+	onload: function (frm) {
+		if (frm.doc.document_type != 'Delivery Note') {
+			frm.fields_dict.document_number.get_query = function (doc) {
+				return {
+					filters: {
+						"send_to_party": 1
+					}
+				};
+			}
+		}
+	},
+	
 	calculate_package_qty : function(frm) {
 		let items = frm.doc.items;
 		let total = {"total_qty" : 0,'total_packages': 0};

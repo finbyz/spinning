@@ -16,6 +16,7 @@
   "posting_time",
   "set_posting_time",
   "gate_entry_no",
+  "gate_entry",
   "section_break_7",
   "items",
   "section_break_10",
@@ -314,10 +315,16 @@
    "fieldname": "adjustment_entry",
    "fieldtype": "Check",
    "label": "Adjustment Entry"
+  },
+  {
+   "fieldname": "gate_entry",
+   "fieldtype": "Link",
+   "label": "Gate Entry",
+   "options": "Gate Entry"
   }
  ],
  "is_submittable": 1,
- "modified": "2019-12-27 14:00:33.683269",
+ "modified": "2020-01-03 13:57:09.452816",
  "modified_by": "Administrator",
  "module": "Spinning",
  "name": "Material Receipt",

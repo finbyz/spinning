@@ -171,7 +171,9 @@ doc_events = {
 		"on_submit": "spinning.doc_events.stock_reconciliation.on_submit",
 		"on_cancel": "spinning.doc_events.stock_reconciliation.on_cancel",
 	},
-
+	'Sales Invoice':{
+		'validate': "spinning.doc_events.sales_invoice.validate"
+	}
 }
 
 

@@ -53,7 +53,8 @@ def get_columns():
 		{"label": _("Item"), "fieldname": "item_code", "fieldtype": "Link", "options": "Item", "width": 200},
 		{"label": _("Item Group"), "fieldname": "item_group", "fieldtype": "Link", "options": "Item Group", "width": 100},
 		{"label": _("Warehouse"), "fieldname": "warehouse", "fieldtype": "Link", "options": "Warehouse", "width": 100},
-		{"label": _("UOM"), "fieldname": "stock_uom", "fieldtype": "Link", "options": "UOM", "width": 50},
+		{"label": _("Merge"), "fieldname": "merge", "fieldtype": "Link", "options": "Merge", "width": 80},
+		{"label": _("Grade"), "fieldname": "grade", "fieldtype": "Link", "options": "Grade", "width": 50},
 		{"label": _("Qty"), "fieldname": "actual_qty", "fieldtype": "Float", "width": 80, "convertible": "qty"},
 		{"label": _("Balance Qty"), "fieldname": "qty_after_transaction", "fieldtype": "Float", "width": 100, "convertible": "qty"},
 		{"label": _("Incoming Rate"), "fieldname": "incoming_rate", "fieldtype": "Currency", "width": 100,
@@ -64,10 +65,12 @@ def get_columns():
 			"options": "Company:company:default_currency"},
 		{"label": _("Voucher Type"), "fieldname": "voucher_type", "width": 110},
 		{"label": _("Voucher #"), "fieldname": "voucher_no", "fieldtype": "Dynamic Link", "options": "voucher_type", "width": 100},
+		{"label": _("Entry Type"), "fieldname": "entry_type", "fieldtype": "Data", "width": 100},
 		{"label": _("Batch"), "fieldname": "batch_no", "fieldtype": "Link", "options": "Batch", "width": 120},
-		{"label": _("Merge"), "fieldname": "merge", "fieldtype": "Link", "options": "Merge", "width": 80},
-		{"label": _("Grade"), "fieldname": "grade", "fieldtype": "Link", "options": "Grade", "width": 50},
-		{"label": _("Company"), "fieldname": "company", "fieldtype": "Link", "options": "Company", "width": 110}
+		{"label": _("Work Order"), "fieldname": "work_order", "fieldtype": "Link", "options": "Work Order", "width": 120},
+		{"label": _("Company"), "fieldname": "company", "fieldtype": "Link", "options": "Company", "width": 110},
+		{"label": _("UOM"), "fieldname": "stock_uom", "fieldtype": "Link", "options": "UOM", "width": 50},
+
 	]
 
 	return columns
@@ -77,20 +80,27 @@ def get_stock_ledger_entries(filters, items):
 	if items:
 		item_conditions_sql = 'and sle.item_code in ({})'\
 			.format(', '.join([frappe.db.escape(i) for i in items]))
-
+	
+	entry_type = filters.get("entry_type", None)
+	item_query_condition = ""
+	if entry_type:
+		item_query_condition = " and se.stock_entry_type = '{}'".format(entry_type)
+	
 	return frappe.db.sql("""select concat_ws(" ", sle.posting_date, sle.posting_time) as date,
 			sle.item_code, sle.warehouse, sle.actual_qty, sle.qty_after_transaction, sle.incoming_rate, sle.valuation_rate,
-			sle.stock_value, sle.voucher_type, sle.voucher_no, sle.batch_no, bt.merge, bt.grade, sle.company, sle.stock_value_difference
+			sle.stock_value, sle.voucher_type, se.stock_entry_type as entry_type, se.work_order, sle.voucher_no, sle.batch_no, bt.merge, bt.grade, sle.company, sle.stock_value_difference
 		from `tabStock Ledger Entry` sle
 		Join `tabBatch` bt on sle.batch_no = bt.name
+		Left Join `tabStock Entry` as se on se.name = sle.voucher_no
 		where sle.company = %(company)s and
 			sle.posting_date between %(from_date)s and %(to_date)s
 			{sle_conditions}
-			{item_conditions_sql}
+			{item_conditions_sql} {item_query_condition}
 			order by sle.posting_date asc, sle.posting_time asc, sle.creation asc"""\
 		.format(
 			sle_conditions=get_sle_conditions(filters),
-			item_conditions_sql = item_conditions_sql
+			item_conditions_sql = item_conditions_sql,
+			item_query_condition = item_query_condition
 		), filters, as_dict=1)
 
 def get_items(filters):

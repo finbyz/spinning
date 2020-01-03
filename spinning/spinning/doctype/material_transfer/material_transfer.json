@@ -77,6 +77,7 @@
   "vehicle_no",
   "distance",
   "gate_pass_no",
+  "gate_entry",
   "gate_pass_date",
   "remarks",
   "section_break_12",
@@ -559,10 +560,16 @@
    "fieldtype": "Link",
    "label": "BOM",
    "options": "BOM"
+  },
+  {
+   "fieldname": "gate_entry",
+   "fieldtype": "Link",
+   "label": "Gate Entry",
+   "options": "Gate Entry"
   }
  ],
  "is_submittable": 1,
- "modified": "2020-01-02 17:43:45.424574",
+ "modified": "2020-01-03 13:57:55.898019",
  "modified_by": "Administrator",
  "module": "Spinning",
  "name": "Material Transfer",
