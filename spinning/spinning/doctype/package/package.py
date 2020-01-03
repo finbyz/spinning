@@ -20,7 +20,6 @@ class Package(Document):
 	def autoname(self):
 		if self.package_series:
 			series = self.package_series
-			
 			# name = None
 			# while not name:
 			# 	name = make_autoname(series, "Package", self)
@@ -47,7 +46,6 @@ class Package(Document):
 
 		else:
 			date = self.purchase_date
-
 		cd   = datetime.date(datetime.now())
 		if date > cd:
 			frappe.throw(_('Posting Date Cannot Be After Today Date'))

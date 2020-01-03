@@ -142,7 +142,8 @@
    "fieldname": "batch_no",
    "fieldtype": "Link",
    "label": "Batch No",
-   "options": "Batch"
+   "options": "Batch",
+   "read_only": 1
   },
   {
    "fieldname": "column_break_20",
@@ -155,14 +156,6 @@
    "in_list_view": 1,
    "label": "Merge",
    "options": "Merge"
-  },
-  {
-   "columns": 1,
-   "fieldname": "grade",
-   "fieldtype": "Link",
-   "in_list_view": 1,
-   "label": "Grade",
-   "options": "Grade"
   },
   {
    "fieldname": "accounting_section",
@@ -195,10 +188,17 @@
    "fieldname": "actual_qty",
    "fieldtype": "Float",
    "label": "Actual Qty (at source/target)"
+  },
+  {
+   "fieldname": "grade",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Grade",
+   "options": "Grade"
   }
  ],
  "istable": 1,
- "modified": "2019-12-27 14:08:41.018409",
+ "modified": "2019-12-31 12:00:49.901998",
  "modified_by": "Administrator",
  "module": "Spinning",
  "name": "Job Work Return Item",

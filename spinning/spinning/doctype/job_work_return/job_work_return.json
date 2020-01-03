@@ -6,16 +6,14 @@
  "engine": "InnoDB",
  "field_order": [
   "naming_series",
+  "material_transfer",
   "item_code",
   "item_name",
   "bom_no",
-  "package_type",
-  "package_item",
   "merge",
   "grade",
   "paper_tube",
   "column_break_5",
-  "material_transfer",
   "company",
   "posting_date",
   "posting_time",
@@ -26,6 +24,8 @@
   "consumed_items_section",
   "items",
   "section_break_20",
+  "default_package_type",
+  "default_package_item",
   "package_details",
   "section_break_19",
   "total_gross_weight",
@@ -34,6 +34,8 @@
   "total_tare_weight",
   "total_spool",
   "consumed_qty",
+  "section_break_30",
+  "additional_cost",
   "more_information_section",
   "consumed_packages",
   "column_break_28",
@@ -48,6 +50,7 @@
    "options": "JR-.YYYY.-"
   },
   {
+   "fetch_from": "material_transfer.finish_item",
    "fieldname": "item_code",
    "fieldtype": "Link",
    "in_standard_filter": 1,
@@ -55,21 +58,10 @@
    "options": "Item"
   },
   {
+   "fetch_from": "item_code.item_name",
    "fieldname": "item_name",
    "fieldtype": "Data",
    "label": "Item Name"
-  },
-  {
-   "fieldname": "package_type",
-   "fieldtype": "Select",
-   "label": "Package Type",
-   "options": "\nBox\nPallet"
-  },
-  {
-   "fieldname": "package_item",
-   "fieldtype": "Link",
-   "label": "Package Item",
-   "options": "Item"
   },
   {
    "fieldname": "merge",
@@ -119,7 +111,8 @@
    "label": "Posting Time"
   },
   {
-   "fetch_from": "material_unpack.t_warehouse",
+   "fetch_from": "material_transfer.t_warehouse",
+   "fetch_if_empty": 1,
    "fieldname": "s_warehouse",
    "fieldtype": "Link",
    "in_standard_filter": 1,
@@ -127,6 +120,8 @@
    "options": "Warehouse"
   },
   {
+   "fetch_from": "material_transfer.s_warehouse",
+   "fetch_if_empty": 1,
    "fieldname": "t_warehouse",
    "fieldtype": "Link",
    "in_standard_filter": 1,
@@ -137,10 +132,10 @@
    "fieldname": "batch_no",
    "fieldtype": "Link",
    "label": "Finished Item Batch",
-   "options": "Batch"
+   "options": "Batch",
+   "read_only": 1
   },
   {
-   "collapsible": 1,
    "fieldname": "section_break_20",
    "fieldtype": "Section Break",
    "label": "Package Details"
@@ -158,12 +153,14 @@
   {
    "fieldname": "total_gross_weight",
    "fieldtype": "Float",
-   "label": "Total Gross Weight"
+   "label": "Total Gross Weight",
+   "read_only": 1
   },
   {
    "fieldname": "total_net_weight",
    "fieldtype": "Float",
-   "label": "Total Net Weight"
+   "label": "Total Net Weight",
+   "read_only": 1
   },
   {
    "fieldname": "column_break_23",
@@ -172,19 +169,22 @@
   {
    "fieldname": "total_tare_weight",
    "fieldtype": "Float",
-   "label": "Total Tare Weight"
+   "label": "Total Tare Weight",
+   "read_only": 1
   },
   {
    "fieldname": "total_spool",
    "fieldtype": "Int",
-   "label": "Total Paper Tubes"
+   "label": "Total Paper Tubes",
+   "read_only": 1
   },
   {
    "allow_on_submit": 1,
    "default": "0",
    "fieldname": "consumed_qty",
    "fieldtype": "Float",
-   "label": "Consumed Qty"
+   "label": "Consumed Qty",
+   "read_only": 1
   },
   {
    "collapsible": 1,
@@ -196,7 +196,8 @@
    "fieldname": "consumed_packages",
    "fieldtype": "Small Text",
    "label": "Consumed Packages",
-   "no_copy": 1
+   "no_copy": 1,
+   "read_only": 1
   },
   {
    "fieldname": "column_break_28",
@@ -211,7 +212,6 @@
    "print_hide": 1
   },
   {
-   "collapsible": 1,
    "fieldname": "consumed_items_section",
    "fieldtype": "Section Break",
    "label": "Consumed Items"
@@ -223,7 +223,7 @@
    "options": "Job Work Return Item"
   },
   {
-   "fetch_from": "work_order.bom_no",
+   "fetch_from": "material_transfer.bom",
    "fieldname": "bom_no",
    "fieldtype": "Link",
    "label": "BOM No",
@@ -232,11 +232,35 @@
   {
    "fieldname": "qty",
    "fieldtype": "Float",
-   "label": "Quantity"
+   "in_list_view": 1,
+   "label": "Quantity",
+   "reqd": 1
+  },
+  {
+   "fieldname": "default_package_type",
+   "fieldtype": "Select",
+   "label": "Default Package Type",
+   "options": "Box\nPallet"
+  },
+  {
+   "fieldname": "default_package_item",
+   "fieldtype": "Link",
+   "label": "Default Package Item",
+   "options": "Item"
+  },
+  {
+   "fieldname": "section_break_30",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "additional_cost",
+   "fieldtype": "Table",
+   "label": "Additional Cost",
+   "options": "Job Work Additional Cost"
   }
  ],
  "is_submittable": 1,
- "modified": "2019-12-30 11:19:50.065651",
+ "modified": "2020-01-02 18:10:51.257512",
  "modified_by": "Administrator",
  "module": "Spinning",
  "name": "Job Work Return",

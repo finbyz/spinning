@@ -5,13 +5,13 @@
  "engine": "InnoDB",
  "field_order": [
   "package",
+  "package_type",
+  "package_item",
+  "column_break_6",
   "gross_weight",
   "net_weight",
   "tare_weight",
   "spools",
-  "column_break_6",
-  "package_type",
-  "package_item",
   "is_returnable",
   "returnable_by"
  ],
@@ -46,6 +46,7 @@
    "default": "0",
    "fieldname": "spools",
    "fieldtype": "Int",
+   "in_list_view": 1,
    "label": "Spools"
   },
   {
@@ -69,17 +70,19 @@
    "depends_on": "eval: doc.package_type == \"Pallet\"",
    "fieldname": "is_returnable",
    "fieldtype": "Check",
+   "in_list_view": 1,
    "label": "Is Returnable"
   },
   {
    "depends_on": "eval: doc.is_returnable",
    "fieldname": "returnable_by",
    "fieldtype": "Date",
+   "in_list_view": 1,
    "label": "Returnable By"
   }
  ],
  "istable": 1,
- "modified": "2019-12-09 17:32:12.741376",
+ "modified": "2019-12-31 14:01:09.144590",
  "modified_by": "Administrator",
  "module": "Spinning",
  "name": "Job Work Return Package Details",
