@@ -28,7 +28,15 @@ cur_frm.fields_dict.taxes_and_charges.get_query = function(doc){
 		}
 	};
 }
+cur_frm.fields_dict['pallet_item'].grid.get_field("pallet_item").get_query = function (doc, cdt, cdn) {
+	let d = locals[cdt][cdn];
 
+	return {
+		filters: {
+			"item_group": "Pallet"
+		}
+	}
+};
 /* cur_frm.fields_dict['items'].grid.get_field("grade").get_query = function(doc) {
 	return {
 		filters: {

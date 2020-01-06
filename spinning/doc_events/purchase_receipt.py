@@ -29,13 +29,13 @@ def before_save(self, method):
 def on_submit(self, method):
 	validate_gate_pass(self)
 	create_packages(self)
-	create_stock_entry(self)
+	create_pallet_stock_entry(self)
 	add_package_consumption(self)
 	
 @frappe.whitelist()
 def on_cancel(self, method):
 	clear_package_weight(self)
-	cancel_stock_entry(self)
+	cancel_pallet_stock_entry(self)
 	remove_package_consumption(self)
 
 
@@ -123,7 +123,7 @@ def clear_package_weight(self):
 	else:
 		frappe.db.commit()
 			
-def create_stock_entry(self):
+def create_pallet_stock_entry(self):
 	abbr = frappe.db.get_value('Company',self.company,'abbr')
 	if self.pallet_item:
 		pallet_se = frappe.new_doc("Stock Entry")
@@ -135,30 +135,34 @@ def create_stock_entry(self):
 		pallet_se.company = self.company
 		pallet_se.reference_doctype = self.doctype
 		pallet_se.reference_docname = self.name
+		pallet_se.party_type = "Supllier"
+		pallet_se.party = self.supplier
 		
 		for row in self.pallet_item:
+			rate = frappe.db.get_value("Item",row.pallet_item,'valuation_rate')
 			pallet_se.append("items",{
 				'item_code': row.pallet_item,
 				'qty': row.qty,
-				'basic_rate': 0,
-				't_warehouse': 'Zero Rated Pallet - %s' % abbr,
-				'allow_zero_valuation_rate': 1
+				'basic_rate': rate or 0,
+				't_warehouse': 'Pallet In - %s' % abbr,
+				#'allow_zero_valuation_rate': 1
 			})
 		try:
 			pallet_se.save(ignore_permissions=True)
 			pallet_se.submit()
 		except Exception as e:
 			frappe.throw(str(e))
-		else:
-			self.db_set('stock_entry_pallet',pallet_se.name)
-
-def cancel_stock_entry(self):
-	if self.stock_entry_pallet:
-		pallet_se = frappe.get_doc("Stock Entry",self.stock_entry_pallet)
-		pallet_se.cancel()
-		self.db_set('stock_entry_pallet','')
-		frappe.db.commit()
 		
+def cancel_pallet_stock_entry(self):
+	se = frappe.get_doc("Stock Entry",{'reference_doctype': self.doctype,'reference_docname':self.name})
+	se.flags.ignore_permissions = True
+	try:
+		se.cancel()
+	except Exception as e:
+		raise e
+	se.db_set('reference_doctype','')
+	se.db_set('reference_docname','')
+
 def update_pallet_item(self):
 	count = 0
 	if self.package_type == 'Pallet' and self.package_item:

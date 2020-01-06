@@ -20,10 +20,11 @@ def before_save(self, method):
 
 def on_submit(self, method):
 	update_packages(self, method)
+	create_pallet_stock_entry(self)
 
 def on_cancel(self, method):
 	update_packages(self, method)
-
+	cancel_pallet_stock_entry(self)
 
 def validate_packages(self):
 	for row in self.packages:
@@ -100,3 +101,45 @@ def update_packages(self, method):
 			doc = frappe.get_doc("Package", row.package)
 			doc.remove_consumption(self.doctype, self.name)
 			doc.save(ignore_permissions=True)
+
+def create_pallet_stock_entry(self):
+	abbr = frappe.db.get_value('Company',self.company,'abbr')
+	if self.pallet_item:
+		pallet_se = frappe.new_doc("Stock Entry")
+		pallet_se.stock_entry_type = "Material Transfer"
+		pallet_se.purpose = "Material Transfer"
+		pallet_se.posting_date = self.posting_date
+		pallet_se.posting_time = self.posting_time
+		pallet_se.set_posting_time = self.set_posting_time
+		pallet_se.company = self.company
+		pallet_se.reference_doctype = self.doctype
+		pallet_se.reference_docname = self.name
+		pallet_se.party_type = "Customer"
+		pallet_se.party = self.customer
+		
+		for row in self.pallet_item:
+			rate = frappe.db.get_value("Item",row.pallet_item,'valuation_rate')
+			pallet_se.append("items",{
+				'item_code': row.pallet_item,
+				'qty': row.qty,
+				'basic_rate': rate or 0,
+				's_warehouse': row.s_warehouse,
+				't_warehouse': row.t_warehouse
+				#'allow_zero_valuation_rate': 1
+			})
+		try:
+			pallet_se.save(ignore_permissions=True)
+			pallet_se.submit()
+		except Exception as e:
+			frappe.throw(str(e))
+
+def cancel_pallet_stock_entry(self):
+	se = frappe.get_doc("Stock Entry",{'reference_doctype': self.doctype,'reference_docname':self.name})
+	se.flags.ignore_permissions = True
+	try:
+		se.cancel()
+	except Exception as e:
+		raise e
+	self.remove_package_consumption()
+	se.db_set('reference_doctype','')
+	se.db_set('reference_docname','')

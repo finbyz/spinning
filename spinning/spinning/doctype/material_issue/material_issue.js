@@ -3,8 +3,35 @@
 
 frappe.provide("erpnext.stock");
 
+cur_frm.fields_dict['pallet_item'].grid.get_field("pallet_item").get_query = function(doc) {
+	return {
+		filters: {
+			"item_group": 'Pallet'
+		}
+	}
+};
+
+frappe.ui.form.on("Material Issue Pallet Item", {
+	pallet_item_add: function(frm){
+		frm.trigger('set_s_warehouse');
+		frm.trigger('set_t_warehouse');
+	},
+	set_s_warehouse: function(frm){
+		frappe.db.get_value("Material Issue Pallet Item", frm.doc.name, 'abbr', function(r){
+				frappe.msgprint(__("inside s_warehourse"))
+				frm.set_value('s_warehouse', 'Pallets - '+ r.abbr)
+		});
+	},
+	set_t_warehouse: function(frm){
+		frappe.db.get_value("Material Issue Pallet Item", frm.doc.name, 'abbr', function(r){
+				frm.set_value('t_warehouse', 'Pallet Out - '+ r.abbr)
+				// frappe.msgprint(t_warehouse)
+		});
+	}
+});
 
 frappe.ui.form.on('Material Issue', {
+	
 	"party": function(frm) {
 		frappe.call({
 			method:"erpnext.accounts.party.get_party_details",

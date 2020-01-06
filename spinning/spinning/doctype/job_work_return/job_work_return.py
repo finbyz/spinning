@@ -21,6 +21,9 @@ from frappe.utils import flt, cstr, cint
 
 
 class JobWorkReturn(Document):
+	def validate(self):
+		self.validate_weights()
+	
 	def on_submit(self):
 		self.create_packages()
 		self.create_stock_entry()
@@ -34,6 +37,16 @@ class JobWorkReturn(Document):
 		self.clear_package_weight()
 		self.cancel_stock_entry()
 
+	def validate_weights(self):
+		for row in self.package_details:
+			# has_batch_no = frappe.db.get_value('Item', row.item_code, 'has_batch_no')
+			# frappe.msgprint(__("wght called."))
+			total_net_weight = sum(map(lambda x: x.net_weight, self.package_details))
+
+			if flt(self.qty != flt(total_net_weight)):
+				frappe.throw(_("Total Qty does not match with Total Net Weight for Item {} in Row {}".format(self.qty, row.idx)))
+				
+	
 	def create_stock_entry(self):
 		se = frappe.new_doc("Stock Entry")
 		se.stock_entry_type = "Repack"
@@ -63,7 +76,6 @@ class JobWorkReturn(Document):
 		})
 		for row in self.additional_cost:
 			se.append("additional_costs",{
-				'expense_account': row.expense_account,
 				'description': row.description,
 				'amount': row.amount
 			})
@@ -112,8 +124,9 @@ class JobWorkReturn(Document):
 				package_list = frappe.db.sql(""" select name, remaining_qty from `tabPackage` 
 					where status <> "Out of Stock" and merge = %s and item_code = %s and warehouse = %s""", (row.merge, row.item_code,self.s_warehouse), as_dict = True)
 				
+				frappe.msgprint(str(package_list))
 				total_remaining_qty = sum(flt(d.remaining_qty) for d in package_list)
-				
+				frappe.msgprint(str(total_remaining_qty))
 				if total_remaining_qty < flt(row.qty):
 					frappe.throw(_("Sufficient quantity for item {} is not available in {} warehouse for merge {}.".format(frappe.bold(row.item_code), frappe.bold(self.s_warehouse), frappe.bold(row.merge))))
 				for pkg in package_list:
