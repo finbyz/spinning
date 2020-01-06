@@ -11,29 +11,37 @@ cur_frm.fields_dict['pallet_item'].grid.get_field("pallet_item").get_query = fun
 	}
 };
 
-frappe.ui.form.on("Material Issue Pallet Item", {
-	pallet_item_add: function(frm){
-		// frappe.msgprint(__("pallet added"))
-		frm.trigger('set_s_warehouse');
-		frm.trigger('set_t_warehouse');
-	},
-	set_s_warehouse: function(frm){
-		frappe.msgprint(__("inside s_warehourse"))
-		frappe.db.get_value("Material Issue Pallet Item", frm.doc.name, 'abbr', function(r){
-				// frappe.msgprint(__("inside s_warehourse"))
-				frm.set_value('s_warehouse', 'Pallets - '+ r.abbr)
-		});
-	},
-	set_t_warehouse: function(frm){
-		frappe.db.get_value("Material Issue Pallet Item", frm.doc.name, 'abbr', function(r){
-				frm.set_value('t_warehouse', 'Pallet Out - '+ r.abbr)
-				// frappe.msgprint(t_warehouse)
-		});
-	}
-});
+// frappe.ui.form.on("Material Issue Pallet Item", {
+// 	pallet_item_add: function(frm){
+// 		// frappe.msgprint(__("pallet added"))
+// 		frm.events.set_s_warehouse(frm);
+// 		// frm.events.set_t_warehouse(frm);
+// 	},
+
+// });
 
 frappe.ui.form.on('Material Issue', {
 	
+	// set_s_warehouse: function(frm){
+	// 	frappe.db.get_value("Company", frm.doc.company, 'abbr', function(r){
+
+	// 			let c = frm.add_child('pallet_item')
+	// 			$.each(row, function(k, v) {
+	// 				frappe.model.set_value(c.doctype, c.name ,c.s_warehouse, 'Pallets - '+ r.abbr,k, v)
+	// 			});
+
+	// 			// frappe.msgprint(__("inside s_warehourse"))
+	// 			// frm.set_value('s_warehouse', 'Pallets - '+ r.abbr)
+	// 	});
+
+	// },
+	// set_t_warehouse: function(frm){
+	// 	frappe.db.get_value("Company", frm.doc.company, 'abbr', function(r){
+	// 		frm.set_value('t_warehouse', 'Pallet Out - '+ r.abbr)
+	// 			// frappe.msgprint(t_warehouse)
+	// 	});
+	// },
+
 	"party": function(frm) {
 		frappe.call({
 			method:"erpnext.accounts.party.get_party_details",
