@@ -135,7 +135,7 @@ def create_pallet_stock_entry(self):
 		pallet_se.company = self.company
 		pallet_se.reference_doctype = self.doctype
 		pallet_se.reference_docname = self.name
-		pallet_se.party_type = "Supllier"
+		pallet_se.party_type = "Supplier"
 		pallet_se.party = self.supplier
 		
 		for row in self.pallet_item:

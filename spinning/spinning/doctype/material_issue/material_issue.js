@@ -13,12 +13,14 @@ cur_frm.fields_dict['pallet_item'].grid.get_field("pallet_item").get_query = fun
 
 frappe.ui.form.on("Material Issue Pallet Item", {
 	pallet_item_add: function(frm){
+		// frappe.msgprint(__("pallet added"))
 		frm.trigger('set_s_warehouse');
 		frm.trigger('set_t_warehouse');
 	},
 	set_s_warehouse: function(frm){
+		frappe.msgprint(__("inside s_warehourse"))
 		frappe.db.get_value("Material Issue Pallet Item", frm.doc.name, 'abbr', function(r){
-				frappe.msgprint(__("inside s_warehourse"))
+				// frappe.msgprint(__("inside s_warehourse"))
 				frm.set_value('s_warehouse', 'Pallets - '+ r.abbr)
 		});
 	},
