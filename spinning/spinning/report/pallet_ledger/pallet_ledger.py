@@ -69,7 +69,6 @@ def get_columns():
 		{"label": _("Entry Type"), "fieldname": "entry_type", "fieldtype": "Data", "width": 100},
 		{"label": _("Company"), "fieldname": "company", "fieldtype": "Link", "options": "Company", "width": 110},
 		{"label": _("UOM"), "fieldname": "stock_uom", "fieldtype": "Link", "options": "UOM", "width": 50},
-
 	]
 
 	return columns
@@ -79,38 +78,37 @@ def get_stock_ledger_entries(filters, items):
 	if items:
 		item_conditions_sql = 'and sle.item_code in ({})'\
 			.format(', '.join([frappe.db.escape(i) for i in items]))
+
+	party_type = filters.get('party_type',  None)
+	party = filters.get('party', None)
+	warehouse = filters.get('warehouse', None)
 	
-	party_type = filters.get('party_type' or None)
-	party = filters.get('party' or None)
 	
+
 	party_condition = ''
 	if party_type:
 		party_condition += " and se.party_type = '{}'".format(party_type)
 
 	if party:
-		party_condition += "and se.party = '{}'".format(party)
-
-	entry_type = filters.get("entry_type", None)
-	item_query_condition = ""
-	if entry_type:
-		item_query_condition = " and se.stock_entry_type = '{}'".format(entry_type)
+		party_condition += " and se.party = '{}'".format(party)
 	
+	if warehouse == None:
+		party_condition += " and sle.warehouse LIKE '%%Pallet%%'"
+
 	return frappe.db.sql("""select concat_ws(" ", sle.posting_date, sle.posting_time) as date,
 			sle.item_code, sle.warehouse, sle.actual_qty, sle.qty_after_transaction, sle.incoming_rate, sle.valuation_rate,
-			sle.stock_value, sle.voucher_type, se.stock_entry_type as entry_type, se.work_order, sle.voucher_no, sle.company, sle.stock_value_difference,
-			se.party, se.party_type, se.returnable_by
+			sle.stock_value, sle.voucher_type, sle.voucher_no, sle.batch_no, sle.serial_no, sle.company, sle.project, sle.stock_value_difference,
+			se.party, se.party_type, se.party_type
 		from `tabStock Ledger Entry` sle
-		Join `tabBatch` bt on sle.batch_no = bt.name
 		Left Join `tabStock Entry` as se on se.name = sle.voucher_no
 		where sle.company = %(company)s and
 			sle.posting_date between %(from_date)s and %(to_date)s
 			{sle_conditions}
-			{item_conditions_sql} {item_query_condition} {party_condition}
+			{item_conditions_sql} {party_condition}
 			order by sle.posting_date asc, sle.posting_time asc, sle.creation asc"""\
 		.format(
 			sle_conditions=get_sle_conditions(filters),
 			item_conditions_sql = item_conditions_sql,
-			item_query_condition = item_query_condition,
 			party_condition = party_condition
 		), filters, as_dict=1)
 
@@ -119,6 +117,8 @@ def get_items(filters):
 	if filters.get("item_code"):
 		conditions.append("item.name=%(item_code)s")
 	else:
+		if filters.get("brand"):
+			conditions.append("item.brand=%(brand)s")
 		if filters.get("item_group"):
 			conditions.append(get_item_group_condition(filters.get("item_group")))
 
@@ -144,7 +144,7 @@ def get_item_details(items, sl_entries, include_uom):
 
 	res = frappe.db.sql("""
 		select
-			item.name, item.item_group, item.stock_uom {cf_field}
+			item.name, item.item_name, item.description, item.item_group, item.brand, item.stock_uom {cf_field}
 		from
 			`tabItem` item
 			{cf_join}
@@ -156,36 +156,6 @@ def get_item_details(items, sl_entries, include_uom):
 		item_details.setdefault(item.name, item)
 
 	return item_details
-
-def get_item_details(items, sl_entries, include_uom):
-	item_details = {}
-	if not items:
-		items = list(set([d.item_code for d in sl_entries]))
-
-	if not items:
-		return item_details
-
-	cf_field = cf_join = ""
-	if include_uom:
-		cf_field = ", ucd.conversion_factor"
-		cf_join = "left join `tabUOM Conversion Detail` ucd on ucd.parent=item.name and ucd.uom=%s" \
-			% frappe.db.escape(include_uom)
-
-	res = frappe.db.sql("""
-		select
-			item.name, item.item_group, item.stock_uom {cf_field}
-		from
-			`tabItem` item
-			{cf_join}
-		where
-			item.name in ({item_codes})
-	""".format(cf_field=cf_field, cf_join=cf_join, item_codes=','.join(['%s'] *len(items))), items, as_dict=1)
-
-	for item in res:
-		item_details.setdefault(item.name, item)
-
-	return item_details
-
 
 def get_sle_conditions(filters):
 	conditions = []
@@ -194,10 +164,11 @@ def get_sle_conditions(filters):
 		if warehouse_condition:
 			conditions.append(warehouse_condition)
 	if filters.get("voucher_no"):
-		conditions.append("sle.voucher_no=%(voucher_no)s")
+		conditions.append("voucher_no=%(voucher_no)s")
 	if filters.get("batch_no"):
-		conditions.append("sle.batch_no in %(batch_no)s")
-
+		conditions.append("batch_no=%(batch_no)s")
+	if filters.get("project"):
+		conditions.append("project=%(project)s")
 
 	return "and {}".format(" and ".join(conditions)) if conditions else ""
 

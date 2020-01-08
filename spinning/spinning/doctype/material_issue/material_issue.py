@@ -100,7 +100,7 @@ class MaterialIssue(Document):
 			frappe.throw(str(e))
 			
 	def cancel_pallet_stock_entry(self):
-		if self.pallet_item self.is_returnable:
+		if self.pallet_item and self.is_returnable:
 			se = frappe.get_doc("Stock Entry",{'reference_doctype': self.doctype,'reference_docname':self.name})
 			se.flags.ignore_permissions = True
 			try:

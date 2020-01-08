@@ -46,7 +46,8 @@
 					{% } %}
 
 					{{ __("Against") }}: {%= data[i].against %}
-					<br>{%= __("Remarks") %}: {%= data[i].remarks %}
+                    <br>{%= __("Remarks") %}: {%= data[i].remarks %}
+                    <br>{%= data[i].account %} {%= data[i].debit %}
 					{% if(data[i].bill_no) { %}
 						<br>{%= __("Supplier Invoice No") %}: {%= data[i].bill_no %}
 					{% } %}
