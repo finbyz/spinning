@@ -26,6 +26,10 @@ def get_data():
 				{
 					"type": "doctype",
 					"name": "Material Repack",
+				},
+				{
+					"type": "doctype",
+					"name": "Job Work Return",
 				}
 			]
 		},
@@ -59,6 +63,19 @@ def get_data():
 				}
 			]
 		},
+			{
+			"label": _("Gate"),
+			"items": [
+				{
+					"type": "doctype",
+					"name": "Gate Entry",
+				},
+				{
+					"type": "doctype",
+					"name": "Gate Exit",
+				}
+			]
+		},
 		{
 			"label": _("Report"),
 			"items": [
@@ -74,6 +91,13 @@ def get_data():
 					"is_query_report": True,
 					"name": "Sales Order Delivery Details",
 					"doctype": "Sales Order",
+					"onboard": 1,
+				},
+				{
+					"type": "report",
+					"is_query_report": True,
+					"name": "Pallet Ledger",
+					"doctype": "Stock Ledger Entry",
 					"onboard": 1,
 				},
 			]

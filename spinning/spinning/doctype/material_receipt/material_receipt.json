@@ -11,12 +11,16 @@
   "adjustment_entry",
   "company",
   "warehouse",
+  "party_type",
+  "party",
   "column_break_4",
   "posting_date",
   "posting_time",
   "set_posting_time",
+  "send_to_party",
   "gate_entry_no",
   "gate_entry",
+  "party_name",
   "section_break_7",
   "items",
   "section_break_10",
@@ -321,10 +325,43 @@
    "fieldtype": "Link",
    "label": "Gate Entry",
    "options": "Gate Entry"
+  },
+  {
+   "default": "0",
+   "fieldname": "send_to_party",
+   "fieldtype": "Check",
+   "label": "send to party"
+  },
+  {
+   "depends_on": "eval:doc.send_to_party",
+   "fieldname": "party_type",
+   "fieldtype": "Select",
+   "in_standard_filter": 1,
+   "label": "Party Type",
+   "options": "Customer\nSupplier",
+   "translatable": 1
+  },
+  {
+   "bold": 1,
+   "depends_on": "eval:doc.party_type && doc.send_to_party",
+   "fieldname": "party",
+   "fieldtype": "Dynamic Link",
+   "in_standard_filter": 1,
+   "label": "Party",
+   "options": "party_type"
+  },
+  {
+   "depends_on": "eval:doc.party_type && doc.send_to_party",
+   "fieldname": "party_name",
+   "fieldtype": "Data",
+   "in_global_search": 1,
+   "label": "Party Name",
+   "read_only": 1,
+   "translatable": 1
   }
  ],
  "is_submittable": 1,
- "modified": "2020-01-03 13:57:09.452816",
+ "modified": "2020-01-08 10:38:33.951135",
  "modified_by": "Administrator",
  "module": "Spinning",
  "name": "Material Receipt",

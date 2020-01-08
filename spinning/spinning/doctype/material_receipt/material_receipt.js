@@ -43,7 +43,26 @@ cur_frm.fields_dict.package_item.get_query = function (doc) {
         }
     }
 };
+
+frappe.ui.form.on("Material Receipt Pallet Item", {
+	pallet_item_add: function(frm){
+		// frappe.msgprint(__("pallet added"))
+		frm.events.set_t_warehouse(frm);
+	},
+
+});
+
 frappe.ui.form.on('Material Receipt', {
+
+
+	set_t_warehouse: function(frm){
+		frappe.db.get_value("Company", frm.doc.company, 'abbr', function(r){
+			frm.doc.pallet_item.forEach(function(row){
+				frappe.model.set_value(row.doctype, row.name, "t_warehouse" ,'Pallet In - '+ r.abbr);
+			});
+	});
+	},
+
 	validate: function(frm){
 		
 		$.each(frm.doc.items || [], function(i, d) {
@@ -80,6 +99,23 @@ frappe.ui.form.on('Material Receipt', {
 			frm.trigger("toggle_display_account_head");
 		}
 	},
+
+	
+	"party": function(frm) {
+		frappe.call({
+			method:"erpnext.accounts.party.get_party_details",
+			args:{
+				party: frm.doc.party,
+				party_type: frm.doc.party_type
+			},
+			callback: function(r){
+				if(r.message){
+					frm.set_value ('party_name', frm.doc.party)
+				}
+			}
+		})
+	},
+
 	set_basic_rate: function(frm, cdt, cdn) {
 		const item = locals[cdt][cdn];
 		item.transfer_qty = flt(item.qty) * flt(item.conversion_factor);

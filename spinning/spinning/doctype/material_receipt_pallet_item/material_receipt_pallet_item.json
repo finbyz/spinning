@@ -5,7 +5,9 @@
  "engine": "InnoDB",
  "field_order": [
   "pallet_item",
-  "qty"
+  "qty",
+  "column_break_3",
+  "t_warehouse"
  ],
  "fields": [
   {
@@ -20,10 +22,20 @@
    "fieldtype": "Float",
    "in_list_view": 1,
    "label": "Qty"
+  },
+  {
+   "fieldname": "t_warehouse",
+   "fieldtype": "Link",
+   "label": "T Warehouse",
+   "options": "Warehouse"
+  },
+  {
+   "fieldname": "column_break_3",
+   "fieldtype": "Column Break"
   }
  ],
  "istable": 1,
- "modified": "2019-12-07 15:21:42.484325",
+ "modified": "2020-01-07 12:50:28.109604",
  "modified_by": "Administrator",
  "module": "Spinning",
  "name": "Material Receipt Pallet Item",

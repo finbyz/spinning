@@ -2,6 +2,15 @@
 	'label': "Stock Entry",
 	'items': ['Stock Entry']
 }); */
+
+cur_frm.fields_dict['pallet_item'].grid.get_field("pallet_item").get_query = function(doc) {
+	return {
+		filters: {
+			"item_group": 'Pallet'
+		}
+	}
+};
+
 cur_frm.fields_dict['items'].grid.get_field("merge").get_query = function(doc, cdt, cdn) {
 	let d = locals[cdt][cdn];
 
@@ -28,15 +37,7 @@ cur_frm.fields_dict.taxes_and_charges.get_query = function(doc){
 		}
 	};
 }
-cur_frm.fields_dict['pallet_item'].grid.get_field("pallet_item").get_query = function (doc, cdt, cdn) {
-	let d = locals[cdt][cdn];
 
-	return {
-		filters: {
-			"item_group": "Pallet"
-		}
-	}
-};
 /* cur_frm.fields_dict['items'].grid.get_field("grade").get_query = function(doc) {
 	return {
 		filters: {
@@ -52,7 +53,24 @@ cur_frm.fields_dict.package_item.get_query = function (doc) {
     }
 };
 
+frappe.ui.form.on("Purchase Receipt Pallet Item", {
+	pallet_item_add: function(frm){
+		// frappe.msgprint(__("pallet added"))
+		frm.events.set_t_warehouse(frm);
+	},
+
+});
+
 frappe.ui.form.on('Purchase Receipt', {
+
+	set_t_warehouse: function(frm){
+		frappe.db.get_value("Company", frm.doc.company, 'abbr', function(r){
+			frm.doc.pallet_item.forEach(function(row){
+				frappe.model.set_value(row.doctype, row.name, "t_warehouse" ,'Pallet In - '+ r.abbr);
+			});
+	});
+	},
+
 	onload: function(frm){
 		frm.trigger('override_merge_new_doc');
 		frm.trigger('override_grade_new_doc');

@@ -37,6 +37,23 @@ cur_frm.fields_dict.packages.grid.get_field('package').get_query = function(doc)
 	}
 }
 
+cur_frm.fields_dict['pallet_item'].grid.get_field("pallet_item").get_query = function(doc) {
+	return {
+		filters: {
+			"item_group": 'Pallet'
+		}
+	}
+};
+
+frappe.ui.form.on("Delivery Note Pallet Item", {
+	pallet_item_add: function(frm){
+		// frappe.msgprint(__("pallet added"))
+		frm.events.set_s_warehouse(frm);
+		frm.events.set_t_warehouse(frm);
+	},
+
+});
+
 cur_frm.fields_dict.taxes_and_charges.get_query = function(doc){
 	return {
 		"filters": {
@@ -46,6 +63,23 @@ cur_frm.fields_dict.taxes_and_charges.get_query = function(doc){
 }
 
 frappe.ui.form.on("Delivery Note", {
+
+	set_s_warehouse: function(frm){
+		frappe.db.get_value("Company", frm.doc.company, 'abbr', function(r){
+				frm.doc.pallet_item.forEach(function(row){
+					frappe.model.set_value(row.doctype, row.name, "s_warehouse" ,'Pallets - '+ r.abbr);
+				});
+		});
+	},
+
+	set_t_warehouse: function(frm){
+		frappe.db.get_value("Company", frm.doc.company, 'abbr', function(r){
+			frm.doc.pallet_item.forEach(function(row){
+				frappe.model.set_value(row.doctype, row.name, "t_warehouse" ,'Pallet Out - '+ r.abbr);
+			});
+	});
+	},
+
 	onload: function (frm) {
 		if(!frm.doc.tc_name){
 			frm.set_value("tc_name", "Delivery Challan Terms");

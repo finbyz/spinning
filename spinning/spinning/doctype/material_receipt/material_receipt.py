@@ -25,7 +25,6 @@ class MaterialReceipt(Document):
 			frappe.throw(_('Posting Date Cannot Be After Today Date'))
 		if self._action == 'submit':
 			self.validate_weights()
-			#self.create_packages()
 		set_batches(self, 't_warehouse')
 		self.calculate_amount()
 
@@ -213,6 +212,9 @@ class MaterialReceipt(Document):
 		se.company = self.company
 		se.reference_doctype = self.doctype
 		se.reference_docname = self.name
+		se.party_type = self.party_type
+		se.party = self.party
+		se.returnable_by = self.returnable_by
 		abbr = frappe.db.get_value('Company',self.company,'abbr')
 
 		for row in self.items:
@@ -239,22 +241,23 @@ class MaterialReceipt(Document):
 				})
 		if self.pallet_item:
 			for d in self.pallet_item:
+				rate = frappe.db.get_value("Item",d.pallet_item,'valuation_rate')
 				if self.is_opening == "Yes":
 					se.append("items",{
 						'item_code': d.pallet_item,
 						'qty': d.qty,
-						'basic_rate': 0,
+						'basic_rate': rate or 0,
 						'expense_account': 'Temporary Opening - %s' % abbr,
-						't_warehouse': 'Zero Rated Pallet - %s' % abbr,
-						'allow_zero_valuation_rate': 1
+						't_warehouse': d.t_warehouse or 'Pallet In - %s' % abbr,
+						#'allow_zero_valuation_rate': 1
 					})
 				else:
 					se.append("items",{
 						'item_code': d.pallet_item,
 						'qty': d.qty,
-						'basic_rate': 0,
-						't_warehouse': 'Zero Rated Pallet - %s' % abbr,
-						'allow_zero_valuation_rate': 1
+						'basic_rate': rate or 0,
+						't_warehouse': d.t_warehouse or 'Pallet In - %s' % abbr,
+						#'allow_zero_valuation_rate': 1
 					})
 		try:
 			se.save(ignore_permissions=True)

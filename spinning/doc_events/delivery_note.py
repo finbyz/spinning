@@ -18,9 +18,11 @@ def before_validate(self, method):
 def before_save(self, method):
 	calculate_totals(self)
 
+
 def on_submit(self, method):
 	update_packages(self, method)
 	create_pallet_stock_entry(self)
+
 
 def on_cancel(self, method):
 	update_packages(self, method)
@@ -103,8 +105,8 @@ def update_packages(self, method):
 			doc.save(ignore_permissions=True)
 
 def create_pallet_stock_entry(self):
-	abbr = frappe.db.get_value('Company',self.company,'abbr')
-	if self.pallet_item:
+	if self.pallet_item and self.is_returnable:
+		abbr = frappe.db.get_value('Company',self.company,'abbr')
 		pallet_se = frappe.new_doc("Stock Entry")
 		pallet_se.stock_entry_type = "Material Transfer"
 		pallet_se.purpose = "Material Transfer"
@@ -116,6 +118,8 @@ def create_pallet_stock_entry(self):
 		pallet_se.reference_docname = self.name
 		pallet_se.party_type = "Customer"
 		pallet_se.party = self.customer
+		pallet_se.returnable_by = self.returnable_by
+
 		
 		for row in self.pallet_item:
 			rate = frappe.db.get_value("Item",row.pallet_item,'valuation_rate')
@@ -134,12 +138,14 @@ def create_pallet_stock_entry(self):
 			frappe.throw(str(e))
 
 def cancel_pallet_stock_entry(self):
-	se = frappe.get_doc("Stock Entry",{'reference_doctype': self.doctype,'reference_docname':self.name})
-	se.flags.ignore_permissions = True
-	try:
-		se.cancel()
-	except Exception as e:
-		raise e
-	self.remove_package_consumption()
-	se.db_set('reference_doctype','')
-	se.db_set('reference_docname','')
+	if self.pallet_item and self.is_returnable:
+		se = frappe.get_doc("Stock Entry",{'reference_doctype': self.doctype,'reference_docname':self.name})
+		se.flags.ignore_permissions = True
+		try:
+			se.cancel()
+		except Exception as e:
+			raise e
+		se.db_set('reference_doctype','')
+		se.db_set('reference_docname','')	
+		self.remove_package_consumption()
+

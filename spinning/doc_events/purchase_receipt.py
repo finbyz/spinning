@@ -25,16 +25,62 @@ def before_save(self, method):
 	pass
 	#update_pallet_item(self)
 
+
+def create_pallet_stock_entry(self):
+	if self.pallet_item and is_returnable:
+		abbr = frappe.db.get_value('Company',self.company,'abbr')
+		pallet_se = frappe.new_doc("Stock Entry")
+		pallet_se.stock_entry_type = "Material Receipt"
+		pallet_se.purpose = "Material Receipt"
+		pallet_se.posting_date = self.posting_date
+		pallet_se.posting_time = self.posting_time
+		pallet_se.set_posting_time = self.set_posting_time
+		pallet_se.company = self.company
+		pallet_se.reference_doctype = self.doctype
+		pallet_se.reference_docname = self.name
+		pallet_se.party_type = "Supplier"
+		pallet_se.party = self.supplier
+		pallet_se.returnable_by = self.returnable_by
+		
+		for row in self.pallet_item:
+			rate = frappe.db.get_value("Item",row.pallet_item,'valuation_rate')
+			pallet_se.append("items",{
+				'item_code': row.pallet_item,
+				'qty': row.qty,
+				'basic_rate': rate or 0,
+				't_warehouse': 'Pallet In - %s' % abbr,
+				#'allow_zero_valuation_rate': 1
+			})
+		try:
+			pallet_se.save(ignore_permissions=True)
+			pallet_se.submit()
+		except Exception as e:
+			frappe.throw(str(e))
+	
+def cancel_pallet_stock_entry(self):
+	if self.pallet_item:
+		se = frappe.get_doc("Stock Entry",{'reference_doctype': self.doctype,'reference_docname':self.name})
+		se.flags.ignore_permissions = True
+		try:
+			se.cancel()
+		except Exception as e:
+			raise e
+		se.db_set('reference_doctype','')
+		se.db_set('reference_docname','')
+
+
+
 @frappe.whitelist()
 def on_submit(self, method):
 	validate_gate_pass(self)
-	create_packages(self)
+	create_packages(self)	
 	create_pallet_stock_entry(self)
 	add_package_consumption(self)
+
 	
 @frappe.whitelist()
 def on_cancel(self, method):
-	clear_package_weight(self)
+	clear_package_weight(self)	
 	cancel_pallet_stock_entry(self)
 	remove_package_consumption(self)
 
@@ -123,46 +169,38 @@ def clear_package_weight(self):
 	else:
 		frappe.db.commit()
 			
-def create_pallet_stock_entry(self):
+def create_stock_entry(self):
+	pallet_se = frappe.new_doc("Stock Entry")
+	pallet_se.stock_entry_type = "Material Receipt"
+	pallet_se.purpose = "Material Receipt"
+	pallet_se.posting_date = self.posting_date
+	pallet_se.posting_time = self.posting_time
+	pallet_se.set_posting_time = self.set_posting_time
+	pallet_se.company = self.company
+	pallet_se.reference_doctype = self.doctype
+	pallet_se.reference_docname = self.name
+	pallet_se.party_type = "Supplier"
+	pallet_se.party = self.supplier
+	pallet_se.returnable_by = self.returnable_by
 	abbr = frappe.db.get_value('Company',self.company,'abbr')
-	if self.pallet_item:
-		pallet_se = frappe.new_doc("Stock Entry")
-		pallet_se.stock_entry_type = "Material Receipt"
-		pallet_se.purpose = "Material Receipt"
-		pallet_se.posting_date = self.posting_date
-		pallet_se.posting_time = self.posting_time
-		pallet_se.set_posting_time = self.set_posting_time
-		pallet_se.company = self.company
-		pallet_se.reference_doctype = self.doctype
-		pallet_se.reference_docname = self.name
-		pallet_se.party_type = "Supplier"
-		pallet_se.party = self.supplier
-		
+
+	if self.pallet_item and is_returnable:
 		for row in self.pallet_item:
-			rate = frappe.db.get_value("Item",row.pallet_item,'valuation_rate')
+			rate = frappe.db.get_value("Item",d.pallet_item,'valuation_rate')
 			pallet_se.append("items",{
 				'item_code': row.pallet_item,
 				'qty': row.qty,
 				'basic_rate': rate or 0,
-				't_warehouse': 'Pallet In - %s' % abbr,
-				#'allow_zero_valuation_rate': 1
+				't_warehouse': row.t_warehouse or 'Pallet In - %s' % abbr
 			})
 		try:
 			pallet_se.save(ignore_permissions=True)
 			pallet_se.submit()
 		except Exception as e:
 			frappe.throw(str(e))
+		#else:
+		#	self.db_set('stock_entry_pallet',pallet_se.name)
 		
-def cancel_pallet_stock_entry(self):
-	se = frappe.get_doc("Stock Entry",{'reference_doctype': self.doctype,'reference_docname':self.name})
-	se.flags.ignore_permissions = True
-	try:
-		se.cancel()
-	except Exception as e:
-		raise e
-	se.db_set('reference_doctype','')
-	se.db_set('reference_docname','')
-
 def update_pallet_item(self):
 	count = 0
 	if self.package_type == 'Pallet' and self.package_item:

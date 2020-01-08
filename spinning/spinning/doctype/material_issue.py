@@ -46,7 +46,8 @@ class MaterialIssue(Document):
 
 	def before_save(self):
 		self.calculate_totals()
-	
+		create_pallet_stock_entry(self)
+
 		abbr = frappe.db.get_value('Company',self.company,'abbr')
 		if self.is_opening == 'Yes':
 			self.adjustment_entry = 0
@@ -55,9 +56,13 @@ class MaterialIssue(Document):
 		if self.adjustment_entry:
 			for row in self.items:
 				row.expense_account = 'Stock Adjustment - %s' %abbr
-						
+				
+	def on_cancel(self, method):
+		cancel_pallet_stock_entry(self)
+		
+			
 	def create_pallet_stock_entry(self):
-		if self.pallet_item and self.is_returnable:
+		if self.pallet_item and is_returnable:
 			abbr = frappe.db.get_value('Company',self.company,'abbr')
 			pallet_se = frappe.new_doc("Stock Entry")
 			pallet_se.stock_entry_type = "Material Transfer"
@@ -68,31 +73,20 @@ class MaterialIssue(Document):
 			pallet_se.company = self.company
 			pallet_se.reference_doctype = self.doctype
 			pallet_se.reference_docname = self.name
-			pallet_se.party_type = self.party_type
-			pallet_se.party = self.party
+			pallet_se.party_type = "Customer"
+			pallet_se.party = self.customer
 			pallet_se.returnable_by = self.returnable_by
 
 		for row in self.pallet_item:
 			rate = frappe.db.get_value("Item",row.pallet_item,'valuation_rate')
-			if self.is_opening == "Yes":
-				pallet_se.append("items",{
-					'item_code': row.pallet_item,
-					'qty': row.qty,
-					'basic_rate': rate or 0,
-					'expense_account': 'Temporary Opening - %s' % abbr,
-					's_warehouse': row.s_warehouse,
-					't_warehouse': row.t_warehouse
-					#'allow_zero_valuation_rate': 1
-				})
-			else:
-				pallet_se.append("items",{
-					'item_code': row.pallet_item,
-					'qty': row.qty,
-					'basic_rate': rate or 0,
-					's_warehouse': row.s_warehouse,
-					't_warehouse': row.t_warehouse
-					#'allow_zero_valuation_rate': 1
-				})
+			pallet_se.append("items",{
+				'item_code': row.pallet_item,
+				'qty': row.qty,
+				'basic_rate': rate or 0,
+				's_warehouse': row.s_warehouse,
+				't_warehouse': row.t_warehouse
+				#'allow_zero_valuation_rate': 1
+			})
 		try:
 			pallet_se.save(ignore_permissions=True)
 			pallet_se.submit()
@@ -100,16 +94,17 @@ class MaterialIssue(Document):
 			frappe.throw(str(e))
 			
 	def cancel_pallet_stock_entry(self):
-		if self.pallet_item self.is_returnable:
-			se = frappe.get_doc("Stock Entry",{'reference_doctype': self.doctype,'reference_docname':self.name})
-			se.flags.ignore_permissions = True
-			try:
-				se.cancel()
-			except Exception as e:
-				raise e
-			se.db_set('reference_doctype','')
-			se.db_set('reference_docname','')	
+		se = frappe.get_doc("Stock Entry",{'reference_doctype': self.doctype,'reference_docname':self.name})
+		se.flags.ignore_permissions = True
+		try:
+			se.cancel()
+		except Exception as e:
+			raise e
+		se.db_set('reference_doctype','')
+		se.db_set('reference_docname','')	
+		self.remove_package_consumption()
 
+	
 	def set_items_as_per_packages(self):
 		#package_items = list(set(map(lambda x: (x.item_code, x.merge, x.grade, x.batch_no), self.packages)))
 
@@ -229,11 +224,9 @@ class MaterialIssue(Document):
 
 	def on_submit(self):		
 		self.create_stock_entry()
-		self.create_pallet_stock_entry()
 
 	def on_cancel(self):
 		self.cancel_stock_entry()
-		self.cancel_pallet_stock_entry()
 
 	def create_stock_entry(self):
 		def get_stock_entry_doc(source_name, target_doc=None, ignore_permissions= True):
