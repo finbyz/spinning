@@ -11,7 +11,6 @@
   "is_send_to_subcontractor",
   "purchase_order",
   "is_material_transfer_for_manufacture",
-  "finish_item",
   "party_type",
   "party",
   "party_name",
@@ -20,7 +19,9 @@
   "posting_time",
   "set_posting_time",
   "send_to_party",
+  "send_for_job_work",
   "company",
+  "finish_item",
   "bom",
   "work_order_details_section",
   "workstation",
@@ -548,14 +549,14 @@
    "label": "Remarks"
   },
   {
-   "depends_on": "eval:doc.send_to_party",
+   "depends_on": "eval:doc.send_for_job_work",
    "fieldname": "finish_item",
    "fieldtype": "Link",
    "label": "Finish Item",
    "options": "Item"
   },
   {
-   "depends_on": "eval:doc.send_to_party",
+   "depends_on": "eval:doc.send_for_job_work",
    "fieldname": "bom",
    "fieldtype": "Link",
    "label": "BOM",
@@ -566,10 +567,16 @@
    "fieldtype": "Link",
    "label": "Gate Entry",
    "options": "Gate Entry"
+  },
+  {
+   "default": "0",
+   "fieldname": "send_for_job_work",
+   "fieldtype": "Check",
+   "label": "send for job work"
   }
  ],
  "is_submittable": 1,
- "modified": "2020-01-03 13:57:55.898019",
+ "modified": "2020-01-09 09:50:32.473385",
  "modified_by": "Administrator",
  "module": "Spinning",
  "name": "Material Transfer",

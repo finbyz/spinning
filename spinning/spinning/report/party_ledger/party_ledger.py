@@ -108,11 +108,10 @@ def set_account_currency(filters):
 
 def get_result(filters, account_details):
 	gl_entries = get_gl_entries(filters)
-
 	data = get_data_with_opening_closing(filters, account_details, gl_entries)
-
+	
 	result = get_result_as_list(data, filters)
-
+	
 	return result
 
 def get_gl_entries(filters):
@@ -135,9 +134,12 @@ def get_gl_entries(filters):
 			posting_date, account, party_type, party,
 			voucher_type, voucher_no, cost_center, project,
 			against_voucher_type, against_voucher, account_currency,
-			remarks, against, is_opening {select_fields}
+			remarks, against, is_opening, GROUP_CONCAT(account SEPARATOR '<br>') as accounts_list,
+			GROUP_CONCAT(debit_in_account_currency SEPARATOR '<br>') as debit_list,
+			GROUP_CONCAT(credit_in_account_currency SEPARATOR '<br>') as credit_list {select_fields}
 		from `tabGL Entry`
 		where company=%(company)s {conditions}
+		Group by voucher_no
 		{order_by_statement}
 		""".format(
 			select_fields=select_fields, conditions=get_conditions(filters),
@@ -165,8 +167,8 @@ def get_conditions(filters):
 	if filters.get("voucher_no"):
 		conditions.append("voucher_no=%(voucher_no)s")
 
-	if filters.get("group_by") == "Group by Party" and not filters.get("party_type"):
-		conditions.append("party_type in ('Customer', 'Supplier')")
+	#if filters.get("group_by") == "Group by Party" and not filters.get("party_type"):
+	#	conditions.append("party_type in ('Customer', 'Supplier')")
 
 	if filters.get("party_type"):
 		conditions.append("party_type=%(party_type)s")
@@ -324,7 +326,7 @@ def get_result_as_list(data, filters):
 	balance, balance_in_account_currency = 0, 0
 	inv_details = get_supplier_invoice_details()
 
-	for d in data:
+	for index, d in enumerate(data):
 		if not d.get('posting_date'):
 			balance, balance_in_account_currency = 0, 0
 
@@ -334,7 +336,47 @@ def get_result_as_list(data, filters):
 		d['account_currency'] = filters.account_currency
 		d['bill_no'] = inv_details.get(d.get('against_voucher'), '')
 
-	return data
+		voucher_no = d.get('voucher_no', None)
+		party = d.get('party', None)
+
+		if (voucher_no != None) and (party == None):
+			data[index] = None
+		elif d.get("accounts_list", None):
+			accounts_list = d['accounts_list'].split("<br>")[1:]
+
+			debit_list = d['debit_list'].split("<br>")[1:]
+			credit_list = d['credit_list'].split("<br>")[1:]
+
+			debit_credit_list = []
+			dr_cr = []
+			for i, j in zip(debit_list, credit_list):
+				if float(i) > 0.0:
+					dr_cr.append("Dr")
+					debit_credit_list.append(str(round(float(i), 2)))
+				elif float(j) > 0.0:
+					dr_cr.append("Cr")
+					debit_credit_list.append(str(round(float(j), 2)))
+			
+			d['debit_credit_list'] = "<table width='100%%'' border='0' cellspacing='0' cellpadding='0'><tbody>"
+			for x, y, z in zip(accounts_list, dr_cr, debit_credit_list):
+				d['debit_credit_list'] += """
+				<tr>
+					<td width='70%%'>{}</td>
+					<td width='10%%'>{}</td>
+					<td width='20%%' align='right'>{}</td>
+				</tr>
+				""".format(x, y, z)
+
+			d['debit_credit_list'] += "<tbody></table>"
+		debit_credit_list = None
+		debit_list = None
+		credit_list = None
+		accounts_list = None
+		voucher_no = None
+		party = None
+
+		data_min = [i for i in data if i]
+	return data_min
 
 def get_supplier_invoice_details():
 	inv_details = {}
@@ -454,6 +496,11 @@ def get_columns(filters):
 		{
 			"label": _("Remarks"),
 			"fieldname": "remarks",
+			"width": 400
+		},
+		{
+			"label": _("debit credit list"),
+			"fieldname": "debit_credit_list",
 			"width": 400
 		}
 	])

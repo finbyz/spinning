@@ -2,6 +2,8 @@
 // For license information, please see license.txt
 frappe.provide("erpnext.stock");
 
+
+
 frappe.ui.form.on('Material Transfer', {
 
 	
@@ -105,6 +107,14 @@ frappe.ui.form.on('Material Transfer', {
 			}
 		})
 	},
+	finish_item: function(frm){
+		frappe.db.get_value("BOM", {'item':frm.doc.finish_item,'is_active':1,'is_default':1}, 'name', function(r){
+			if(r.name){
+				frm.set_value('bom',r.name);
+			}
+		});
+			
+	},
 	setup: function(frm) {
 		frm.set_query('batch_no', 'items', function(doc, cdt, cdn) {
 			var item = locals[cdt][cdn];
@@ -141,6 +151,15 @@ frappe.ui.form.on('Material Transfer', {
 				}
 			}
 		}
+
+		frm.fields_dict.bom.get_query = function(doc) {
+			return {
+				filters: {
+					'item':doc.finish_item,
+					'is_active':1,
+				}
+			}
+		};	
 
 		frm.add_fetch('work_order', 'wip_warehouse', 't_warehouse');
 	},

@@ -260,7 +260,7 @@ class MaterialRepack(Document):
 			'qty': self.consumed_qty,
 		})
 		
-		if self.package_item:
+		if self.package_item and self.package_type == "Box":
 			se.append("items",{
 				'item_code': self.package_item,
 				's_warehouse': self.package_warehouse,

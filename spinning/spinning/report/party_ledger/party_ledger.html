@@ -40,14 +40,9 @@
 				<td>{%= data[i].voucher_type %}
 					<br>{%= data[i].voucher_no %}</td>
 				<td>
-					{% if(!(filters.party || filters.account)) { %}
-						{%= data[i].party || data[i].account %}
-						<br>
-					{% } %}
-
-					{{ __("Against") }}: {%= data[i].against %}
-                    <br>{%= __("Remarks") %}: {%= data[i].remarks %}
-                    <br>{%= data[i].account %} {%= data[i].debit %}
+					<strong>{%= data[i].party || data[i].account %}</strong>
+					<br>{%= data[i].debit_credit_list%}
+					<br>{%= __("Remarks") %}: {%= data[i].remarks %}
 					{% if(data[i].bill_no) { %}
 						<br>{%= __("Supplier Invoice No") %}: {%= data[i].bill_no %}
 					{% } %}
