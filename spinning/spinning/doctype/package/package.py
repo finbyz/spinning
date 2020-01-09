@@ -126,7 +126,14 @@ class Package(Document):
 		else:
 			# self.purchase_document_type = ""
 			# self.purchase_document_no = ""
-			doc_dict={'Material Receipt':'Material Receipt Package Detail', 'Purchase Receipt':'Purchase Receipt Package Detail', 'Work Order Finish':'Work Order Finish Detail','Other Production':'Other Production Package Details','Material Repack':'Material Repack Package Detail'}
+			doc_dict = {
+				'Material Receipt':'Material Receipt Package Detail',
+				'Purchase Receipt':'Purchase Receipt Package Detail',
+				'Work Order Finish':'Work Order Finish Detail',
+				'Other Production':'Other Production Package Details',
+				'Material Repack':'Material Repack Package Detail',
+				'Purchase Receipt':'Purchase Receipt Package Detail',
+			}
 			child_doctype = doc_dict[self.purchase_document_type]
 			child_table_name = frappe.db.sql_list("""select name from `tab{0}` where package = {1}""".format(child_doctype,self.name))
 			for r in child_table_name:

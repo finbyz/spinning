@@ -17,6 +17,7 @@
   "column_break_10",
   "gross_weight",
   "net_weight",
+  "consumed_qty",
   "tare_weight"
  ],
  "fields": [
@@ -102,7 +103,7 @@
    "fieldtype": "Column Break"
   },
   {
-   "columns": 2,
+   "columns": 1,
    "fetch_from": "package.gross_weight",
    "fieldname": "gross_weight",
    "fieldtype": "Float",
@@ -111,7 +112,7 @@
    "read_only": 1
   },
   {
-   "columns": 2,
+   "columns": 1,
    "fetch_from": "package.net_weight",
    "fieldname": "net_weight",
    "fieldtype": "Float",
@@ -125,10 +126,19 @@
    "fieldtype": "Float",
    "label": "Tare Weight",
    "read_only": 1
+  },
+  {
+   "columns": 2,
+   "fetch_from": "package.net_weight",
+   "fetch_if_empty": 1,
+   "fieldname": "consumed_qty",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Consumed Qty"
   }
  ],
  "istable": 1,
- "modified": "2019-12-07 15:14:21.741275",
+ "modified": "2020-01-09 11:39:40.851235",
  "modified_by": "Administrator",
  "module": "Spinning",
  "name": "Material Issue Package",

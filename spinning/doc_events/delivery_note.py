@@ -95,7 +95,7 @@ def update_packages(self, method):
 	if method == "on_submit":
 		for row in self.packages:
 			doc = frappe.get_doc("Package", row.package)
-			doc.add_consumption(self.doctype, self.name, row.net_weight, self.posting_date, self.posting_time)
+			doc.add_consumption(self.doctype, self.name, row.consumed_qty, self.posting_date, self.posting_time)
 			doc.save(ignore_permissions=True)
 
 	elif method == "on_cancel":
@@ -147,5 +147,5 @@ def cancel_pallet_stock_entry(self):
 			raise e
 		se.db_set('reference_doctype','')
 		se.db_set('reference_docname','')	
-		self.remove_package_consumption()
+		
 
