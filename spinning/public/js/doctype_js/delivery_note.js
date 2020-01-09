@@ -2,15 +2,14 @@ this.frm.add_fetch('batch_no', 'merge', 'merge');
 this.frm.add_fetch('batch_no', 'grade', 'grade');
 
 
-cur_frm.fields_dict['pallet_item'].grid.get_field("pallet_item").get_query = function(doc) {
-	return {
-		filters: {
-			"item_group": 'Pallet'
-		}
-	}
+
+cur_frm.fields_dict.package_item.get_query = function (doc) {
+    return {
+        filters: {
+            "item_group": doc.package_type
+        }
+    }
 };
-
-
 this.frm.cscript.onload = function(frm) {
 	this.frm.set_query("batch_no", "items", function(doc, cdt, cdn) {
 		let d = locals[cdt][cdn];

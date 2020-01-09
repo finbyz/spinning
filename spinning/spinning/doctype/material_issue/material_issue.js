@@ -3,12 +3,12 @@
 
 frappe.provide("erpnext.stock");
 
-cur_frm.fields_dict['pallet_item'].grid.get_field("pallet_item").get_query = function(doc) {
-	return {
-		filters: {
-			"item_group": 'Pallet'
-		}
-	}
+cur_frm.fields_dict.package_item.get_query = function (doc) {
+    return {
+        filters: {
+            "item_group": doc.package_type
+        }
+    }
 };
 
 frappe.ui.form.on("Material Issue Pallet Item", {
