@@ -115,8 +115,7 @@ frappe.query_reports["Party Ledger"] = {
 			"fieldname":"group_by",
 			"label": __("Group by"),
 			"fieldtype": "Select",
-			"options": ["", __("Group by Voucher"), __("Group by Voucher (Consolidated)"),
-				__("Group by Account"), __("Group by Party")],
+			"options": [__("Group by Party")],
 			"default": __("Group by Party")
 		},
 		{
