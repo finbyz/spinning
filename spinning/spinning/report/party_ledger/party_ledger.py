@@ -342,28 +342,28 @@ def get_result_as_list(data, filters):
 		if (voucher_no != None) and (party == None):
 			data[index] = None
 		elif d.get("accounts_list", None):
-			accounts_list = d['accounts_list'].split("<br>")[1:]
+			accounts_list = d['accounts_list'].split("<br>")
 
-			debit_list = d['debit_list'].split("<br>")[1:]
-			credit_list = d['credit_list'].split("<br>")[1:]
+			debit_list = d['debit_list'].split("<br>")
+			credit_list = d['credit_list'].split("<br>")
 
 			debit_credit_list = []
 			dr_cr = []
 			for i, j in zip(debit_list, credit_list):
 				if float(i) > 0.0:
 					dr_cr.append("Dr")
-					debit_credit_list.append(str(round(float(i), 2)))
+					debit_credit_list.append(format(round(float(i), 2), '.2f'))
 				elif float(j) > 0.0:
 					dr_cr.append("Cr")
-					debit_credit_list.append(str(round(float(j), 2)))
+					debit_credit_list.append(format(round(float(j), 2), '.2f'))
 			
-			d['debit_credit_list'] = "<table width='100%%'' border='0' cellspacing='0' cellpadding='0'><tbody>"
+			d['debit_credit_list'] = "<table width='100%%' class='tbspace'><tbody>"
 			for x, y, z in zip(accounts_list, dr_cr, debit_credit_list):
 				d['debit_credit_list'] += """
 				<tr>
 					<td width='70%%'>{}</td>
-					<td width='10%%'>{}</td>
-					<td width='20%%' align='right'>{}</td>
+					<td>{}</td>
+					<td align='right'>{}</td>
 				</tr>
 				""".format(x, y, z)
 

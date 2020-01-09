@@ -27,7 +27,7 @@ def before_save(self, method):
 
 
 def create_pallet_stock_entry(self):
-	if self.pallet_item and is_returnable:
+	if self.pallet_item and self.is_returnable:
 		abbr = frappe.db.get_value('Company',self.company,'abbr')
 		pallet_se = frappe.new_doc("Stock Entry")
 		pallet_se.stock_entry_type = "Material Receipt"
@@ -184,7 +184,7 @@ def create_stock_entry(self):
 	pallet_se.returnable_by = self.returnable_by
 	abbr = frappe.db.get_value('Company',self.company,'abbr')
 
-	if self.pallet_item and is_returnable:
+	if self.pallet_item and self.is_returnable:
 		for row in self.pallet_item:
 			rate = frappe.db.get_value("Item",d.pallet_item,'valuation_rate')
 			pallet_se.append("items",{

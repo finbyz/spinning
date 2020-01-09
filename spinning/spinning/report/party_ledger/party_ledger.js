@@ -117,7 +117,7 @@ frappe.query_reports["Party Ledger"] = {
 			"fieldtype": "Select",
 			"options": ["", __("Group by Voucher"), __("Group by Voucher (Consolidated)"),
 				__("Group by Account"), __("Group by Party")],
-			"default": __("Group by Voucher (Consolidated)")
+			"default": __("Group by Party")
 		},
 		{
 			"fieldname":"tax_id",
