@@ -72,32 +72,32 @@ class MaterialIssue(Document):
 			pallet_se.party = self.party
 			pallet_se.returnable_by = self.returnable_by
 
-		for row in self.pallet_item:
-			rate = frappe.db.get_value("Item",row.pallet_item,'valuation_rate')
-			if self.is_opening == "Yes":
-				pallet_se.append("items",{
-					'item_code': row.pallet_item,
-					'qty': row.qty,
-					'basic_rate': rate or 0,
-					'expense_account': 'Temporary Opening - %s' % abbr,
-					's_warehouse': row.s_warehouse,
-					't_warehouse': row.t_warehouse
-					#'allow_zero_valuation_rate': 1
-				})
-			else:
-				pallet_se.append("items",{
-					'item_code': row.pallet_item,
-					'qty': row.qty,
-					'basic_rate': rate or 0,
-					's_warehouse': row.s_warehouse,
-					't_warehouse': row.t_warehouse
-					#'allow_zero_valuation_rate': 1
-				})
-		try:
-			pallet_se.save(ignore_permissions=True)
-			pallet_se.submit()
-		except Exception as e:
-			frappe.throw(str(e))
+			for row in self.pallet_item:
+				rate = frappe.db.get_value("Item",row.pallet_item,'valuation_rate')
+				if self.is_opening == "Yes":
+					pallet_se.append("items",{
+						'item_code': row.pallet_item,
+						'qty': row.qty,
+						'basic_rate': rate or 0,
+						'expense_account': 'Temporary Opening - %s' % abbr,
+						's_warehouse': row.s_warehouse,
+						't_warehouse': row.t_warehouse
+						#'allow_zero_valuation_rate': 1
+					})
+				else:
+					pallet_se.append("items",{
+						'item_code': row.pallet_item,
+						'qty': row.qty,
+						'basic_rate': rate or 0,
+						's_warehouse': row.s_warehouse,
+						't_warehouse': row.t_warehouse
+						#'allow_zero_valuation_rate': 1
+					})
+			try:
+				pallet_se.save(ignore_permissions=True)
+				pallet_se.submit()
+			except Exception as e:
+				frappe.throw(str(e))
 			
 	def cancel_pallet_stock_entry(self):
 		if self.pallet_item and self.is_returnable:
