@@ -57,7 +57,7 @@ class MaterialIssue(Document):
 				row.expense_account = 'Stock Adjustment - %s' %abbr
 						
 	def create_pallet_stock_entry(self):
-		if self.pallet_item and self.is_returnable:
+		if self.pallet_item and self.is_returnable and self.package_type == "Pallet":
 			abbr = frappe.db.get_value('Company',self.company,'abbr')
 			pallet_se = frappe.new_doc("Stock Entry")
 			pallet_se.stock_entry_type = "Material Transfer"

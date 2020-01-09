@@ -28,6 +28,8 @@
   "column_break_21",
   "is_returnable",
   "returnable_by",
+  "section_break_32",
+  "pallet_item",
   "section_break_24",
   "add_packages",
   "packages",
@@ -38,8 +40,6 @@
   "column_break_23",
   "total_tare_weight",
   "total_packages",
-  "section_break_32",
-  "pallet_item",
   "section_break_12",
   "print_heading",
   "letter_head",
@@ -499,12 +499,14 @@
    "options": "\nBox\nPallet"
   },
   {
+   "depends_on": "eval: doc.package_type == \"Box\"",
    "fieldname": "package_item",
    "fieldtype": "Link",
    "label": "Default Package Item",
    "options": "Item"
   },
   {
+   "depends_on": "eval: doc.package_type == \"Pallet\"",
    "fieldname": "section_break_32",
    "fieldtype": "Section Break"
   },
@@ -524,7 +526,7 @@
   }
  ],
  "is_submittable": 1,
- "modified": "2020-01-08 16:22:49.386372",
+ "modified": "2020-01-09 12:39:57.882063",
  "modified_by": "Administrator",
  "module": "Spinning",
  "name": "Material Issue",

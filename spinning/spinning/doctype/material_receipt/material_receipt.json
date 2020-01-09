@@ -34,14 +34,14 @@
   "column_break_12",
   "is_returnable",
   "returnable_by",
+  "pallet_detail_section",
+  "pallet_item",
   "section_break_15",
   "packages",
   "section_break_21",
   "total_package_gross_weight",
   "column_break_23",
   "total_package_net_weight",
-  "pallet_detail_section",
-  "pallet_item",
   "transporter_details_section",
   "transporter_name",
   "vehicle_no",
@@ -256,15 +256,16 @@
    "read_only": 1
   },
   {
+   "depends_on": "eval:doc.package_type=='Box'\n",
    "fieldname": "package_item",
    "fieldtype": "Link",
    "label": "Default Package Item",
    "options": "Item"
   },
   {
+   "depends_on": "eval:doc.package_type == 'Pallet'\n",
    "fieldname": "pallet_detail_section",
-   "fieldtype": "Section Break",
-   "label": "Pallet detail"
+   "fieldtype": "Section Break"
   },
   {
    "fieldname": "pallet_item",
@@ -361,7 +362,7 @@
   }
  ],
  "is_submittable": 1,
- "modified": "2020-01-08 10:38:33.951135",
+ "modified": "2020-01-09 12:40:42.266142",
  "modified_by": "Administrator",
  "module": "Spinning",
  "name": "Material Receipt",
