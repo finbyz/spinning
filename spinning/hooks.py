@@ -141,6 +141,7 @@ doc_events = {
 	
 	"Purchase Invoice": {
 		"validate": "spinning.doc_events.purchase_invoice.validate",
+		"on_submit": "spinning.doc_events.purchase_invoice.on_submit"
 	},
 
 	"BOM": {

@@ -171,7 +171,7 @@ def get_conditions(filters):
 	#	conditions.append("party_type in ('Customer', 'Supplier')")
 
 	if filters.get("party_type"):
-		conditions.append("party_type=%(party_type)s")
+		conditions.append("party_type!=%(party_type)s")
 
 	if filters.get("party"):
 		conditions.append("party in %(party)s")

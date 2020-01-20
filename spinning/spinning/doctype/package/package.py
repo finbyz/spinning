@@ -135,7 +135,7 @@ class Package(Document):
 				'Purchase Receipt':'Purchase Receipt Package Detail',
 			}
 			child_doctype = doc_dict[self.purchase_document_type]
-			child_table_name = frappe.db.sql_list("""select name from `tab{0}` where package = {1}""".format(child_doctype,self.name))
+			child_table_name = frappe.db.sql_list("""select name from `tab{0}` where package = '{1}'""".format(child_doctype,self.name))
 			for r in child_table_name:
 				frappe.db.set_value(child_doctype,r,"package","")
 			frappe.db.commit()

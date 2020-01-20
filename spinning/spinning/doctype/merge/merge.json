@@ -6,8 +6,8 @@
  "editable_grid": 1,
  "engine": "InnoDB",
  "field_order": [
-  "merge",
   "item_code",
+  "merge",
   "quality_inspection_template"
  ],
  "fields": [
@@ -27,7 +27,6 @@
    "in_standard_filter": 1,
    "label": "Item Code",
    "options": "Item",
-   "read_only": 1,
    "reqd": 1
   },
   {
@@ -37,7 +36,7 @@
    "options": "Quality Inspection Template"
   }
  ],
- "modified": "2019-12-13 10:19:56.391537",
+ "modified": "2020-01-18 11:33:57.480481",
  "modified_by": "Administrator",
  "module": "Spinning",
  "name": "Merge",
