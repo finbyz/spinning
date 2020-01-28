@@ -45,6 +45,8 @@ frappe.ui.form.on('Gate Exit', {
 			callback: function(r){
 				if(r.message){
 					frm.set_value ('party_name', frm.doc.party);
+					frm.set_value('address_display', r.message.address_display);
+					frm.set_value('shipping_address', r.message.shipping_address);
 				}
 			}
 		})
