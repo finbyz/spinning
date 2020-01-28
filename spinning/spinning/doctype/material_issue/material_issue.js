@@ -57,9 +57,16 @@ frappe.ui.form.on('Material Issue', {
 			},
 			callback: function(r){
 				if(r.message){
-					frm.set_value('contact_person', r.message.contact_person)
-					frm.set_value('contact_email', r.message.contact_email)
-					frm.set_value ('party_name', frm.doc.party)
+					frm.set_value('contact_person', r.message.contact_person);
+					frm.set_value('contact_email', r.message.contact_email);
+					frm.set_value('mobile_no', r.message.contact_mobile);
+					frm.set_value('contact', r.message.contact_dispaly);
+					frm.set_value('billing_address_name', r.message.customer_address);
+					frm.set_value('billing_address', r.message.address_display);
+					frm.set_value('shipping_address', r.message.shipping_address);
+					frm.set_value('shipping_address_name', r.message.shipping_address_name);
+					frm.set_value ('party_name', frm.doc.party);
+					
 				}
 			}
 		})
