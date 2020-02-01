@@ -71,6 +71,36 @@ frappe.ui.form.on('Material Issue', {
 			}
 		})
 	},
+	billing_address_name:function(frm){
+        if(frm.doc.billing_address_name) {
+			console.log('call');
+            return frappe.call({
+                method: "frappe.contacts.doctype.address.address.get_address_display",
+                args: {
+                    "address_dict": frm.doc.billing_address_name
+                },
+                callback: function(r) {
+                    if(r.message)
+                        frm.set_value("billing_address", r.message);
+                }
+            });
+        }
+    },
+    shipping_address_name:function(frm){
+        if(frm.doc.billing_address_name) {
+			console.log('call');
+            return frappe.call({
+                method: "frappe.contacts.doctype.address.address.get_address_display",
+                args: {
+                    "address_dict": frm.doc.shipping_address_name
+                },
+                callback: function(r) {
+                    if(r.message)
+                        frm.set_value("shipping_address", r.message);
+                }
+            });
+        }
+    },
 	setup: function(frm) {
 		frm.set_query('batch_no', 'items', function(doc, cdt, cdn) {
 			var item = locals[cdt][cdn];
