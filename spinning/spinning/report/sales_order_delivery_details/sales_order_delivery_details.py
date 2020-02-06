@@ -98,6 +98,12 @@ def get_columns():
 			"width": 100
 		},
 		{
+			"fieldname": "po_no",
+			"label": _("PO NO"),
+			"fieldtype": "Data",
+			"width": 80
+		},
+		{
 			"fieldname": "transaction_date",
 			"label": _("SO Date"),
 			"fieldtype": "Date",
@@ -172,13 +178,6 @@ def get_columns():
 			"fieldtype": "Float",
 			"width": 80
 		},
-		{
-			"fieldname": "po_no",
-			"label": _("PO NO"),
-			"fieldtype": "Data",
-			"width": 80
-		},
-	
 	]
 
 	return columns
