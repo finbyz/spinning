@@ -26,6 +26,12 @@ def get_conditions(filters):
 	if filters.get('item_code'):
 		conditions += " AND soi.item_code = '%s'" % filters.get('item_code')
 
+	if filters.get('from_date'):
+		conditions += " AND so.transaction_date >= '%s'" % filters.get('from_date')
+	
+	if filters.get('to_date'):
+		conditions += " AND so.transaction_date <= '%s'" % filters.get('to_date')
+
 	return conditions
 
 
@@ -35,7 +41,7 @@ def get_data(filters):
 	
 	data = frappe.db.sql("""
 		SELECT 
-			so.name as sales_order, so.transaction_date, so.customer, soi.item_code, soi.item_name, soi.qty, soi.base_rate, soi.base_amount, soi.name as so_detail
+			so.name as sales_order, so.transaction_date, so.customer, soi.item_code, soi.item_name, soi.qty, soi.base_rate, soi.base_amount, soi.name as so_detail, so.po_no as po_no
 		FROM 
 			`tabSales Order` as so LEFT JOIN `tabSales Order Item` as soi ON (so.name = soi.parent)
 		WHERE
@@ -164,6 +170,12 @@ def get_columns():
 			"fieldname": "delivery_qty",
 			"label": _("Delivery Qty"),
 			"fieldtype": "Float",
+			"width": 80
+		},
+		{
+			"fieldname": "po_no",
+			"label": _("PO NO"),
+			"fieldtype": "Data",
 			"width": 80
 		},
 	

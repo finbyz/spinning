@@ -481,7 +481,6 @@
   },
   {
    "default": "0",
-   "depends_on": "eval: doc.package_type == \"Pallet\"",
    "fieldname": "is_returnable",
    "fieldtype": "Check",
    "label": "Is Returnable"
@@ -526,7 +525,7 @@
   }
  ],
  "is_submittable": 1,
- "modified": "2020-01-09 12:39:57.882063",
+ "modified": "2020-02-03 16:02:51.090388",
  "modified_by": "Administrator",
  "module": "Spinning",
  "name": "Material Issue",
