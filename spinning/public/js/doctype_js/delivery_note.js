@@ -227,8 +227,14 @@ frappe.ui.form.on("Delivery Note", {
 					}
 
 					//package_items[key]['warehouse'] = row.warehouse;
-					package_items[key]['net_weight'] += row.net_weight;
-					package_items[key]['gross_weight'] += row.gross_weight;
+					if(frm.doc.is_return){
+						package_items[key]['net_weight'] -= row.net_weight;
+						package_items[key]['gross_weight'] -= row.gross_weight;
+					}
+					else{
+						package_items[key]['net_weight'] += row.net_weight;
+						package_items[key]['gross_weight'] += row.gross_weight;
+					}
 					package_items[key]['no_of_spools'] += row.spools;
 					package_items[key]['packages'] += 1;
 					console.log("final Package_item Dict")
@@ -249,6 +255,7 @@ frappe.ui.form.on("Delivery Note", {
 					values.batch_no = keys[3];
 					values.warehouse = keys[4];
 					values.qty = args.net_weight
+					values.stock_qty = flt(args.net_weight * frm.doc.conversion_factor)
 					values.gross_wt = args.gross_weight
 					values.spools = args.no_of_spools
 					values.no_of_packages = args.packages

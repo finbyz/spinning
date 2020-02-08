@@ -114,7 +114,7 @@
    "fieldname": "document_type",
    "fieldtype": "Select",
    "label": "Document Type",
-   "options": "\nMaterial Issue\nMaterial Transfer\nDelivery Note"
+   "options": "\nMaterial Issue\nMaterial Transfer\nDelivery Note\nPurchase Receipt"
   },
   {
    "fieldname": "document_number",
@@ -164,7 +164,7 @@
    "translatable": 1
   }
  ],
- "modified": "2020-01-31 14:08:22.438845",
+ "modified": "2020-02-08 07:05:55.040711",
  "modified_by": "Administrator",
  "module": "Spinning",
  "name": "Gate Exit",

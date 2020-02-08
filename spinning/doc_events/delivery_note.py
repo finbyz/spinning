@@ -10,10 +10,11 @@ from spinning.controllers.batch_controller import set_batches
 
 
 def before_validate(self, method):
+	if self.is_return == 0:
 	# if self._action == 'submit':
 		# set_items_as_per_packages(self)
 	# set_items_as_per_packages(self)
-	validate_packages(self)
+		validate_packages(self)
 
 def before_save(self, method):
 	calculate_totals(self)
@@ -93,10 +94,16 @@ def calculate_totals(self):
 
 def update_packages(self, method):
 	if method == "on_submit":
-		for row in self.packages:
-			doc = frappe.get_doc("Package", row.package)
-			doc.add_consumption(self.doctype, self.name, row.consumed_qty, self.posting_date, self.posting_time)
-			doc.save(ignore_permissions=True)
+		if self.is_return:
+			for row in self.packages:
+				doc = frappe.get_doc("Package", row.package)
+				doc.add_consumption(self.doctype, self.name, -row.consumed_qty, self.posting_date, self.posting_time)
+				doc.save(ignore_permissions=True)
+		else:
+			for row in self.packages:
+				doc = frappe.get_doc("Package", row.package)
+				doc.add_consumption(self.doctype, self.name, row.consumed_qty, self.posting_date, self.posting_time)
+				doc.save(ignore_permissions=True)
 
 	elif method == "on_cancel":
 		for row in self.packages:
@@ -105,6 +112,7 @@ def update_packages(self, method):
 			doc.save(ignore_permissions=True)
 
 def create_pallet_stock_entry(self):
+
 	if self.pallet_item and self.is_returnable:
 		abbr = frappe.db.get_value('Company',self.company,'abbr')
 		pallet_se = frappe.new_doc("Stock Entry")
@@ -120,22 +128,39 @@ def create_pallet_stock_entry(self):
 		pallet_se.party = self.customer
 		pallet_se.returnable_by = self.returnable_by
 
-		
-		for row in self.pallet_item:
-			rate = frappe.db.get_value("Item",row.pallet_item,'valuation_rate')
-			pallet_se.append("items",{
-				'item_code': row.pallet_item,
-				'qty': row.qty,
-				'basic_rate': rate or 0,
-				's_warehouse': row.s_warehouse,
-				't_warehouse': row.t_warehouse
-				#'allow_zero_valuation_rate': 1
-			})
-		try:
-			pallet_se.save(ignore_permissions=True)
-			pallet_se.submit()
-		except Exception as e:
-			frappe.throw(str(e))
+		if self.is_return:
+			for row in self.pallet_item:
+				rate = frappe.db.get_value("Item",row.pallet_item,'valuation_rate')
+				pallet_se.append("items",{
+					'item_code': row.pallet_item,
+					'qty': row.qty,
+					'basic_rate': rate or 0,
+					's_warehouse': row.t_warehouse,
+					't_warehouse': row.s_warehouse
+					#'allow_zero_valuation_rate': 1
+				})
+			try:
+				pallet_se.save(ignore_permissions=True)
+				pallet_se.submit()
+			except Exception as e:
+				frappe.throw(str(e))
+
+		else:
+			for row in self.pallet_item:
+				rate = frappe.db.get_value("Item",row.pallet_item,'valuation_rate')
+				pallet_se.append("items",{
+					'item_code': row.pallet_item,
+					'qty': row.qty,
+					'basic_rate': rate or 0,
+					's_warehouse': row.s_warehouse,
+					't_warehouse': row.t_warehouse
+					#'allow_zero_valuation_rate': 1
+				})
+			try:
+				pallet_se.save(ignore_permissions=True)
+				pallet_se.submit()
+			except Exception as e:
+				frappe.throw(str(e))
 
 def cancel_pallet_stock_entry(self):
 	if self.pallet_item and self.is_returnable:
