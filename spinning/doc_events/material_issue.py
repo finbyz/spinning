@@ -41,7 +41,7 @@ class MaterialIssue(Document):
 		self.total_qty = sum([row.qty for row in self.items])
 		self.total_amount = sum([row.amount for row in self.items])
 		self.total_gross_weight = sum([row.gross_weight for row in self.packages])
-		self.total_net_weight = sum([row.net_weight for row in self.packages])
+		self.total_net_weight = sum([row.consumed_qty for row in self.packages])
 		self.total_packages = sum([row.no_of_packages for row in self.items])
 
 	def before_save(self):
@@ -135,7 +135,7 @@ class MaterialIssue(Document):
 			#package_items[key].update(item_row)
 			package_items[key].update(items_row_dict.get(row.item_code))
 			# package_items[key].s_warehouse = self.warehouse
-			package_items[key].net_weight += row.net_weight
+			package_items[key].net_weight += row.consumed_qty
 			package_items[key].packages += 1
 		
 		for (item_code, merge, grade, batch_no), args in package_items.items():
@@ -290,7 +290,7 @@ class MaterialIssue(Document):
 		if self._action == "submit":
 			for row in self.packages:
 				doc = frappe.get_doc("Package", row.package)
-				doc.add_consumption(self.doctype, self.name, row.net_weight,  self.posting_date, self.posting_time)
+				doc.add_consumption(self.doctype, self.name, row.consumed_qty,  self.posting_date, self.posting_time)
 				doc.save(ignore_permissions=True)
 
 		elif self._action == "cancel":

@@ -228,11 +228,11 @@ frappe.ui.form.on("Delivery Note", {
 
 					//package_items[key]['warehouse'] = row.warehouse;
 					if(frm.doc.is_return){
-						package_items[key]['net_weight'] -= row.net_weight;
+						package_items[key]['net_weight'] -= row.consumed_qty;
 						package_items[key]['gross_weight'] -= row.gross_weight;
 					}
 					else{
-						package_items[key]['net_weight'] += row.net_weight;
+						package_items[key]['net_weight'] += row.consumed_qty;
 						package_items[key]['gross_weight'] += row.gross_weight;
 					}
 					package_items[key]['no_of_spools'] += row.spools;

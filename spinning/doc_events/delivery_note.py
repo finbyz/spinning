@@ -11,9 +11,6 @@ from spinning.controllers.batch_controller import set_batches
 
 def before_validate(self, method):
 	if self.is_return == 0:
-	# if self._action == 'submit':
-		# set_items_as_per_packages(self)
-	# set_items_as_per_packages(self)
 		validate_packages(self)
 
 def before_save(self, method):
@@ -63,7 +60,7 @@ def set_items_as_per_packages(self):
 
 		package_items[key].update(items_row_dict.get(row.item_code))
 		package_items[key].warehouse = row.warehouse
-		package_items[key].net_weight += row.net_weight
+		package_items[key].net_weight += row.consumed_qty
 		package_items[key].gross_weight += row.gross_weight
 		package_items[key].no_of_spools += row.spools
 		package_items[key].packages += 1
