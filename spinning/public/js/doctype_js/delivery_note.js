@@ -195,8 +195,8 @@ frappe.ui.form.on("Delivery Note", {
 						
 					})
 				});
-				console.log("item merge grade dict");
-				console.log(item_merge_grade_row_dict);
+				//console.log("item merge grade dict");
+				//console.log(item_merge_grade_row_dict);
 			},
 			() => {
 				to_remove.reverse().forEach(function(i){
@@ -209,8 +209,8 @@ frappe.ui.form.on("Delivery Note", {
 					let item_merge_grade = row.item_code.toString() + row.merge.toString() + row.grade.toString() + row.warehouse.toString()
 					if(!(key in package_items)){
 						if (item_merge_grade_row_dict[item_merge_grade]){
-							console.log("Merge Grade Item Received");
-							console.log(item_merge_grade_row_dict[item_merge_grade])
+							//console.log("Merge Grade Item Received");
+							//console.log(item_merge_grade_row_dict[item_merge_grade])
 							package_items[key] = Object.assign({}, item_merge_grade_row_dict[item_merge_grade]);
 						}
 						else{

@@ -113,7 +113,7 @@
   },
   {
    "columns": 1,
-   "fetch_from": "package.net_weight",
+   "fetch_from": "package.remaining_qty",
    "fieldname": "net_weight",
    "fieldtype": "Float",
    "in_list_view": 1,
@@ -129,16 +129,16 @@
   },
   {
    "columns": 2,
-   "fetch_from": "package.net_weight",
+   "fetch_from": "package.remaining_qty",
    "fetch_if_empty": 1,
    "fieldname": "consumed_qty",
    "fieldtype": "Float",
    "in_list_view": 1,
-   "label": "Consumed Qty"
+   "label": "Issued Qty"
   }
  ],
  "istable": 1,
- "modified": "2020-01-09 11:39:40.851235",
+ "modified": "2020-02-13 15:22:11.810164",
  "modified_by": "Administrator",
  "module": "Spinning",
  "name": "Material Issue Package",

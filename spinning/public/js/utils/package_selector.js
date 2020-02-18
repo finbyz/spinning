@@ -300,6 +300,13 @@ PackageSelector = Class.extend({
 						'fieldname': 'tare_weight',
 						'read_only': 1,
 					},
+					{
+						'label': 'Consumed Qty',
+						'fieldtype': 'Float',
+						'fieldname': 'consumed_qty',
+						'read_only': 1,
+						'in_list_view': 0,
+					},					
 				],
 				in_place_edit: true,
 				// data: this.data,

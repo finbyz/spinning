@@ -186,7 +186,7 @@ class Package(Document):
 
 @frappe.whitelist()
 def get_packages(filters, raw_filters = None):
-	fields = ('name as package', 'spools', 'item_code', 'item_name', 'warehouse', 'batch_no', 'merge', 'grade', 'gross_weight', 'remaining_qty as net_weight', 'tare_weight')
+	fields = ('name as package', 'spools', 'item_code', 'item_name', 'warehouse', 'batch_no', 'merge', 'grade', 'gross_weight', 'remaining_qty as net_weight', 'tare_weight', 'remaining_qty as consumed_qty',)
 
 	if isinstance(filters, string_types):
 		filters = json.loads(filters)

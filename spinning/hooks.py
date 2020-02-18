@@ -42,7 +42,9 @@ doctype_js = {
 	"Delivery Note": "public/js/doctype_js/delivery_note.js",
 	"Stock Reconciliation": "public/js/doctype_js/stock_reconciliation.js",
 	"Purchase Order": "public/js/doctype_js/purchase_order.js",
-	"Quality Inspection": "public/js/doctype_js/quality_inspection.js"
+	"Quality Inspection": "public/js/doctype_js/quality_inspection.js",
+	"Quality Inspection Template": "public/js/doctype_js/quality_inspection_template.js"
+
 }
 
 # Home Pages
