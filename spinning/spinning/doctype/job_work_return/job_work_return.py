@@ -123,10 +123,9 @@ class JobWorkReturn(Document):
 				remaining_qty = row.qty
 				package_list = frappe.db.sql(""" select name, remaining_qty from `tabPackage` 
 					where status <> "Out of Stock" and merge = %s and item_code = %s and warehouse = %s""", (row.merge, row.item_code,self.s_warehouse), as_dict = True)
-				
-				frappe.msgprint(str(package_list))
+	
 				total_remaining_qty = sum(flt(d.remaining_qty) for d in package_list)
-				frappe.msgprint(str(total_remaining_qty))
+
 				if total_remaining_qty < flt(row.qty):
 					frappe.throw(_("Sufficient quantity for item {} is not available in {} warehouse for merge {}.".format(frappe.bold(row.item_code), frappe.bold(self.s_warehouse), frappe.bold(row.merge))))
 				for pkg in package_list:

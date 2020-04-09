@@ -11,6 +11,8 @@
   "adjustment_entry",
   "company",
   "warehouse",
+  "customer_challan_no",
+  "customer_challan_date",
   "party_type",
   "party",
   "column_break_4",
@@ -365,10 +367,21 @@
    "fieldtype": "Link",
    "label": "Material Issue",
    "options": "Material Issue"
+  },
+  {
+   "fieldname": "customer_challan_no",
+   "fieldtype": "Data",
+   "label": "Customer Challan No",
+   "translatable": 1
+  },
+  {
+   "fieldname": "customer_challan_date",
+   "fieldtype": "Date",
+   "label": "Customer Challan Date"
   }
  ],
  "is_submittable": 1,
- "modified": "2020-02-04 10:03:54.259142",
+ "modified": "2020-02-19 14:42:10.392956",
  "modified_by": "Administrator",
  "module": "Spinning",
  "name": "Material Receipt",

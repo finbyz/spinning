@@ -33,7 +33,8 @@ cur_frm.fields_dict.grade.get_query = function(doc) {
 cur_frm.fields_dict.bom_no.get_query = function (doc) {
     return {
         filters: {
-            "item_code": doc.item_code
+			"item": doc.item_code,
+			"docstatus": 1
         }
     }
 };
@@ -81,7 +82,7 @@ frappe.ui.form.on('Job Work Return', {
 					d.item_name = row.item_name;
 					d.uom = row.uom;
 					d.basic_rate = row.rate;
-					d.merge = os_doc.merge;
+					d.merge = row.merge;
 					//console.log("quantity",os_doc.quantity);
 					d.qty = flt(flt(frm.doc.qty * row.qty) / os_doc.quantity);
 					d.amount = d.basic_rate * d.qty;
@@ -156,5 +157,17 @@ frappe.ui.form.on("Job Work Return Package Details", {
 frappe.ui.form.on("Job Work Return Item", {
 	items_add: function(frm, cdt, cdn){
 		console.log("hello");
+	
 	},
-})
+	qty: function(frm, cdt, cdn){
+		var d = locals[cdt][cdn]
+		frappe.model.set_value(d.doctype, d.name, 'amount', flt(d.qty * d.basic_rate));
+		frappe.model.set_value(d.doctype, d.name, 'basic_amount', flt(d.amount));
+	},
+
+	basic_rate: function(frm, cdt, cdn){
+		var d = locals[cdt][cdn]
+		frappe.model.set_value(d.doctype, d.name, 'amount', flt(d.qty * d.basic_rate));
+		frappe.model.set_value(d.doctype, d.name, 'basic_amount', flt(d.amount));
+	},
+});

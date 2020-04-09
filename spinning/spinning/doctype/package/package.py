@@ -132,7 +132,7 @@ class Package(Document):
 				'Work Order Finish':'Work Order Finish Detail',
 				'Other Production':'Other Production Package Details',
 				'Material Repack':'Material Repack Package Detail',
-				'Purchase Receipt':'Purchase Receipt Package Detail',
+				'Job Work Return':'Job Work Return Package Details',
 			}
 			child_doctype = doc_dict[self.purchase_document_type]
 			child_table_name = frappe.db.sql_list("""select name from `tab{0}` where package = '{1}'""".format(child_doctype,self.name))
