@@ -3,10 +3,12 @@ from __future__ import unicode_literals
 from . import __version__ as app_version
 
 
-
+# import erpnext
 from erpnext.setup.doctype.naming_series.naming_series import NamingSeries
 from erpnext.stock.doctype.pick_list.pick_list import PickList
-# bencbenc
+from spinning.override_method import get_transactions, set_item_locations
+NamingSeries.get_transactions = get_transactions
+PickList.set_item_locations = set_item_locations
 
 
 app_name = "spinning"
@@ -197,5 +199,5 @@ doc_events = {
 # ------------------------------
 #
 override_whitelisted_methods = {
-	"erpnext.selling.doctype.sales_order.sales_order.create_pick_list": "spinning.doc_events.sales_order.create_pick_list"
+	"erpnext.selling.doctype.sales_order.sales_order.create_pick_list": "spinning.spining.get_events"
 }

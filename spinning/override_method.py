@@ -173,3 +173,8 @@ def get_itemised_tax_breakup_data(doc, account_wise=False, eway=False):
 
 def set_item_locations(self):
 	pass
+
+# def override_method():
+# 	import erpnext
+# 	from spinning.doc_events.sales_order import create_pick_list
+# 	erpnext.selling.doctype.sales_order.sales_order.create_pick_list = create_pick_list
