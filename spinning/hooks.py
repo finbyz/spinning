@@ -198,3 +198,6 @@ doc_events = {
 # Overriding Whitelisted Methods
 # ------------------------------
 #
+override_whitelisted_methods = {
+	"erpnext.selling.doctype.sales_order.sales_order.create_pick_list": "spinning.spining.get_events"
+}
