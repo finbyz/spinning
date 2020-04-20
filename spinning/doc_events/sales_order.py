@@ -1,9 +1,9 @@
 import frappe
 from frappe.model.mapper import get_mapped_doc
+from frappe.utils import flt
 
 @frappe.whitelist()
 def create_pick_list(source_name, target_doc=None):
-	frappe.throw("hahah")
 	def update_item_quantity(source, target, source_parent):
 		target.qty = flt(source.qty) - flt(source.picked_qty)
 		target.so_qty = flt(source.qty)

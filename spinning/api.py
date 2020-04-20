@@ -5,6 +5,7 @@ import frappe
 from frappe import _
 from frappe.utils import flt
 from frappe.contacts.doctype.address.address import get_company_address
+from erpnext.accounts.utils import get_fiscal_year
 
 @frappe.whitelist()
 def company_address(company):
@@ -99,3 +100,45 @@ def get_package_details(batch_no,to_date):
 	# 	'batch_no': batch_no,
 	# 	'status': ['!=', "Out of Stock"]
 	# }, fields = ['name', 'package_type', 'gross_weight', 'net_weight', 'spools', 'remaining_qty', 'status'])
+	
+@frappe.whitelist()
+def before_naming(self, method):
+	if not self.amended_from:
+		
+		date = self.get("transaction_date") or self.get("posting_date") or getdate()
+		fiscal = get_fiscal(date)
+		self.fiscal = fiscal
+
+		# if self.get('series_value'):
+			# if self.series_value > 0:
+				# name = naming_series_name(self.naming_series, fiscal,self.company_series)
+				
+				# check = frappe.db.get_value('Series', name, 'current', order_by="name")
+				# if check == 0:
+					# pass
+				# elif not check:
+					# frappe.db.sql(f"insert into tabSeries (name, current) values ('{name}', 0)")
+				
+				# frappe.db.sql(f"update `tabSeries` set current = {int(self.series_value) - 1} where name = '{name}'")
+
+def naming_series_name(name, fiscal, company_series=None):
+	if company_series:
+		name = name.replace('company_series', str(company_series))
+	
+	name = name.replace('YYYY', str(datetime.date.today().year))
+	name = name.replace('YY', str(datetime.date.today().year)[2:])
+	name = name.replace('MM', f'{datetime.date.today().month:02d}')
+	name = name.replace('DD', f'{datetime.date.today().day:02d}')
+	name = name.replace('fiscal', str(fiscal))
+	name = name.replace('#',	'')
+	name = name.replace('.', '')
+	
+	return name
+
+@frappe.whitelist()
+def get_fiscal(date):
+	fy = get_fiscal_year(date)[0]
+	fiscal = frappe.db.get_value("Fiscal Year", fy, 'fiscal')
+
+	return fiscal if fiscal else fy.split("-")[0][2:] + fy.split("-")[1][2:]
+

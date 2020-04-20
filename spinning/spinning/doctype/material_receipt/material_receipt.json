@@ -59,7 +59,9 @@
   "stock_entry",
   "amended_from",
   "column_break_24",
-  "stock_entry_pallet"
+  "stock_entry_pallet",
+  "fiscal",
+  "company_series"
  ],
  "fields": [
   {
@@ -378,10 +380,25 @@
    "fieldname": "customer_challan_date",
    "fieldtype": "Date",
    "label": "Customer Challan Date"
+  },
+  {
+   "fieldname": "fiscal",
+   "fieldtype": "Data",
+   "hidden": 1,
+   "label": "Fiscal",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "company.default_package_series",
+   "fieldname": "company_series",
+   "fieldtype": "Data",
+   "hidden": 1,
+   "label": "Company Series",
+   "read_only": 1
   }
  ],
  "is_submittable": 1,
- "modified": "2020-02-19 14:42:10.392956",
+ "modified": "2020-04-20 12:03:29.709128",
  "modified_by": "Administrator",
  "module": "Spinning",
  "name": "Material Receipt",

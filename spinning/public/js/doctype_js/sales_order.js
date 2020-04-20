@@ -118,6 +118,10 @@ frappe.ui.form.on("Sales Order", {
         });
         frm.refresh_field('items');
     },
+    update_items: (frm) => {
+
+    }
+
 });
 frappe.ui.form.on("Sales Order Item", {
     pallet_size: function (frm, cdt, cdn) {
@@ -270,3 +274,9 @@ erpnext.selling.SalesOrderController = erpnext.selling.SalesOrderController.exte
     }
 });
 $.extend(cur_frm.cscript, new erpnext.selling.SalesOrderController({ frm: cur_frm }));
+
+var select_packages = (args) => {
+	frappe.require("assets/spinning/js/utils/item_selector.js", function() {
+		new ItemSelector(args)
+	})
+}

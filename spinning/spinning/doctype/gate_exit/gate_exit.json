@@ -28,7 +28,10 @@
   "address_section",
   "shipping_address",
   "column_break_23",
-  "address_display"
+  "address_display",
+  "section_break_25",
+  "fiscal",
+  "company_series"
  ],
  "fields": [
   {
@@ -162,9 +165,28 @@
    "label": "Address Display",
    "read_only": 1,
    "translatable": 1
+  },
+  {
+   "fieldname": "section_break_25",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "fiscal",
+   "fieldtype": "Data",
+   "hidden": 1,
+   "label": "Fiscal",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "company.default_package_series",
+   "fieldname": "company_series",
+   "fieldtype": "Data",
+   "hidden": 1,
+   "label": "Company Series",
+   "read_only": 1
   }
  ],
- "modified": "2020-02-08 07:05:55.040711",
+ "modified": "2020-04-20 15:36:12.020258",
  "modified_by": "Administrator",
  "module": "Spinning",
  "name": "Gate Exit",

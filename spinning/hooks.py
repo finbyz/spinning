@@ -54,7 +54,7 @@ doctype_js = {
 	"Quality Inspection": "public/js/doctype_js/quality_inspection.js",
 	"Quality Inspection Template": "public/js/doctype_js/quality_inspection_template.js",
 	"Sales Order": "public/js/doctype_js/sales_order.js",
-
+	"Pick List": "public/js/doctype_js/pick_list.js",
 }
 
 # Home Pages
@@ -186,6 +186,9 @@ doc_events = {
 	},
 	'Sales Invoice':{
 		'validate': "spinning.doc_events.sales_invoice.validate"
+	},
+	('Material Issue','Material Receipt','Material Transfer','Gate Exit'):{
+		'before_naming': 'spinning.api.before_naming'
 	}
 }
 

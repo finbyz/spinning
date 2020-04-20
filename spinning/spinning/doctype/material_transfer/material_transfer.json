@@ -82,7 +82,9 @@
   "gate_pass_date",
   "remarks",
   "section_break_12",
-  "amended_from"
+  "amended_from",
+  "fiscal",
+  "company_series"
  ],
  "fields": [
   {
@@ -573,10 +575,25 @@
    "fieldname": "send_for_job_work",
    "fieldtype": "Check",
    "label": "send for job work"
+  },
+  {
+   "fieldname": "fiscal",
+   "fieldtype": "Data",
+   "hidden": 1,
+   "label": "Fiscal",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "company.default_package_series",
+   "fieldname": "company_series",
+   "fieldtype": "Data",
+   "hidden": 1,
+   "label": "Company Series",
+   "read_only": 1
   }
  ],
  "is_submittable": 1,
- "modified": "2020-01-09 09:50:32.473385",
+ "modified": "2020-04-20 12:04:02.388865",
  "modified_by": "Administrator",
  "module": "Spinning",
  "name": "Material Transfer",
