@@ -11,6 +11,7 @@
   "challan_no",
   "challan_date",
   "column_break_7",
+  "company",
   "posting_date",
   "posting_time",
   "edit_posting_date_and_time",
@@ -184,9 +185,16 @@
    "hidden": 1,
    "label": "Company Series",
    "read_only": 1
+  },
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "Company",
+   "options": "Company"
   }
  ],
- "modified": "2020-04-20 15:36:12.020258",
+ "modified": "2020-04-20 16:42:36.173222",
  "modified_by": "Administrator",
  "module": "Spinning",
  "name": "Gate Exit",
