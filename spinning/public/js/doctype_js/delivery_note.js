@@ -1,7 +1,7 @@
 this.frm.add_fetch('batch_no', 'merge', 'merge');
 this.frm.add_fetch('batch_no', 'grade', 'grade');
 
-cur_frm.fields_dict['pallet_item'].grid.get_field("pallet_item").get_query = function(doc) {
+cur_frm.fields_dict['pallet_item'].grid.get_field("pallet_item").get_query = function (doc) {
 	return {
 		filters: {
 			"item_group": 'Pallet'
@@ -11,20 +11,20 @@ cur_frm.fields_dict['pallet_item'].grid.get_field("pallet_item").get_query = fun
 
 
 cur_frm.fields_dict.package_item.get_query = function (doc) {
-    return {
-        filters: {
-            "item_group": doc.package_type
-        }
-    }
+	return {
+		filters: {
+			"item_group": doc.package_type
+		}
+	}
 };
-this.frm.cscript.onload = function(frm) {
-	this.frm.set_query("batch_no", "items", function(doc, cdt, cdn) {
+this.frm.cscript.onload = function (frm) {
+	this.frm.set_query("batch_no", "items", function (doc, cdt, cdn) {
 		let d = locals[cdt][cdn];
 
-		if(!d.item_code){
+		if (!d.item_code) {
 			frappe.throw(__("Please enter Item Code to get batch no."));
 		}
-		else{
+		else {
 			return {
 				query: "spinning.controllers.queries.batch_query",
 				filters: {
@@ -43,8 +43,8 @@ cur_frm.set_query("shipping_address_name", function () {
 	};
 });
 
-cur_frm.fields_dict.packages.grid.get_field('package').get_query = function(doc) {
-	let items = [...new Set((frm.doc.items || []).map(function(i){return i.item_code}))]
+cur_frm.fields_dict.packages.grid.get_field('package').get_query = function (doc) {
+	let items = [...new Set((frm.doc.items || []).map(function (i) { return i.item_code }))]
 	return {
 		filters: {
 			"status": ["!=", "Out of Stock"],
@@ -53,7 +53,7 @@ cur_frm.fields_dict.packages.grid.get_field('package').get_query = function(doc)
 	}
 }
 
-cur_frm.fields_dict['pallet_item'].grid.get_field("pallet_item").get_query = function(doc) {
+cur_frm.fields_dict['pallet_item'].grid.get_field("pallet_item").get_query = function (doc) {
 	return {
 		filters: {
 			"item_group": 'Pallet'
@@ -62,7 +62,7 @@ cur_frm.fields_dict['pallet_item'].grid.get_field("pallet_item").get_query = fun
 };
 
 frappe.ui.form.on("Delivery Note Pallet Item", {
-	pallet_item_add: function(frm){
+	pallet_item_add: function (frm) {
 		// frappe.msgprint(__("pallet added"))
 		frm.events.set_s_warehouse(frm);
 		frm.events.set_t_warehouse(frm);
@@ -70,7 +70,7 @@ frappe.ui.form.on("Delivery Note Pallet Item", {
 
 });
 
-cur_frm.fields_dict.taxes_and_charges.get_query = function(doc){
+cur_frm.fields_dict.taxes_and_charges.get_query = function (doc) {
 	return {
 		"filters": {
 			'company': doc.company
@@ -80,29 +80,29 @@ cur_frm.fields_dict.taxes_and_charges.get_query = function(doc){
 
 frappe.ui.form.on("Delivery Note", {
 
-	set_s_warehouse: function(frm){
-		frappe.db.get_value("Company", frm.doc.company, 'abbr', function(r){
-				frm.doc.pallet_item.forEach(function(row){
-					frappe.model.set_value(row.doctype, row.name, "s_warehouse" ,'Pallets - '+ r.abbr);
-				});
+	set_s_warehouse: function (frm) {
+		frappe.db.get_value("Company", frm.doc.company, 'abbr', function (r) {
+			frm.doc.pallet_item.forEach(function (row) {
+				frappe.model.set_value(row.doctype, row.name, "s_warehouse", 'Pallets - ' + r.abbr);
+			});
 		});
 	},
 
-	set_t_warehouse: function(frm){
-		frappe.db.get_value("Company", frm.doc.company, 'abbr', function(r){
-			frm.doc.pallet_item.forEach(function(row){
-				frappe.model.set_value(row.doctype, row.name, "t_warehouse" ,'Pallet Out - '+ r.abbr);
+	set_t_warehouse: function (frm) {
+		frappe.db.get_value("Company", frm.doc.company, 'abbr', function (r) {
+			frm.doc.pallet_item.forEach(function (row) {
+				frappe.model.set_value(row.doctype, row.name, "t_warehouse", 'Pallet Out - ' + r.abbr);
 			});
-	});
+		});
 	},
 
 	onload: function (frm) {
-		if(!frm.doc.tc_name){
+		if (!frm.doc.tc_name) {
 			frm.set_value("tc_name", "Delivery Challan Terms");
 		}
 	},
-	
-	validate: function(frm){
+
+	validate: function (frm) {
 		frm.events.set_items_as_per_packages(frm);
 	},
 
@@ -123,17 +123,17 @@ frappe.ui.form.on("Delivery Note", {
 		frm.set_value('total_packages', frm.doc.packages.length || 0);
 	},
 
-	add_packages: function(frm){
-		frappe.db.get_value("Company", frm.doc.company, 'default_source_warehouse', function(r){
-			select_packages({frm: frm, merge: frm.doc.merge, warehouse: frm.doc.set_warehouse || r.default_source_warehouse});
+	add_packages: function (frm) {
+		frappe.db.get_value("Company", frm.doc.company, 'default_source_warehouse', function (r) {
+			select_packages({ frm: frm, merge: frm.doc.merge, warehouse: frm.doc.set_warehouse || r.default_source_warehouse });
 		})
 	},
 
-	set_batches_and_remove_items(frm){
-		frm.doc.items.forEach(function(row) {
+	set_batches_and_remove_items(frm) {
+		frm.doc.items.forEach(function (row) {
 			let packages = frm.doc.packages.filter(d => d.item_code == row.item_code)
 
-			if(packages.length && !row.batch_no){
+			if (packages.length && !row.batch_no) {
 				row.merge = packages[0].merge;
 				row.grade = packages[0].grade;
 				row.batch_no = packages[0].batch_no;
@@ -143,20 +143,20 @@ frappe.ui.form.on("Delivery Note", {
 
 		let to_remove = [];
 
-		frm.doc.items.reverse().forEach(function(row){
-			if(row.batch_no == undefined || row.batch_no == ''){
+		frm.doc.items.reverse().forEach(function (row) {
+			if (row.batch_no == undefined || row.batch_no == '') {
 				to_remove.push(row.idx - 1);
 			}
 		})
 
-		to_remove.forEach(function(i){
+		to_remove.forEach(function (i) {
 			frm.get_field('items').grid.grid_rows[i].remove();
 		});
 
 		frm.refresh_field('items');
 	},
 
-	set_items_as_per_packages: function(frm) {
+	set_items_as_per_packages: function (frm) {
 
 		let to_remove = [];
 		let item_merge_grade_row_dict = {};
@@ -165,7 +165,7 @@ frappe.ui.form.on("Delivery Note", {
 
 		frappe.run_serially([
 			() => {
-				frm.doc.items.forEach(function(row){
+				frm.doc.items.forEach(function (row) {
 					frappe.call({
 						method: 'frappe.client.get_value',
 						args: {
@@ -176,47 +176,47 @@ frappe.ui.form.on("Delivery Note", {
 							fieldname: 'has_batch_no'
 						},
 						async: false,
-						callback: function(r){
-							if(r.message.has_batch_no){
+						callback: function (r) {
+							if (r.message.has_batch_no) {
 								to_remove.push(row.idx - 1);
 								if (row.merge && row.grade && row.warehouse) {
-									let item_merge_grade = row.item_code.toString() + row.merge.toString() + row.grade.toString() + row.grade.toString()
-									if(!(item_merge_grade in item_merge_grade_row_dict)){
-										console.log("Adding Item to Merge Dict" + item_merge_grade);
+									let item_merge_grade = row.item_code.toString() + row.merge.toString() + row.grade.toString() + row.warehouse.toString()
+									if (!(item_merge_grade in item_merge_grade_row_dict)) {
+										//console.log("Adding Item to Merge Dict" + item_merge_grade);
 										item_merge_grade_row_dict[item_merge_grade] = Object.assign({}, row);
 									}
 								}
-								if(!(row.item_code in item_row_dict)){
+								if (!(row.item_code in item_row_dict)) {
 									item_row_dict[row.item_code.toString()] = Object.assign({}, row);
 								}
-							
+
 							}
 						}
-						
+
 					})
 				});
 				//console.log("item merge grade dict");
 				//console.log(item_merge_grade_row_dict);
 			},
 			() => {
-				to_remove.reverse().forEach(function(i){
+				to_remove.reverse().forEach(function (i) {
 					frm.get_field('items').grid.grid_rows[i].remove();
 				});
 			},
 			() => {
-				frm.doc.packages.forEach(function(row){
+				frm.doc.packages.forEach(function (row) {
 					let key = [row.item_code, row.merge, row.grade, row.batch_no, row.warehouse];
 					let item_merge_grade = row.item_code.toString() + row.merge.toString() + row.grade.toString() + row.warehouse.toString()
-					if(!(key in package_items)){
-						if (item_merge_grade_row_dict[item_merge_grade]){
+					if (!(key in package_items)) {
+						if (item_merge_grade_row_dict[item_merge_grade]) {
 							//console.log("Merge Grade Item Received");
 							//console.log(item_merge_grade_row_dict[item_merge_grade])
 							package_items[key] = Object.assign({}, item_merge_grade_row_dict[item_merge_grade]);
 						}
-						else{
+						else {
 							package_items[key] = Object.assign({}, item_row_dict[row.item_code]);
-							console.log("Merge Grde Item Not Received");
-							console.log(item_row_dict[row.item_code]);
+							//	console.log("Merge Grde Item Not Received");
+							//console.log(item_row_dict[row.item_code]);
 
 						}
 						package_items[key]['net_weight'] = 0;
@@ -227,22 +227,22 @@ frappe.ui.form.on("Delivery Note", {
 					}
 
 					//package_items[key]['warehouse'] = row.warehouse;
-					if(frm.doc.is_return){
+					if (frm.doc.is_return) {
 						package_items[key]['net_weight'] -= row.consumed_qty;
 						package_items[key]['gross_weight'] -= row.gross_weight;
 					}
-					else{
+					else {
 						package_items[key]['net_weight'] += row.consumed_qty;
 						package_items[key]['gross_weight'] += row.gross_weight;
 					}
 					package_items[key]['no_of_spools'] += row.spools;
 					package_items[key]['packages'] += 1;
-					console.log("final Package_item Dict")
-					console.log(package_items[key])
+					//console.log("final Package_item Dict")
+					//console.log(package_items[key])
 				});
 			},
 			() => {
-				$.each(package_items || {}, function(key, args){
+				$.each(package_items || {}, function (key, args) {
 					let keys = key.split(",");
 					let values = Object.assign({}, args);
 
@@ -262,7 +262,7 @@ frappe.ui.form.on("Delivery Note", {
 
 					frm.add_child('items', values);
 				});
-			}, 
+			},
 			() => frm.refresh_field('items'),
 		]);
 	},
@@ -272,12 +272,12 @@ frappe.ui.form.on("Delivery Note", {
 frappe.ui.form.on("Delivery Note Item", {
 	item_code: function (frm, cdt, cdn) {
 		let d = locals[cdt][cdn];
-		setTimeout(function(){
-			frappe.db.get_value("Batch", d.batch_no, ['merge', 'grade'], function(r){
+		setTimeout(function () {
+			frappe.db.get_value("Batch", d.batch_no, ['merge', 'grade'], function (r) {
 				frappe.model.set_value(cdt, cdn, 'merge', r.merge);
 				frappe.model.set_value(cdt, cdn, 'grade', r.grade);
-				
-				select_packages({frm: frm, item_code: d.item_code, merge: d.merge, warehouse: d.warehouse});
+
+				select_packages({ frm: frm, item_code: d.item_code, merge: d.merge, warehouse: d.warehouse });
 			});
 		}, 1000);
 	},
@@ -285,7 +285,7 @@ frappe.ui.form.on("Delivery Note Item", {
 
 
 const select_packages = (args) => {
-	frappe.require("assets/spinning/js/utils/package_selector.js", function() {
+	frappe.require("assets/spinning/js/utils/package_selector_dn.js", function () {
 		new PackageSelector(args)
 	})
 }

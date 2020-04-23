@@ -10,30 +10,38 @@ def get_naming_series_options(doctype):
 	options_list = []
 
 	fields = [d.fieldname for d in meta.fields]
+	# frappe.msgprint(str(len(options)))
 
 	for option in options:
-		flag = False
 		parts = option.split('.')
 
 		if parts[-1] == "#" * len(parts[-1]):
 			del parts[-1]
 
 		naming_str = parse_naming_series(parts)
-
+		series = {}
+		dynamic_field = {}
+		field_list = []
+		
 		for part in parts:
 			if part in fields:
-				flag = True
-				data = frappe.db.sql_list("select distinct {field} from `tab{doctype}` where {field} is not NULL".format(field=part, doctype=doctype))
+				field_list.append(part)
+				dynamic_field[part] = (frappe.db.sql_list("select distinct {field} from `tab{doctype}` where {field} is not NULL".format(field=part, doctype=doctype)))
+	
+		import itertools
+		if dynamic_field.items():
+			pair = [(k, v) for k, v in dynamic_field.items()]
+			key = [item[0] for item in pair]
+			value = [item[1] for item in pair]
 
-				for value in data:
-					series = naming_str.replace(part, value)
+			combination = list(itertools.product(*value))
+			for item in combination:
+				name = naming_str
+				for k, v in zip(key, item):
+					name = name.replace(k, v)
 
-					if frappe.db.get_value("Series", series, 'name', order_by='name'):
-						options_list.append(series)
-		else:
-			if not flag:
-				options_list.append(option)
-
+				options_list.append(name)
+		
 	return "\n".join(options_list)
 
 def get_transactions(self, arg=None):
@@ -57,7 +65,8 @@ def get_transactions(self, arg=None):
 			options = get_naming_series_options(d)
 			prefixes = prefixes + "\n" + options
 	prefixes.replace("\n\n", "\n")
-	prefixes = prefixes.split("\n")
+	# frappe.msgprint(str(prefixes))
+	prefixes = sorted(list(set(prefixes.split("\n"))))
 
 	custom_prefixes = frappe.get_all('DocType', fields=["autoname"],
 		filters={"name": ('not in', doctypes), "autoname":('like', '%.#%'), 'module': ('not in', ['Core'])})
