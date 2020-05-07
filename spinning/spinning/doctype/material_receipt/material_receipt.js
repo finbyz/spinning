@@ -63,6 +63,15 @@ frappe.ui.form.on('Material Receipt', {
 	});
 	},
 
+	warehouse: function(frm) {
+		let item = frm.doc.items;
+		if (item){
+			item.forEach(function(value, key) {
+				frappe.model.set_value(value.doctype, value.name,'t_warehouse', frm.doc.warehouse);
+			});
+		}
+	},
+
 	validate: function(frm){
 		
 		$.each(frm.doc.items || [], function(i, d) {

@@ -2,7 +2,8 @@ function get_merge_wise_package_details(batch_no, warehouse) {
 	let template = `
 		<table class="table table-bordered" style="margin: 0;">
 			<thead>
-				<th>{{ __("Package") }}</th>
+				<th>{{ __("Package No") }}</th>
+				<th>{{ __("Package Name") }}</th>
 				<th>{{ __("Type") }}</th>
 				<th>{{ __("Spools") }}</th>
 				<th>{{ __("Gross Weight") }}</th>
@@ -13,6 +14,7 @@ function get_merge_wise_package_details(batch_no, warehouse) {
 			<tbody>
 				{% for (let row of data ) { %}
 					<tr>
+						<td>{{ __(row['package_no']) }}</td>
 						<td>{{ __(row['name']) }}</td>
 						<td>{{ __(row['package_type']) }}</td>
 						<td>{{ __(row['spools']) }}</td>
@@ -26,7 +28,7 @@ function get_merge_wise_package_details(batch_no, warehouse) {
 			</tbody>
 		</table>`;
 
-	frappe.call({
+		frappe.call({
 		method: "spinning.api.get_merge_wise_package_details",
 		args: {
 			batch_no: batch_no,
@@ -47,6 +49,7 @@ function get_package_details(batch_no,to_date) {
 		<table class="table table-bordered" style="margin: 0;">
 			<thead>
 				<th>{{ __("Package") }}</th>
+				<th>{{ __("Package Name") }}</th>
 				<th>{{ __("Type") }}</th>
 				<th>{{ __("Spools") }}</th>
 				<th>{{ __("Gross Weight") }}</th>
@@ -62,6 +65,7 @@ function get_package_details(batch_no,to_date) {
 						<td>{{ __(row[3]) }}</td>
 						<td>{{ __(row[4]) }}</td>
 						<td>{{ __(row[5]) }}</td>
+						<td>{{ __(row[6]) }}</td>
 						
 					</tr>
 				{% } %}

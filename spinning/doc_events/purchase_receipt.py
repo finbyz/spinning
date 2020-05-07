@@ -38,6 +38,7 @@ def on_submit(self, method):
 	
 @frappe.whitelist()
 def on_cancel(self, method):
+	validate_package(self)
 	if self.is_return:
 		update_packages(self, method)
 		create_pallet_stock_entry(self)
@@ -48,7 +49,14 @@ def on_cancel(self, method):
 		remove_package_consumption(self)
 
 
-
+def validate_package(self):
+	package_list = frappe.get_list("Package",filters={'purchase_document_type':self.doctype,'purchase_document_no':self.name})		
+	for row in package_list:		
+		doc = frappe.get_doc("Package", row.name)	
+		if doc.warehouse != self.set_warehouse:
+			frappe.throw(_("Package {} does not belong to warehouse {}.".format(doc.name,self.set_warehouse)))
+			
+		
 def validate_purchase_receipt(self):
 	for row in self.items:
 		if row.purchase_order:

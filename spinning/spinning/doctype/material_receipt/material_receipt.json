@@ -113,7 +113,7 @@
    "fieldname": "items",
    "fieldtype": "Table",
    "label": "Items",
-   "options": "Job Work Return Item",
+   "options": "Material Receipt Item",
    "reqd": 1
   },
   {
@@ -384,21 +384,17 @@
   {
    "fieldname": "fiscal",
    "fieldtype": "Data",
-   "hidden": 1,
-   "label": "Fiscal",
-   "read_only": 1
+   "label": "Fiscal"
   },
   {
    "fetch_from": "company.default_package_series",
    "fieldname": "company_series",
    "fieldtype": "Data",
-   "hidden": 1,
-   "label": "Company Series",
-   "read_only": 1
+   "label": "Company Series"
   }
  ],
  "is_submittable": 1,
- "modified": "2020-04-20 12:03:29.709128",
+ "modified": "2020-04-29 12:37:33.513710",
  "modified_by": "Administrator",
  "module": "Spinning",
  "name": "Material Receipt",

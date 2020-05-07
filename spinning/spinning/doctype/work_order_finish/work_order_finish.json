@@ -13,6 +13,7 @@
   "merge",
   "package_type",
   "is_returnable",
+  "sheet_item",
   "fg_completed_qty",
   "package_item",
   "spool_weight",
@@ -38,6 +39,7 @@
   "section_break_20",
   "total_gross_weight",
   "total_net_weight",
+  "total_sheets",
   "column_break_23",
   "total_tare_weight",
   "total_spool",
@@ -90,7 +92,7 @@
    "fieldtype": "Select",
    "label": "Package Type",
    "options": "\nBox\nPallet",
-   "read_only": 1
+   "permlevel": 1
   },
   {
    "default": "0",
@@ -233,7 +235,7 @@
    "fieldtype": "Link",
    "label": "Package Item",
    "options": "Item",
-   "read_only": 1
+   "permlevel": 1
   },
   {
    "fetch_from": "work_order.source_warehouse",
@@ -292,10 +294,26 @@
    "fieldtype": "Link",
    "label": "Package Warehouse",
    "options": "Warehouse"
+  },
+  {
+   "depends_on": "eval: doc.package_type == \"Pallet\"",
+   "fetch_from": "work_order.sheet_item",
+   "fetch_if_empty": 1,
+   "fieldname": "sheet_item",
+   "fieldtype": "Link",
+   "label": "Sheet Item",
+   "options": "Item",
+   "permlevel": 1
+  },
+  {
+   "fieldname": "total_sheets",
+   "fieldtype": "Int",
+   "label": "Total Sheets",
+   "read_only": 1
   }
  ],
  "is_submittable": 1,
- "modified": "2019-12-07 15:11:29.261102",
+ "modified": "2020-05-07 11:19:24.002913",
  "modified_by": "Administrator",
  "module": "Spinning",
  "name": "Work Order Finish",

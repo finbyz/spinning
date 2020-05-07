@@ -14,8 +14,15 @@ from datetime import datetime
 from spinning.controllers.merge_validation import validate_merge
 
 import json
+from spinning.api import get_fiscal
 
 class MaterialRepack(Document):
+	def before_naming(self):
+		if not self.amended_from:
+			date = self.get("transaction_date") or self.get("posting_date") or getdate()
+			fiscal = get_fiscal(date)
+			self.fiscal = fiscal
+	
 	def validate(self):
 		validate_merge(self)
 		date = datetime.strptime(self.posting_date, '%Y-%m-%d').date()

@@ -15,8 +15,15 @@ from erpnext.stock.doctype.stock_entry.stock_entry import get_uom_details, get_w
 from erpnext.setup.doctype.item_group.item_group import get_item_group_defaults
 from erpnext.setup.doctype.brand.brand import get_brand_defaults
 from erpnext.stock.doctype.batch.batch import get_batch_no
+from spinning.api import get_fiscal
 
 class MaterialIssue(Document):
+	def before_naming(self):
+		if not self.amended_from:
+			date = self.get("transaction_date") or self.get("posting_date") or getdate()
+			fiscal = get_fiscal(date)
+			self.fiscal = fiscal
+	
 	def validate(self):
 		date = datetime.strptime(self.posting_date, '%Y-%m-%d').date()
 		cd   = datetime.date(datetime.now())

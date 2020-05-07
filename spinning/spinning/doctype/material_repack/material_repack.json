@@ -41,7 +41,9 @@
   "more_information_section",
   "consumed_packages",
   "column_break_35",
-  "amended_from"
+  "amended_from",
+  "fiscal",
+  "company_series"
  ],
  "fields": [
   {
@@ -277,10 +279,21 @@
    "fieldtype": "Float",
    "label": "Consumed Qty",
    "read_only": 1
+  },
+  {
+   "fieldname": "fiscal",
+   "fieldtype": "Data",
+   "label": "Fiscal"
+  },
+  {
+   "fetch_from": "company.default_package_series",
+   "fieldname": "company_series",
+   "fieldtype": "Data",
+   "label": "Company Series"
   }
  ],
  "is_submittable": 1,
- "modified": "2019-12-07 15:11:41.484053",
+ "modified": "2020-04-29 15:32:15.837251",
  "modified_by": "Administrator",
  "module": "Spinning",
  "name": "Material Repack",

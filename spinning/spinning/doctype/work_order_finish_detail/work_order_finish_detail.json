@@ -10,8 +10,10 @@
   "column_break_4",
   "net_weight",
   "tare_weight",
+  "no_of_sheets",
   "print",
-  "package"
+  "package",
+  "package_type"
  ],
  "fields": [
   {
@@ -38,6 +40,7 @@
    "fieldtype": "Column Break"
   },
   {
+   "columns": 1,
    "fieldname": "net_weight",
    "fieldtype": "Float",
    "in_list_view": 1,
@@ -66,10 +69,25 @@
    "no_copy": 1,
    "options": "Package",
    "read_only": 1
+  },
+  {
+   "fieldname": "package_type",
+   "fieldtype": "Select",
+   "label": "Package Type",
+   "options": "\nBox\nPallet",
+   "read_only": 1
+  },
+  {
+   "columns": 1,
+   "depends_on": "eval: doc.package_type == 'Pallet'",
+   "fieldname": "no_of_sheets",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "No of sheets"
   }
  ],
  "istable": 1,
- "modified": "2019-12-07 15:19:43.178214",
+ "modified": "2020-05-07 12:39:33.198316",
  "modified_by": "Administrator",
  "module": "Spinning",
  "name": "Work Order Finish Detail",

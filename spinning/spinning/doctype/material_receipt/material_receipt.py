@@ -16,13 +16,20 @@ from erpnext.setup.doctype.item_group.item_group import get_item_group_defaults
 from erpnext.setup.doctype.brand.brand import get_brand_defaults
 from six import string_types
 from datetime import datetime
+from spinning.api import get_fiscal
 
 class MaterialReceipt(Document):
+	def before_naming(self):
+		if not self.amended_from:
+			date = self.get("transaction_date") or self.get("posting_date") or getdate()
+			fiscal = get_fiscal(date)
+			self.fiscal = fiscal
+
 	def validate(self):
-		date = datetime.strptime(self.posting_date, '%Y-%m-%d').date()
-		cd   = datetime.date(datetime.now())
-		if date > cd:
-			frappe.throw(_('Posting Date Cannot Be After Today Date'))
+		# date = datetime.strptime(self.posting_date, '%Y-%m-%d').date()
+		# cd   = datetime.date(datetime.now())
+		# if date > cd:
+			# frappe.throw(_('Posting Date Cannot Be After Today Date'))
 		if self._action == 'submit':
 			self.validate_weights()
 		set_batches(self, 't_warehouse')
@@ -31,6 +38,8 @@ class MaterialReceipt(Document):
 	def calculate_amount(self):
 		for row in self.items:
 			row.amount = flt(row.basic_amount)
+		self.total_package_net_weight = sum([d.net_weight for d in self.packages])
+		self.total_package_gross_weight = sum([d.gross_weight for d in self.packages])
 		
 	def before_save(self):
 
@@ -115,8 +124,17 @@ class MaterialReceipt(Document):
 		#frappe.db.commit()
 		
 	def on_cancel(self):
+		self.validate_package()
 		self.clear_package_weight()
 		self.cancel_stock_entry()
+		
+	def validate_package(self):
+		package_list = frappe.get_list("Package",filters={'purchase_document_type':self.doctype,'purchase_document_no':self.name})		
+		for row in package_list:		
+			doc = frappe.get_doc("Package", row.name)	
+			if doc.warehouse != self.warehouse:
+				frappe.throw(_("<b>{}</b> package is in {} warehouse.".format(doc.name,doc.warehouse)))
+			
 		
 	def validate_weights(self):
 		for row in self.items:
@@ -198,8 +216,8 @@ class MaterialReceipt(Document):
 			doc.purchase_document_no = ''
 			doc.save(ignore_permissions=True)
 
-		else:
-			frappe.db.commit()
+		# else:
+			# frappe.db.commit()
 			
 	def create_stock_entry(self):
 		se = frappe.new_doc("Stock Entry")
@@ -275,7 +293,6 @@ class MaterialReceipt(Document):
 
 		se.db_set('reference_doctype','')
 		se.db_set('reference_docname','')
-		frappe.db.commit()
 
 	def update_pallet_item(self):
 		count = 0

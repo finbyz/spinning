@@ -11,8 +11,15 @@ from frappe.model.mapper import get_mapped_doc
 from spinning.controllers.batch_controller import get_batch_no
 from datetime import datetime
 from spinning.controllers.merge_validation import validate_merge
+from spinning.api import get_fiscal
 
 class MaterialUnpack(Document):
+	def before_naming(self):
+		if not self.amended_from:
+			date = self.get("transaction_date") or self.get("posting_date") or getdate()
+			fiscal = get_fiscal(date)
+			self.fiscal = fiscal
+	
 	def validate(self):	
 		validate_merge(self)
 		date = datetime.strptime(self.posting_date, '%Y-%m-%d').date()

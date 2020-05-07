@@ -80,12 +80,12 @@ def get_merge_wise_package_details(batch_no, warehouse):
 		'batch_no': batch_no, 
 		'warehouse': warehouse, 
 		'status': ['!=', "Out of Stock"]
-	}, fields = ['name', 'package_type', 'gross_weight', 'net_weight', 'spools', 'remaining_qty', 'status'])
+	}, fields = ['package_no', 'name', 'package_type', 'gross_weight', 'net_weight', 'spools', 'remaining_qty', 'status'])
 
 @frappe.whitelist()
 def get_package_details(batch_no,to_date):
 	sql = frappe.db.sql("""
-	SELECT p.name, p.package_type, p.spools, p.gross_weight, p.net_weight, (p.net_weight - sum(IFNULL(case when pc.posting_date <= '{0}' then pc.consumed_qty end,0))) as remaining
+	SELECT p.package_no, p.name, p.package_type, p.spools, p.gross_weight, p.net_weight, (p.net_weight - sum(IFNULL(case when pc.posting_date <= '{0}' then pc.consumed_qty end,0))) as remaining
 		FROM `tabPackage` as p
 		LEFT JOIN `tabPackage Consumption` as pc ON pc.parent = p.name
 		WHERE 
@@ -103,7 +103,7 @@ def get_package_details(batch_no,to_date):
 	
 @frappe.whitelist()
 def before_naming(self, method):
-	if not hasattr(self,'amended_from'):
+	if not self.get('amended_from'):
 		
 		date = self.get("transaction_date") or self.get("posting_date") or getdate()
 		fiscal = get_fiscal(date)

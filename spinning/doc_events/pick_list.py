@@ -39,6 +39,9 @@ def before_submit(self, method):
 def on_submit(self, method):
 	update_sales_order(self, 'submit')
 
+def on_cancel(self, method):
+	update_sales_order(self, 'cancel')
+
 def update_sales_order(self, method):
 	if method == "submit":
 		for item in self.locations:
@@ -177,7 +180,7 @@ def create_delivery_note(source_name, target_doc=None):
 			'name': 'so_detail',
 			'parent': 'against_sales_order',
 		},
-		'condition': lambda doc: abs(doc.delivered_qty) < abs(doc.qty) and doc.delivered_by_supplier!=1
+		'condition': lambda doc: abs(doc.delivered_qty) < abs(doc.qty)
 	}
 
 	for location in pick_list.locations:
@@ -186,7 +189,7 @@ def create_delivery_note(source_name, target_doc=None):
 
 		if dn_item:
 			dn_item.warehouse = location.warehouse
-			dn_item.qty = location.picked_qty
+			dn_item.qty = location.picked_qty - location.delivered_qty
 			dn_item.batch_no = location.batch_no
 			dn_item.serial_no = location.serial_no
 

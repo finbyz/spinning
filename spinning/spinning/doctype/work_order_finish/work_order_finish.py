@@ -22,6 +22,7 @@ class WorkOrderFinish(Document):
 
 	def validate(self):
 		validate_merge(self)
+		self.calculate_totals()
 		date = datetime.strptime(self.posting_date, '%Y-%m-%d').date()
 		cd   = datetime.date(datetime.now())
 		if date > cd:
@@ -75,7 +76,8 @@ class WorkOrderFinish(Document):
 			'spools': 0.0,
 			'net_weight': 0.0,
 			'gross_weight': 0.0,
-			'tare_weight': 0.0
+			'tare_weight': 0.0,
+			'total_sheets': 0
 		})
 
 		for row in self.package_details:
@@ -83,11 +85,13 @@ class WorkOrderFinish(Document):
 			totals.gross_weight += row.gross_weight
 			totals.tare_weight += row.tare_weight
 			totals.net_weight += row.net_weight
+			totals.total_sheets += row.no_of_sheets
 
 		self.db_set('total_spool', flt(totals.spools, 3))
 		self.db_set('total_net_weight', flt(totals.net_weight, 3))
 		self.db_set('total_gross_weight', flt(totals.gross_weight, 3))
 		self.db_set('total_tare_weight', flt(totals.tare_weight, 3))
+		self.db_set('total_sheets', flt(totals.total_sheets, 3))
 
 	def print_row_package(self, child_row, commit=True):
 		def get_package_doc(source_name, target_doc=None, ignore_permissions = True):
@@ -99,6 +103,7 @@ class WorkOrderFinish(Document):
 				target.merge = self.merge
 				target.grade = self.grade
 				target.package_type = self.package_type
+				target.sheet_item = self.sheet_item
 
 			return get_mapped_doc("Work Order Finish", source_name, {
 				"Work Order Finish": {
@@ -176,9 +181,17 @@ class WorkOrderFinish(Document):
 		self.create_stock_entry()
 
 	def on_cancel(self):
+		self.validate_package()
 		self.clear_package_details()
 		self.cancel_stock_entry()
 
+	def validate_package(self):
+		for row in self.package_details:
+			if row.package:
+				warehouse = frappe.db.get_value("Package",row.package,'warehouse')
+				if self.target_warehouse != warehouse:
+					frappe.throw(_("Row:{} Package {} does not belong to warehouse {}.".format(row.idx,row.package,self.target_warehouse)))
+		
 	def update_package_details(self):
 		for row in self.package_details:
 			doc = frappe.get_doc("Package",row.package)
@@ -188,6 +201,7 @@ class WorkOrderFinish(Document):
 			doc.item_code = self.item_code
 			doc.item_name = self.item_name
 			doc.package_item = self.package_item
+			doc.sheet_item = self.sheet_item
 			doc.package_type = self.package_type
 			doc.paper_tube = self.paper_tube
 			doc.purchase_date = self.posting_date
@@ -198,6 +212,7 @@ class WorkOrderFinish(Document):
 			doc.net_weight = row.net_weight
 			doc.tare_weight = row.tare_weight
 			doc.spools = row.no_of_spool
+			doc.no_of_sheets = row.no_of_sheets
 			doc.package_weight = row.package_weight
 			doc.purchase_document_type = self.doctype
 			doc.purchase_document_no = self.name
@@ -209,6 +224,7 @@ class WorkOrderFinish(Document):
 			doc.gross_weight = 0.0
 			doc.net_weight = 0.0
 			doc.tare_weight = 0.0
+			doc.no_of_sheets = 0
 			doc.spools = 0.0
 			doc.package_weight = 0.0
 			doc.purchase_document_no = ''
@@ -246,7 +262,13 @@ class WorkOrderFinish(Document):
 				's_warehouse': self.package_warehouse or self.source_warehouse,
 				'qty': len(self.package_details),
 			})
-
+		if self.sheet_item and self.total_sheets:
+			se.append("items",{
+				'item_code': self.sheet_item,
+				's_warehouse': self.package_warehouse or self.source_warehouse,
+				'qty': self.total_sheets,
+			})
+			
 		for d in se.items:
 			if d.t_warehouse and d.item_code == self.item_code:
 				d.merge = self.merge

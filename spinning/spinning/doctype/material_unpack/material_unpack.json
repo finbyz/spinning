@@ -36,7 +36,9 @@
   "letter_head",
   "section_break_12",
   "stock_entry_ref",
-  "amended_from"
+  "amended_from",
+  "fiscal",
+  "company_series"
  ],
  "fields": [
   {
@@ -251,10 +253,21 @@
    "fieldtype": "Int",
    "label": "Total Packages",
    "read_only": 1
+  },
+  {
+   "fieldname": "fiscal",
+   "fieldtype": "Data",
+   "label": "Fiscal"
+  },
+  {
+   "fetch_from": "company.default_package_series",
+   "fieldname": "company_series",
+   "fieldtype": "Data",
+   "label": "Company Series"
   }
  ],
  "is_submittable": 1,
- "modified": "2019-12-07 15:11:35.526660",
+ "modified": "2020-04-29 15:10:17.864973",
  "modified_by": "Administrator",
  "module": "Spinning",
  "name": "Material Unpack",

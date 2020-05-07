@@ -245,7 +245,7 @@ ItemSelector = Class.extend({
 				'in_list_view': 1,
 			},
 			{
-				'label': 'Avalilable to Pick',
+				'label': 'Picked Qty',
 				'fieldtype': 'Float',
 				'fieldname': 'to_pick_qty',
 				'in_list_view': 1,
@@ -271,7 +271,7 @@ ItemSelector = Class.extend({
 				'in_list_view': 0,
 			},
 			{
-				'label': 'Picked Qty',
+				'label': 'Available Qty',
 				'fieldtype': 'Float',
 				'fieldname': 'picked_qty',
 				'read_only': 1,

@@ -22,6 +22,13 @@ cur_frm.fields_dict.package_item.get_query = function(doc) {
 //         }
 //     }
 // };
+cur_frm.fields_dict.workstation.get_query = function (doc) {
+    return {
+        filters: {
+            "company": doc.company
+        }
+    }
+};
 cur_frm.fields_dict.source_warehouse.get_query = function (doc) {
     return {
         filters: {
@@ -53,7 +60,14 @@ cur_frm.fields_dict.grade.get_query = function(doc) {
 	}
 }
 frappe.ui.form.on("Work Order Finish", {
-	onload: function(frm){
+	onload: function (frm) {
+		var df = frappe.meta.get_docfield("Work Order Finish Detail", "no_of_sheets", cur_frm.doc.name);
+		if (frm.doc.package_type == "Pallet") {
+			df.read_only = 0;
+		}
+		else {
+			df.read_only = 1;
+		}
 		if(frm.doc.__islocal){
 			frappe.db.get_value("Company", frm.doc.company, 'abbr', function(r){
 				frm.set_value('package_warehouse','Work In Progress - ' + r.abbr)
@@ -149,7 +163,8 @@ frappe.ui.form.on("Work Order Finish", {
 		let net_weight = 0.0;
 		let gross_weight = 0.0;
 		let tare_weight = 0.0;
-		let total_tare_weight = 0.0 ;
+		let total_tare_weight = 0.0;
+		let total_sheets = 0;
 		
 		frm.doc.package_details.forEach(function (d) {
 			spool += d.no_of_spool;
@@ -159,11 +174,26 @@ frappe.ui.form.on("Work Order Finish", {
 			frappe.model.set_value(d.doctype,d.name,"tare_weight",tare_weight);
 			frappe.model.set_value(d.doctype,d.name,"net_weight",flt(d.gross_weight - d.tare_weight))
 			net_weight += d.net_weight;
+			total_sheets += d.no_of_sheets
 		});
 		frm.set_value("total_spool",spool);
 		frm.set_value("total_net_weight",net_weight);
 		frm.set_value("total_gross_weight",gross_weight);
-		frm.set_value("total_tare_weight",total_tare_weight);
+		frm.set_value("total_tare_weight", total_tare_weight);
+		frm.set_value("total_sheets", total_sheets);
+	},
+	package_type: function (frm) {
+		$.each(frm.doc.package_details || [], function (i, d) {
+			d.package_type = frm.doc.package_type;
+		});
+		var df = frappe.meta.get_docfield("Work Order Finish Detail", "no_of_sheets", cur_frm.doc.name);
+		if (frm.doc.package_type == "Pallet") {	
+			df.read_only = 0;
+		}
+		else {
+			df.read_only = 1;
+		}
+		frm.refresh_field("package_details");
 	},
 });
 
@@ -213,5 +243,10 @@ frappe.ui.form.on("Work Order Finish Detail", {
 				//cur_frm.print_doc();
 			}
 		});
-	},	
+	},
+	package_details_add: function (frm, cdt, cdn) {
+		var row = locals[cdt][cdn];
+		row.package_type = frm.doc.package_type;
+		frm.refresh_field("package_details");
+	},
 });

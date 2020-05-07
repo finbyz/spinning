@@ -20,11 +20,26 @@ def before_save(self, method):
 def on_submit(self, method):
 	update_packages(self, method)
 	create_pallet_stock_entry(self)
-
+	for item in self.items:
+		if item.against_pick_list:
+			pick_list_item = frappe.get_doc("Pick List Item", item.against_pick_list)
+			delivered_qty = item.qty + pick_list_item.delivered_qty
+			if delivered_qty > pick_list_item.qty:
+				frappe.throw(f"Row {item.idx}: You can not deliver more tha picked qty")
+			pick_list_item.db_set("delivered_qty", delivered_qty)
 
 def on_cancel(self, method):
 	update_packages(self, method)
 	cancel_pallet_stock_entry(self)
+	for item in self.items:
+		if item.against_pick_list:
+			pick_list_item = frappe.get_doc("Pick List Item", item.against_pick_list)
+			delivered_qty = pick_list_item.delivered_qty - item.qty
+			if delivered_qty < 0:
+				delivered_qty = 0
+				# frappe.throw("You can not deliver more tha picked qty")
+				pass
+			pick_list_item.db_set("delivered_qty", delivered_qty)
 
 def validate_packages(self):
 	for row in self.packages:

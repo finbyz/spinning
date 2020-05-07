@@ -139,6 +139,11 @@ doc_events = {
 		"validate": "spinning.doc_events.stock_entry.validate",
 		'before_save': "spinning.doc_events.stock_entry.before_save",
 	},
+	"Pick List": {
+		'before_naming': 'spinning.api.before_naming',
+		"on_submit": "spinning.doc_events.pick_list.on_submit",
+		"on_cancel": "spinning.doc_events.pick_list.on_cancel",
+	},
 
 	"Batch": {
 		'before_naming': "spinning.doc_events.batch.before_naming",
@@ -187,7 +192,7 @@ doc_events = {
 	'Sales Invoice':{
 		'validate': "spinning.doc_events.sales_invoice.validate"
 	},
-	('Material Issue','Material Receipt','Material Transfer','Gate Exit'):{
+	('Material Issue','Material Receipt','Material Transfer','Gate Exit','Pick List'):{
 		'before_naming': 'spinning.api.before_naming'
 	}
 }
@@ -203,4 +208,8 @@ doc_events = {
 #
 override_whitelisted_methods = {
 	"erpnext.selling.doctype.sales_order.sales_order.create_pick_list": "spinning.spining.get_events"
+}
+
+override_doctype_dashboards = {
+	"Pick List": "spinning.dashboard.pick_list.get_data",
 }
