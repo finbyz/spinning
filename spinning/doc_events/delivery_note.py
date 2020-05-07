@@ -15,7 +15,7 @@ def before_validate(self, method):
 
 def before_save(self, method):
 	calculate_totals(self)
-
+	set_pallet_item(self)
 
 def on_submit(self, method):
 	update_packages(self, method)
@@ -47,6 +47,25 @@ def validate_packages(self):
 
 		if status == "Out of Stock":
 			frappe.throw(_("Row {}: Package {} is Out of Stock. Please select another package.".format(row.idx, frappe.bold(row.package))))
+
+def set_pallet_item(self):
+	finish_list = []
+	result = {}
+	if self.package_type == "Pallet":
+		for row in self.packages:
+			if row.sheet_item or row.package_item:
+				finish_list.append({row.sheet_item:row.no_of_sheets,row.package_item:1})
+
+		for d in finish_list:
+			for k in d.keys():
+				result[k] = result.get(k, 0) + d[k]
+
+		self.pallet_item = []
+		for k,v in result.items():
+			self.append('pallet_item',{
+				'pallet_item': k,
+				'qty': v
+			})
 
 def set_items_as_per_packages(self):
 	to_remove = []

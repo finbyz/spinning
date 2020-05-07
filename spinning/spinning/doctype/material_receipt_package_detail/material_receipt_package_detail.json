@@ -9,6 +9,7 @@
   "net_weight",
   "tare_weight",
   "spools",
+  "no_of_sheets",
   "row_ref",
   "column_break_6",
   "package_type",
@@ -38,6 +39,7 @@
    "reqd": 1
   },
   {
+   "columns": 1,
    "fieldname": "row_ref",
    "fieldtype": "Select",
    "in_list_view": 1,
@@ -83,10 +85,17 @@
    "fieldtype": "Float",
    "label": "Tare Weight",
    "read_only": 1
+  },
+  {
+   "columns": 1,
+   "fieldname": "no_of_sheets",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Sheets"
   }
  ],
  "istable": 1,
- "modified": "2020-04-28 10:53:11.566722",
+ "modified": "2020-05-07 18:21:17.533373",
  "modified_by": "Administrator",
  "module": "Spinning",
  "name": "Material Receipt Package Detail",

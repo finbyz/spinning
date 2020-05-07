@@ -5,7 +5,7 @@ import frappe
 from frappe import _
 from frappe.utils import flt
 from frappe.contacts.doctype.address.address import get_company_address
-from erpnext.accounts.utils import get_fiscal_year
+from erpnext.accounts.utils import get_fiscal_year, getdate
 
 @frappe.whitelist()
 def company_address(company):

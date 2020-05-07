@@ -230,6 +230,12 @@ frappe.ui.form.on('Material Receipt', {
 	},
 
 	onload: function(frm){
+		var df = frappe.meta.get_docfield("Material Receipt Package Detail","no_of_sheets", cur_frm.doc.name);
+		if (frm.doc.package_type == "Pallet") {
+			df.read_only = 0;
+		} else {
+			df.read_only = 1;
+		}
 		frm.trigger('override_merge_new_doc');
 		frm.trigger('override_grade_new_doc');
 		frm.trigger('set_options_for_row_ref');
@@ -301,6 +307,12 @@ frappe.ui.form.on('Material Receipt', {
 		$.each(frm.doc.packages || [], function(i, d) {
 			d.package_type = frm.doc.package_type;
 		});
+		var df = frappe.meta.get_docfield("Material Receipt Package Detail", "no_of_sheets", cur_frm.doc.name);
+		if (frm.doc.package_type == "Pallet") {
+			df.read_only = 0;
+		} else {
+			df.read_only = 1;
+		}
 		refresh_field("packages");
 	},
 	is_returnable: function(frm) {

@@ -18,7 +18,12 @@
   "gross_weight",
   "net_weight",
   "consumed_qty",
-  "tare_weight"
+  "tare_weight",
+  "section_break_16",
+  "sheet_item",
+  "package_item",
+  "column_break_19",
+  "no_of_sheets"
  ],
  "fields": [
   {
@@ -136,10 +141,42 @@
    "fieldtype": "Float",
    "in_list_view": 1,
    "label": "Consumed Qty"
+  },
+  {
+   "fieldname": "section_break_16",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fetch_from": "package.sheet_item",
+   "fieldname": "sheet_item",
+   "fieldtype": "Link",
+   "label": "Sheet Item",
+   "options": "Item",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "package.package_item",
+   "fieldname": "package_item",
+   "fieldtype": "Link",
+   "label": "Package Item",
+   "options": "Item",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_19",
+   "fieldtype": "Column Break",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "package.no_of_sheets",
+   "fieldname": "no_of_sheets",
+   "fieldtype": "Int",
+   "label": "No of Sheets",
+   "read_only": 1
   }
  ],
  "istable": 1,
- "modified": "2020-02-24 13:56:36.810665",
+ "modified": "2020-05-07 16:21:11.743057",
  "modified_by": "Administrator",
  "module": "Spinning",
  "name": "Delivery Note Package Detail",
