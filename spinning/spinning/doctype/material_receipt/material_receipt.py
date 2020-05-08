@@ -184,6 +184,7 @@ class MaterialReceipt(Document):
 			doc.net_weight = pkg.net_weight
 			doc.tare_weight = pkg.tare_weight
 			doc.spools = pkg.spools
+			doc.no_of_sheets = pkg.no_of_sheets
 			
 			doc.batch_no = row.batch_no
 			doc.item_code = row.item_code

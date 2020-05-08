@@ -25,7 +25,7 @@ def on_submit(self, method):
 			pick_list_item = frappe.get_doc("Pick List Item", item.against_pick_list)
 			delivered_qty = item.qty + pick_list_item.delivered_qty
 			if delivered_qty > pick_list_item.qty:
-				frappe.throw(f"Row {item.idx}: You can not deliver more tha picked qty")
+				frappe.throw(f"Row {item.idx}: You can not deliver more than picked qty")
 			pick_list_item.db_set("delivered_qty", delivered_qty)
 
 def on_cancel(self, method):
@@ -51,20 +51,29 @@ def validate_packages(self):
 def set_pallet_item(self):
 	finish_list = []
 	result = {}
-	if self.package_type == "Pallet":
+	if self.package_type == "Pallet" and self.is_returnable:
 		for row in self.packages:
-			if row.sheet_item or row.package_item:
-				finish_list.append({row.sheet_item:row.no_of_sheets,row.package_item:1})
+			if row.package_type == "Pallet":
+				if row.sheet_item:
+					finish_list.append({row.sheet_item:row.no_of_sheets})
+				if row.package_item:
+					finish_list.append({row.package_item:1})
 
 		for d in finish_list:
 			for k in d.keys():
 				result[k] = result.get(k, 0) + d[k]
 
 		self.pallet_item = []
+		pallet_in_use = frappe.db.get_value("Company",self.company,'pallet_in_use')
+		pallet_out = frappe.db.get_value("Company",self.company,'pallet_out')
+		if not pallet_in_use or not pallet_out:
+			frappe.throw(_("Please define pallet in or pallet out warehouse in company {}".format(self.company)))
 		for k,v in result.items():
 			self.append('pallet_item',{
 				'pallet_item': k,
-				'qty': v
+				'qty': v,
+				's_warehouse': pallet_in_use,
+				't_warehouse': pallet_out
 			})
 
 def set_items_as_per_packages(self):
@@ -143,58 +152,105 @@ def update_packages(self, method):
 			doc.save(ignore_permissions=True)
 
 def create_pallet_stock_entry(self):
+	if self.pallet_item:
+		if self.is_returnable:
+			abbr = frappe.db.get_value('Company',self.company,'abbr')
+			pallet_se = frappe.new_doc("Stock Entry")
+			pallet_se.stock_entry_type = "Material Transfer"
+			pallet_se.purpose = "Material Transfer"
+			pallet_se.posting_date = self.posting_date
+			pallet_se.posting_time = self.posting_time
+			pallet_se.set_posting_time = self.set_posting_time
+			pallet_se.company = self.company
+			pallet_se.reference_doctype = self.doctype
+			pallet_se.reference_docname = self.name
+			pallet_se.party_type = "Customer"
+			pallet_se.party = self.customer
+			pallet_se.returnable_by = self.returnable_by
+			
+			if self.is_return:
+				for row in self.pallet_item:
+					rate = frappe.db.get_value("Item",row.pallet_item,'valuation_rate')
+					pallet_se.append("items",{
+						'item_code': row.pallet_item,
+						'qty': row.qty,
+						'basic_rate': rate or 0,
+						's_warehouse': row.t_warehouse,
+						't_warehouse': row.s_warehouse
+						#'allow_zero_valuation_rate': 1
+					})
+					try:
+						pallet_se.save(ignore_permissions=True)
+						pallet_se.submit()
+					except Exception as e:
+						frappe.throw(str(e))
 
-	if self.pallet_item and self.is_returnable:
-		abbr = frappe.db.get_value('Company',self.company,'abbr')
-		pallet_se = frappe.new_doc("Stock Entry")
-		pallet_se.stock_entry_type = "Material Transfer"
-		pallet_se.purpose = "Material Transfer"
-		pallet_se.posting_date = self.posting_date
-		pallet_se.posting_time = self.posting_time
-		pallet_se.set_posting_time = self.set_posting_time
-		pallet_se.company = self.company
-		pallet_se.reference_doctype = self.doctype
-		pallet_se.reference_docname = self.name
-		pallet_se.party_type = "Customer"
-		pallet_se.party = self.customer
-		pallet_se.returnable_by = self.returnable_by
+			else:
+				for row in self.pallet_item:
+					rate = frappe.db.get_value("Item",row.pallet_item,'valuation_rate')		
+					pallet_se.append("items",{
+						'item_code': row.pallet_item,
+						'qty': row.qty,
+						'basic_rate': rate or 0,
+						's_warehouse': row.s_warehouse,
+						't_warehouse': row.t_warehouse
+						#'allow_zero_valuation_rate': 1
+					})
+				try:
+					pallet_se.save(ignore_permissions=True)
+					pallet_se.submit()
+				except Exception as e:
+					frappe.throw(str(e))
 
-		if self.is_return:
-			for row in self.pallet_item:
-				rate = frappe.db.get_value("Item",row.pallet_item,'valuation_rate')
-				pallet_se.append("items",{
-					'item_code': row.pallet_item,
-					'qty': row.qty,
-					'basic_rate': rate or 0,
-					's_warehouse': row.t_warehouse,
-					't_warehouse': row.s_warehouse
-					#'allow_zero_valuation_rate': 1
-				})
-			try:
-				pallet_se.save(ignore_permissions=True)
-				pallet_se.submit()
-			except Exception as e:
-				frappe.throw(str(e))
+		if not self.is_returnable:
+			if not self.is_return:
+				mi = frappe.new_doc("Stock Entry")
+				mi.stock_entry_type = "Material Issue"
+				mi.purpose = "Material Issue"
+				mi.posting_date = self.posting_date
+				mi.posting_time = self.posting_time
+				mi.set_posting_time = self.set_posting_time
+				mi.company = self.company
+				mi.reference_doctype = self.doctype
+				mi.reference_docname = self.name
+				mi.returnable_by = self.returnable_by
+				for row in self.pallet_item:
+					mi.append("items",{
+						'item_code':row.pallet_item,
+						'qty': row.qty,
+						's_warehouse': row.s_warehouse,
+					})
+				try:
+					mi.save(ignore_permissions=True)
+					mi.submit()
+				except Exception as e:
+					frappe.throw(str(e))
 
-		else:
-			for row in self.pallet_item:
-				rate = frappe.db.get_value("Item",row.pallet_item,'valuation_rate')
-				pallet_se.append("items",{
-					'item_code': row.pallet_item,
-					'qty': row.qty,
-					'basic_rate': rate or 0,
-					's_warehouse': row.s_warehouse,
-					't_warehouse': row.t_warehouse
-					#'allow_zero_valuation_rate': 1
-				})
-			try:
-				pallet_se.save(ignore_permissions=True)
-				pallet_se.submit()
-			except Exception as e:
-				frappe.throw(str(e))
+			else:
+				mr = frappe.new_doc("Stock Entry")
+				mr.stock_entry_type = "Material Receipt"
+				mr.purpose = "Material Receipt"
+				mr.posting_date = self.posting_date
+				mr.posting_time = self.posting_time
+				mr.set_posting_time = self.set_posting_time
+				mr.company = self.company
+				mr.reference_doctype = self.doctype
+				mr.reference_docname = self.name
+				mr.returnable_by = self.returnable_by
+				for row in self.pallet_item:
+					mr.append("items",{
+						'item_code':row.pallet_item,
+						'qty': row.qty,
+						's_warehouse': row.s_warehouse,
+					})
+				try:
+					mr.save(ignore_permissions=True)
+					mr.submit()
+				except Exception as e:
+					frappe.throw(str(e))
 
 def cancel_pallet_stock_entry(self):
-	if self.pallet_item and self.is_returnable:
+	if self.pallet_item:
 		se = frappe.get_doc("Stock Entry",{'reference_doctype': self.doctype,'reference_docname':self.name})
 		se.flags.ignore_permissions = True
 		try:
@@ -202,6 +258,4 @@ def cancel_pallet_stock_entry(self):
 		except Exception as e:
 			raise e
 		se.db_set('reference_doctype','')
-		se.db_set('reference_docname','')	
-		
-
+		se.db_set('reference_docname','')

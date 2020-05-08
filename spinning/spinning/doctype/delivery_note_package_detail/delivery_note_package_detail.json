@@ -23,7 +23,8 @@
   "sheet_item",
   "package_item",
   "column_break_19",
-  "no_of_sheets"
+  "no_of_sheets",
+  "package_type"
  ],
  "fields": [
   {
@@ -173,10 +174,18 @@
    "fieldtype": "Int",
    "label": "No of Sheets",
    "read_only": 1
+  },
+  {
+   "fetch_from": "package.package_type",
+   "fieldname": "package_type",
+   "fieldtype": "Select",
+   "label": "Package Type",
+   "options": "\nBox\nPallet",
+   "read_only": 1
   }
  ],
  "istable": 1,
- "modified": "2020-05-07 16:21:11.743057",
+ "modified": "2020-05-08 14:59:23.909363",
  "modified_by": "Administrator",
  "module": "Spinning",
  "name": "Delivery Note Package Detail",

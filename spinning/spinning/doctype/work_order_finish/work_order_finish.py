@@ -179,11 +179,13 @@ class WorkOrderFinish(Document):
 	def on_submit(self):
 		self.update_package_details()
 		self.create_stock_entry()
+		self.create_pallet_entry()
 
 	def on_cancel(self):
 		self.validate_package()
 		self.clear_package_details()
 		self.cancel_stock_entry()
+		self.cancel_pallet_stock_entry()
 
 	def validate_package(self):
 		for row in self.package_details:
@@ -256,18 +258,18 @@ class WorkOrderFinish(Document):
 				's_warehouse': self.package_warehouse or wo.wip_warehouse,
 				'qty': self.total_spool,
 			})
-		if self.package_item:
+		if self.package_item and self.package_type != "Pallet":
 			se.append("items",{
 				'item_code': self.package_item,
 				's_warehouse': self.package_warehouse or self.source_warehouse,
 				'qty': len(self.package_details),
 			})
-		if self.sheet_item and self.total_sheets:
-			se.append("items",{
-				'item_code': self.sheet_item,
-				's_warehouse': self.package_warehouse or self.source_warehouse,
-				'qty': self.total_sheets,
-			})
+		# if self.sheet_item and self.total_sheets:
+		# 	se.append("items",{
+		# 		'item_code': self.sheet_item,
+		# 		's_warehouse': self.package_warehouse or self.source_warehouse,
+		# 		'qty': self.total_sheets,
+		# 	})
 			
 		for d in se.items:
 			if d.t_warehouse and d.item_code == self.item_code:
@@ -465,3 +467,59 @@ class WorkOrderFinish(Document):
 	def update_series_value(self, value):
 		if self.series_value != value:
 			self.db_set('series_value', value)
+
+	def create_pallet_entry(self):
+		if self.package_type == "Pallet":
+			abbr = frappe.db.get_value('Company',self.company,'abbr')
+			pallet_in_warehouse = frappe.db.get_value("Company",self.company,'pallet_in_use')
+
+			pallet_se = frappe.new_doc("Stock Entry")
+			pallet_se.stock_entry_type = "Material Transfer"
+			pallet_se.purpose = "Material Transfer"
+			pallet_se.posting_date = self.posting_date
+			pallet_se.posting_time = self.posting_time
+			pallet_se.set_posting_time = 1
+			pallet_se.company = self.company
+			pallet_se.reference_doctype = self.doctype
+			pallet_se.reference_docname = self.name
+			pallet_se.returnable_by = self.returnable_by
+			pallet_se.from_warehouse = self.package_warehouse
+			pallet_se.to_warehouse = pallet_in_warehouse
+
+			if not pallet_in_warehouse:
+				frappe.throw(_("Please define Pallet In Warehouse in company {}".format(self.company)))
+			if self.sheet_item:
+				pallet_se.append("items",{
+					'item_code': self.sheet_item,
+					'qty': self.total_sheets,
+					's_warehouse': self.package_warehouse,
+					't_warehouse': pallet_in_warehouse
+					#'allow_zero_valuation_rate': 1
+				})
+			if self.package_item:
+				pallet_se.append("items",{
+					'item_code': self.package_item,
+					'qty':  len(self.package_details),
+					's_warehouse': self.package_warehouse,
+					't_warehouse': pallet_in_warehouse
+					#'allow_zero_valuation_rate': 1
+				})
+			
+			try:
+				pallet_se.save(ignore_permissions=True)
+				pallet_se.get_stock_and_rate()
+				pallet_se.save(ignore_permissions=True)
+				pallet_se.submit()
+			except Exception as e:
+				frappe.throw(str(e))
+
+	def cancel_pallet_stock_entry(self):
+		if self.package_type == "Pallet" and (self.package_item or self.sheet_item):
+			se = frappe.get_doc("Stock Entry",{'reference_doctype': self.doctype,'reference_docname':self.name})
+			se.flags.ignore_permissions = True
+			try:
+				se.cancel()
+			except Exception as e:
+				raise e
+			se.db_set('reference_doctype','')
+			se.db_set('reference_docname','')	

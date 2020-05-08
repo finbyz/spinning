@@ -166,6 +166,7 @@ def create_packages(self):
 		doc.package_no = pkg.package
 		doc.package_type = pkg.package_type
 		doc.package_item = pkg.package_item
+		doc.no_of_sheets = pkg.no_of_sheets
 		doc.spools = cint(pkg.spools)
 		doc.company = self.company
 		doc.warehouse = row.warehouse
@@ -208,6 +209,7 @@ def clear_package_weight(self):
 		doc.gross_weight = 0
 		doc.spool_weight = 0
 		doc.tare_weight = 0
+		doc.no_of_sheets = 0
 		doc.save(ignore_permissions=True)
 
 	else:

@@ -55,6 +55,7 @@ doctype_js = {
 	"Quality Inspection Template": "public/js/doctype_js/quality_inspection_template.js",
 	"Sales Order": "public/js/doctype_js/sales_order.js",
 	"Pick List": "public/js/doctype_js/pick_list.js",
+	"Company": "public/js/doctype_js/company.js",
 }
 
 # Home Pages
