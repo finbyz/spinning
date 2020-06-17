@@ -91,7 +91,7 @@ frappe.ui.form.on('Job Work Return', {
 			});
 		}
 	},
-	before_save: function(frm){
+	validate: function(frm){
 		frm.trigger('cal_total_package_gross_wt');
 		frm.trigger('cal_total_package_net_wt');
 	},

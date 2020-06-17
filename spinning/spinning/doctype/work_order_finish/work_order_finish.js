@@ -76,7 +76,7 @@ frappe.ui.form.on("Work Order Finish", {
 	},
 
 	before_save: function (frm) {
-		//frm.trigger("cal_total");
+		frm.trigger("cal_total");
 	},
 
 	set_package_series: function (frm) {
@@ -168,7 +168,7 @@ frappe.ui.form.on("Work Order Finish", {
 		frm.doc.package_details.forEach(function (d) {
 			spool += d.no_of_spool;
 			gross_weight += d.gross_weight;
-			tare_weight = flt(d.package_weight + (d.no_of_spool * frm.doc.spool_weight))
+			tare_weight = flt(d.package_weight + (d.no_of_spool * frm.doc.spool_weight) + (frm.doc.no_of_adapter * frm.doc.adapter_weight))
 			total_tare_weight += d.tare_weight;
 			frappe.model.set_value(d.doctype, d.name, "tare_weight", tare_weight);
 			frappe.model.set_value(d.doctype, d.name, "net_weight", flt(d.gross_weight - d.tare_weight))

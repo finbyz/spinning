@@ -14,6 +14,7 @@ frappe.ui.form.on("Purchase Order", {
 				}
 			}
 		}
+		frm.set_df_property("company", "read_only", (!frm.doc.__islocal || frm.doc.amended_from) ? 1 : 0);
 	},
 	make_transfer: function(frm) {
 		var items = $.map(cur_frm.doc.items, function(d) { return d.bom ? d.item_code : false; });

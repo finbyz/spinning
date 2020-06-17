@@ -71,6 +71,9 @@ frappe.ui.form.on('Purchase Receipt', {
 	});
 	},
 
+	refresh: function(frm){
+		frm.set_df_property("company", "read_only", (!frm.doc.__islocal || frm.doc.amended_from) ? 1 : 0);
+	},
 	onload: function(frm){
 		var df = frappe.meta.get_docfield("Purchase Receipt Package Detail", "no_of_sheets", cur_frm.doc.name);
 		if (frm.doc.package_type == "Pallet") {

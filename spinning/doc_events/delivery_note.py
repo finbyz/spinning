@@ -12,6 +12,29 @@ from spinning.controllers.batch_controller import set_batches
 def before_validate(self, method):
 	if self.is_return == 0:
 		validate_packages(self)
+	
+	validate_item_from_so(self)
+	validate_item_from_picklist(self)
+	
+def validate_item_from_so(self):
+	for row in self.items:
+		if frappe.db.exists("Sales Order Item",row.so_detail):
+			so_item = frappe.db.get_value("Sales Order Item",row.so_detail,"item_code")
+			if row.item_code != so_item:
+				frappe.throw(_(f"Row: {row.idx}: Not allowed to change item {frappe.bold(row.item_code)}."))
+		else:
+			frappe.throw(_(f"Row: {row.idx}: Sales Order reference Not found against item {frappe.bold(row.item_code)}, please create delivery note again"))
+
+
+def validate_item_from_picklist(self):
+	for row in self.items:
+		if frappe.db.exists("Pick List Item",row.against_pick_list):
+			picked_qty = flt(frappe.db.get_value("Pick List Item",row.against_pick_list,"qty"))
+			if flt(row.qty) > picked_qty:
+				frappe.throw(_(f"Row: {row.idx}: Delivered Qty {frappe.bold(row.qty)} can not be higher than picked Qty {frappe.bold(picked_qty)} for item {frappe.bold(row.item_code)}."))
+		elif frappe.db.get_value("Item",row.item_code,"has_batch_no") ==1:
+			frappe.throw(_(f"Row: {row.idx}: The item {frappe.bold(row.item_code)} has not been picked for picklist {frappe.bold(row.against_pick_list)}"))
+
 
 def before_save(self, method):
 	calculate_totals(self)
@@ -24,9 +47,32 @@ def on_submit(self, method):
 		if item.against_pick_list:
 			pick_list_item = frappe.get_doc("Pick List Item", item.against_pick_list)
 			delivered_qty = item.qty + pick_list_item.delivered_qty
-			if delivered_qty > pick_list_item.qty:
-				frappe.throw(f"Row {item.idx}: You can not deliver more than picked qty")
+			# if delivered_qty > pick_list_item.qty:
+				# frappe.throw(f"Row {item.idx}: You can not deliver more than picked qty")
 			pick_list_item.db_set("delivered_qty", delivered_qty)
+	calculate_pick_delivered(self)
+
+def calculate_pick_delivered(self):
+	pick_list_list = list(set([row.against_pick_list for row in self.items]))
+	for item in pick_list_list:
+		if item:
+			parent = frappe.db.get_value("Pick List Item", item, 'parent')
+			pick_doc = frappe.get_doc("Pick List", parent)
+			qty = 0
+			delivered_qty = 0
+			for row in pick_doc.locations:
+				qty += row.qty
+				delivered_qty += row.delivered_qty
+
+			pick_doc.per_delivered = flt((delivered_qty / qty) * 100, 2)
+			if pick_doc.per_delivered > 99.99:
+				pick_doc.status = 'Delivered'
+			elif pick_doc.per_delivered > 0.0 and pick_doc.per_delivered < 99.99:
+				pick_doc.status = 'Partially Delivered'
+			else:
+				pick_doc.status = 'To Deliver'
+			pick_doc.save()
+
 
 def on_cancel(self, method):
 	update_packages(self, method)
@@ -40,6 +86,7 @@ def on_cancel(self, method):
 				# frappe.throw("You can not deliver more tha picked qty")
 				pass
 			pick_list_item.db_set("delivered_qty", delivered_qty)
+	calculate_pick_delivered(self)
 
 def validate_packages(self):
 	for row in self.packages:
@@ -176,7 +223,8 @@ def create_pallet_stock_entry(self):
 						'qty': row.qty,
 						'basic_rate': rate or 0,
 						's_warehouse': row.t_warehouse,
-						't_warehouse': row.s_warehouse
+						't_warehouse': row.s_warehouse,
+						'cost_center': 'Main - %s' %abbr
 						#'allow_zero_valuation_rate': 1
 					})
 					try:
@@ -193,7 +241,8 @@ def create_pallet_stock_entry(self):
 						'qty': row.qty,
 						'basic_rate': rate or 0,
 						's_warehouse': row.s_warehouse,
-						't_warehouse': row.t_warehouse
+						't_warehouse': row.t_warehouse,
+						'cost_center': 'Main - %s' %abbr
 						#'allow_zero_valuation_rate': 1
 					})
 				try:

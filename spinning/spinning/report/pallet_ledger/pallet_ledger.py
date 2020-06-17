@@ -26,7 +26,7 @@ def execute(filters=None):
 
 		sle.update(item_detail)
 
-		if filters.get("batch_no"):
+		if filters.get("batch_no") or filters.get("party"):
 			actual_qty += sle.actual_qty
 			stock_value += sle.stock_value_difference
 

@@ -237,6 +237,7 @@ class OtherProduction(Document):
             'basic_rate': rate,
             'batch_no': self.batch_no,
             'qty': self.total_net_weight,
+            'cost_center': frappe.db.get_value("Company",self.company,'cost_center') 
         })
         
         try:

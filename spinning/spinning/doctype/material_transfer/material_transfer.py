@@ -263,7 +263,8 @@ class MaterialTransfer(Document):
 					"doctype": "Stock Entry Detail",
 					"field_map": {
 						"batch_no": "batch_no",
-						'subcontracted_item': 'subcontracted_item'
+						'subcontracted_item': 'subcontracted_item',
+						'cost_center': 'cost_center'
 					},
 				}
 			}, target_doc, set_missing_values,ignore_permissions=ignore_permissions)

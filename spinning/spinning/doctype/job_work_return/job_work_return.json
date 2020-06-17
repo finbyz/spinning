@@ -41,13 +41,14 @@
   "more_information_section",
   "consumed_packages",
   "column_break_28",
-  "amended_from"
+  "amended_from",
+  "fiscal",
+  "company_series"
  ],
  "fields": [
   {
    "fieldname": "naming_series",
    "fieldtype": "Select",
-   "hidden": 1,
    "label": "Naming Series",
    "options": "JR-.YYYY.-"
   },
@@ -271,10 +272,23 @@
    "fieldname": "supplier_challan_date",
    "fieldtype": "Date",
    "label": "Supplier Challan Date"
+  },
+  {
+   "fieldname": "fiscal",
+   "fieldtype": "Data",
+   "hidden": 1,
+   "label": "Fiscal"
+  },
+  {
+   "fetch_from": "company.default_package_series",
+   "fieldname": "company_series",
+   "fieldtype": "Data",
+   "hidden": 1,
+   "label": "Company Series"
   }
  ],
  "is_submittable": 1,
- "modified": "2020-03-20 09:54:47.804468",
+ "modified": "2020-05-26 11:26:12.739940",
  "modified_by": "Administrator",
  "module": "Spinning",
  "name": "Job Work Return",

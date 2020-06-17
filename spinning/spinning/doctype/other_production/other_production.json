@@ -37,13 +37,14 @@
   "column_break_23",
   "total_tare_weight",
   "total_spool",
-  "amended_from"
+  "amended_from",
+  "fiscal",
+  "company_series"
  ],
  "fields": [
   {
    "fieldname": "naming_series",
    "fieldtype": "Select",
-   "hidden": 1,
    "label": "Naming Series",
    "options": "OTR-.YYYY.-"
   },
@@ -242,10 +243,23 @@
    "fieldtype": "Link",
    "label": "Price list ",
    "options": "Price List"
+  },
+  {
+   "fieldname": "fiscal",
+   "fieldtype": "Data",
+   "hidden": 1,
+   "label": "Fiscal"
+  },
+  {
+   "fetch_from": "company.default_package_series",
+   "fieldname": "company_series",
+   "fieldtype": "Data",
+   "hidden": 1,
+   "label": "Company Series"
   }
  ],
  "is_submittable": 1,
- "modified": "2019-12-07 15:18:36.330411",
+ "modified": "2020-05-13 16:22:07.285988",
  "modified_by": "Administrator",
  "module": "Spinning",
  "name": "Other Production",

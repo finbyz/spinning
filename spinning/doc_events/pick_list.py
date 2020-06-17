@@ -1,14 +1,16 @@
 import frappe
 from frappe import _
-from frappe.utils import today
+from frappe.utils import today, flt
 from erpnext.selling.doctype.sales_order.sales_order import make_delivery_note as create_delivery_note_from_sales_order
 from frappe.model.mapper import get_mapped_doc, map_child_doc
 
 
 def validate(self, method):
-	pass
+	if self.posting_date > self.delivery_date:
+		frappe.throw("Delivery Date cannot be before Posting Date.")
 
 def before_submit(self, method):
+	self.status = 'To Deliver'
 	check = []
 	for item in self.locations:
 		if item.qty != item.picked_qty:
@@ -47,10 +49,14 @@ def update_sales_order(self, method):
 		for item in self.locations:
 			tile = frappe.get_doc("Sales Order Item", {'name': item.sales_order_item, 'parent': item.sales_order})
 			picked_qty = tile.picked_qty + item.qty
-			if picked_qty > tile.qty:
-				frappe.throw("Can not pick item {} in row {} more than {}".format(item.item_code, item.idx, item.qty - item.picked_qty))
+			# variance = frappe.db.get_value("Stock Settings", None, 'over_picklist_allowance')
+			over_picklist_allowance = flt(frappe.db.get_single_value("Stock Settings", 'over_picklist_allowance'))
+			tolernace = tile.qty * over_picklist_allowance / 100.0
+			if picked_qty > (tile.qty + tolernace):
+				frappe.throw(_("Row: {} Picked Quantity is more than allowed tolernace: {} (+/-) {} %".format(item.idx, tile.qty, over_picklist_allowance)))
 
-			tile.db_set('picked_qty', picked_qty)
+			frappe.db.set_value("Sales Order Item", tile.name, 'picked_qty', picked_qty)
+			
 	
 	if method == "cancel":
 		for item in self.locations:
@@ -123,6 +129,8 @@ def get_items(filters):
 		item['available_qty'] = item['actual_qty'] - (pick_list_available[0][0] or 0.0)
 		item['picked_qty'] = item['available_qty']
 		item['to_pick_qty'] = str(item['available_qty'])
+		if item['available_qty'] == 0:
+			item = None
 		if item:
 			data.append(item)
 	
@@ -177,7 +185,7 @@ def create_delivery_note(source_name, target_doc=None):
 		'doctype': 'Delivery Note Item',
 		'field_map': {
 			'rate': 'rate',
-			'name': 'so_detail',
+			'name': 'pl_detail',
 			'parent': 'against_sales_order',
 		},
 		'condition': lambda doc: abs(doc.delivered_qty) < abs(doc.qty)
@@ -194,6 +202,9 @@ def create_delivery_note(source_name, target_doc=None):
 			dn_item.serial_no = location.serial_no
 
 			dn_item.against_pick_list = location.name
+			dn_item.against_sales_order = location.sales_order
+			dn_item.so_detail = location.sales_order_item
+			dn_item.pick_list_no = source_name
 			dn_item.pick_list = pick_list.name
 			dn_item.picked_qty = location.picked_qty
 
@@ -230,3 +241,49 @@ def set_delivery_note_missing_values(target):
 	target.run_method('set_missing_values')
 	target.run_method('set_po_nos')
 	target.run_method('calculate_taxes_and_totals')
+
+@frappe.whitelist()
+def unpick_item(name):
+	doc = frappe.get_doc("Pick List Item", name)
+
+	if doc.delivered_qty:
+		frappe.throw(_("You can not cancel this Sales Order, Delivery Note already there for this Sales Order."))
+
+	picked_qty = frappe.db.get_value("Sales Order Item", doc.sales_order_item, 'picked_qty')
+	frappe.db.set_value("Sales Order Item", doc.sales_order_item, 'picked_qty', flt(picked_qty) - flt(doc.qty))
+
+	picked_pl_qty = frappe.db.get_value("Sales Order Item", doc.sales_order_item, 'picked_qty')
+	# frappe.db.set_value("Sales Order Item", doc.sales_order_item, 'picked_qty', picked_pl_qty - doc.qty)
+
+	if doc.docstatus == 1:
+		doc.cancel()
+	
+	doc.delete()
+
+	pick_doc = frappe.get_doc("Pick List", doc.parent)
+
+	pl_qty = 0
+	pl_delivered_qty = 0
+
+	for item in pick_doc.locations:
+		pl_delivered_qty += item.delivered_qty
+		pl_qty += item.qty
+
+	try:
+		per_delivered = (pl_delivered_qty / pl_qty) * 100
+	except:
+		per_delivered = 0
+	
+	pick_doc.db_set('per_delivered', per_delivered)
+
+	pick_doc.per_delivered = flt(per_delivered, 2)
+	if pick_doc.per_delivered > 99.99:
+		pick_doc.status = 'Delivered'
+	elif pick_doc.per_delivered > 0.0 and pick_doc.per_delivered < 99.99:
+		pick_doc.status = 'Partially Delivered'
+	else:
+		pick_doc.status = 'To Deliver'
+
+	pick_doc.save()
+
+	return "success"

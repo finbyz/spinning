@@ -17,15 +17,18 @@ def create_pick_list(source_name, target_doc=None):
 	doc = get_mapped_doc('Sales Order', source_name, {
 		'Sales Order': {
 			'doctype': 'Pick List',
+			'field_map': {
+				'delivery_date': 'delivery_date'
+			},
 			'validation': {
-				'docstatus': ['=', 1]
+				'docstatus': ['=', 1],
 			}
 		},
 		'Sales Order Item': {
 			'doctype': 'Pick List Item',
 			'field_map': {
 				'parent': 'sales_order',
-				'name': 'sales_order_item'
+				'name': 'sales_order_item',
 			},
 			'field_no_map': [
 				'warehouse'
@@ -36,5 +39,6 @@ def create_pick_list(source_name, target_doc=None):
 	}, target_doc)
 
 	doc.purpose = 'Delivery against Sales Order'
+	# doc.delivery_date = frappe.db.get_value('Sales Order', source_name, 'delivery_date')
 	doc.set_item_locations()
 	return doc

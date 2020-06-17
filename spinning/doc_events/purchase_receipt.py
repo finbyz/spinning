@@ -212,8 +212,8 @@ def clear_package_weight(self):
 		doc.no_of_sheets = 0
 		doc.save(ignore_permissions=True)
 
-	else:
-		frappe.db.commit()
+	# else:
+		# frappe.db.commit()
 
 def update_packages(self, method):
 	if method == "on_submit" and self.is_return:

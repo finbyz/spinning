@@ -149,7 +149,7 @@ class WorkOrderFinish(Document):
 				value = self.series_value + 1
 				self.update_series_value(value)
 
-		child_row.tare_weight = flt(child_row.package_weight + (child_row.no_of_spool * self.spool_weight))
+		child_row.tare_weight = flt(child_row.package_weight + (child_row.no_of_spool * self.spool_weight) + (self.no_of_adapter * self.adapter_weight))
 		child_row.net_weight = child_row.gross_weight - child_row.tare_weight
 
 		if not child_row.package:

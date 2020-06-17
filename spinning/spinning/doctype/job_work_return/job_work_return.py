@@ -38,14 +38,14 @@ class JobWorkReturn(Document):
 		self.cancel_stock_entry()
 
 	def validate_weights(self):
-		for row in self.package_details:
+		#for row in self.package_details:
 			# has_batch_no = frappe.db.get_value('Item', row.item_code, 'has_batch_no')
 			# frappe.msgprint(__("wght called."))
-			total_net_weight = sum(map(lambda x: x.net_weight, self.package_details))
+		total_net_weight = sum(map(lambda x: x.net_weight, self.package_details))
 
-			if flt(self.qty != flt(total_net_weight)):
-				frappe.throw(_("Total Qty does not match with Total Net Weight for Item {} in Row {}".format(self.qty, row.idx)))
-				
+		if flt(self.qty != flt(round(total_net_weight,3))):
+			frappe.throw(_("Total Qty {} does not match with Package Weight {}".format(self.qty,round(total_net_weight,3))))
+			
 	
 	def create_stock_entry(self):
 		se = frappe.new_doc("Stock Entry")

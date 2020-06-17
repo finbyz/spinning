@@ -187,7 +187,6 @@ def get_sle_conditions(filters):
 	if filters.get("batch_no"):
 		conditions.append("sle.batch_no in %(batch_no)s")
 
-
 	return "and {}".format(" and ".join(conditions)) if conditions else ""
 
 def get_opening_balance(filters, columns):

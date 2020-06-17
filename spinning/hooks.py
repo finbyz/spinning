@@ -41,6 +41,7 @@ app_include_js = [
 # include js in doctype views
 # doctype_js = {"doctype" : "public/js/doctype.js"}
 # doctype_list_js = {"doctype" : "public/js/doctype_list.js"}
+doctype_list_js = {"Pick List" : "public/js/doctype_js/pick_list_list.js"}
 # doctype_tree_js = {"doctype" : "public/js/doctype_tree.js"}
 # doctype_calendar_js = {"doctype" : "public/js/doctype_calendar.js"}
 
@@ -142,6 +143,8 @@ doc_events = {
 	},
 	"Pick List": {
 		'before_naming': 'spinning.api.before_naming',
+		"validate": "spinning.doc_events.pick_list.validate",
+		"before_submit": "spinning.doc_events.pick_list.before_submit",
 		"on_submit": "spinning.doc_events.pick_list.on_submit",
 		"on_cancel": "spinning.doc_events.pick_list.on_cancel",
 	},
@@ -193,7 +196,7 @@ doc_events = {
 	'Sales Invoice':{
 		'validate': "spinning.doc_events.sales_invoice.validate"
 	},
-	('Material Issue','Material Receipt','Material Transfer','Gate Exit','Pick List'):{
+	('Material Issue','Material Receipt','Material Transfer','Gate Exit', 'Gate Entry','Pick List','Other Production',"Quality Inspection", "Job Work Return"):{
 		'before_naming': 'spinning.api.before_naming'
 	}
 }
@@ -207,6 +210,9 @@ doc_events = {
 # Overriding Whitelisted Methods
 # ------------------------------
 #
+import erpnext
+from spinning.doc_events.sales_order import create_pick_list
+erpnext.selling.doctype.sales_order.sales_order.create_pick_list = create_pick_list
 override_whitelisted_methods = {
 	"erpnext.selling.doctype.sales_order.sales_order.create_pick_list": "spinning.spining.get_events"
 }

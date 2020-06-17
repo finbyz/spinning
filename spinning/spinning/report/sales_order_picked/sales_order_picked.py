@@ -14,8 +14,10 @@ def execute(filters=None):
 def get_conditions(filters):
 	conditions = ""
 
-	if filters.get('pending_so'):
-		conditions += " AND so.status not in ('Completed', 'Stopped', 'Closed')"
+	conditions += " AND so.status not in ('Completed', 'Stopped', 'Closed')"
+
+	if filters.get('company'):
+		conditions += " AND so.company = '%s'" % filters.get('company')
 
 	if filters.get('sales_order'):
 		conditions += " AND so.name = '%s'" % filters.get('sales_order')
@@ -32,8 +34,8 @@ def get_conditions(filters):
 	if filters.get('to_date'):
 		conditions += " AND so.transaction_date <= '%s'" % filters.get('to_date')
 	
-	if filters.get('company'):
-		conditions += " AND so.company = '%s'" % filters.get('company')
+	if filters.get('item_group'):
+		conditions += "AND i.item_group = '%s'" % filters.get('item_group')
 
 	return conditions
 
@@ -44,9 +46,10 @@ def get_data(filters):
 	
 	data = frappe.db.sql("""
 		SELECT 
-			so.name as sales_order, so.transaction_date, so.customer, soi.item_code, soi.item_name, soi.qty, soi.base_rate, soi.base_amount, soi.name as so_detail, so.po_no as po_no
+			so.name as sales_order, so.transaction_date, so.customer, soi.item_code, soi.item_name, soi.qty, soi.base_rate, soi.base_amount, soi.name as sales_order_item, i.item_group
 		FROM 
 			`tabSales Order` as so LEFT JOIN `tabSales Order Item` as soi ON (so.name = soi.parent)
+			JOIN `tabItem` as i on soi.item_code = i.name
 		WHERE
 			so.docstatus = 1 %s
 		ORDER BY
@@ -57,37 +60,39 @@ def get_data(filters):
 	idx = 0
 
 	for row in data_copy:
-		idx = insert_delivery_note(data, row, idx + 1)
+		idx = insert_pick_list(data, row, idx + 1)
 
 	return data
 
-def insert_delivery_note(data, row, idx):
+def insert_pick_list(data, row , idx):
 
-	dn_data = frappe.db.sql("""
-		SELECT dni.parent as delivery_note, dn.posting_date, dni.qty as delivery_qty
-		FROM `tabDelivery Note` as dn LEFT JOIN `tabDelivery Note Item` as dni ON (dn.name = dni.parent)
+	dn_data = frappe.db.sql(f"""
+		SELECT pni.parent as pick_list, pni.merge as picked_merge_no, pni.grade as picked_grade_no, pni.warehouse as picked_warehouse, pl.posting_date, pni.qty as picked_qty
+		FROM `tabPick List` as pl LEFT JOIN `tabPick List Item` as pni ON (pl.name = pni.parent)
 		WHERE 
-			dn.docstatus = 1
-			AND dni.so_detail = '%s' 
+			pl.docstatus = 1
+			AND pni.sales_order_item = '{row.sales_order_item}'
 		ORDER BY
-			dn.posting_date
-		""" % row.so_detail, as_dict = 1)
-
-	total_qty_delivered = 0.0
+			pl.posting_date
+		""", as_dict = 1)
+	
+	total_qty_picked = 0.0
 	if dn_data:
-		row.delivery_note = dn_data[0].delivery_note
+		row.pick_list = dn_data[0].pick_list
+		row.picked_grade_no = dn_data[0].picked_grade_no
+		row.picked_merge_no = dn_data[0].picked_merge_no
+		row.picked_warehouse = dn_data[0].picked_warehouse
 		row.posting_date = dn_data[0].posting_date
-		row.delivery_qty = dn_data[0].delivery_qty
-		total_qty_delivered += dn_data[0].delivery_qty
-
+		row.picked_qty = dn_data[0].picked_qty
+		total_qty_picked += dn_data[0].picked_qty
+	
 	for i in dn_data[1:]:
 		data.insert(idx, i)
-		total_qty_delivered += i.delivery_qty
+		total_qty_picked += i.picked_qty
 		idx += 1
 
-	row.delivered_qty = total_qty_delivered
-	row.pending_qty = row.qty - total_qty_delivered
-
+	row.picked_total = total_qty_picked
+	row.pending_qty = row.qty - total_qty_picked
 	return idx
 
 
@@ -98,13 +103,7 @@ def get_columns():
 			"label": _("Sales Order"),
 			"fieldtype": "Link",
 			"options": "Sales Order",
-			"width": 100
-		},
-		{
-			"fieldname": "po_no",
-			"label": _("PO NO"),
-			"fieldtype": "Data",
-			"width": 80
+			"width": 130
 		},
 		{
 			"fieldname": "transaction_date",
@@ -117,20 +116,27 @@ def get_columns():
 			"label": _("Customer"),
 			"fieldtype": "Link",
 			"options": "Customer",
-			"width": 150
+			"width": 190
 		},
-		# {
-		# 	"fieldname": "item_code",
-		# 	"label": _("Item Code"),
-		# 	"fieldtype": "Link",
-		# 	"options": "Item",
-		# 	"width": 150
-		# },
+		{
+			"fieldname": "item_code",
+			"label": _("Item Code"),
+			"fieldtype": "Link",
+			"options": "Item",
+			"width": 190
+		},
 		{
 			"fieldname": "item_name",
 			"label": _("Item Name"),
 			"fieldtype": "Data",
-			"width": 180
+			"width": 220
+		},
+		{
+			"fieldname": "item_group",
+			"label": _("Item Group"),
+			"fieldtype": "Link",
+			"options": "Item Group",
+			"width": 120
 		},
 		{
 			"fieldname": "qty",
@@ -151,8 +157,8 @@ def get_columns():
 			"width": 100
 		},
 		{
-			"fieldname": "delivered_qty",
-			"label": _("Delivered Qty"),
+			"fieldname": "picked_total",
+			"label": _("Picked Total"),
 			"fieldtype": "Float",
 			"width": 80
 		},
@@ -163,41 +169,43 @@ def get_columns():
 			"width": 80
 		},
 		{
-			"fieldname": "delivery_note",
-			"label": _("Delivery Note"),
+			"fieldname": "pick_list",
+			"label": _("Pick List"),
 			"fieldtype": "Link",
-			"options": "Delivery Note",
+			"options": "Pick List",
 			"width": 100
 		},
 		{
+			"fieldname": "picked_warehouse",
+			"label": _("Warehouse"),
+			"fieldtype": "Link",
+			"options": "Warehouse",
+			"width": 140
+		},
+		{
+			"fieldname": "picked_merge_no",
+			"label": _("Merge"),
+			"fieldtype": "Data",
+			"width": 80
+		},
+		{
+			"fieldname": "picked_grade_no",
+			"label": _("Grade"),
+			"fieldtype": "Data",
+			"width": 80
+		},
+		{
 			"fieldname": "posting_date",
-			"label": _("Delivery Date"),
+			"label": _("Picked Date"),
 			"fieldtype": "Date",
 			"width": 90
 		},
 		{
-			"fieldname": "delivery_qty",
-			"label": _("Delivery Qty"),
+			"fieldname": "picked_qty",
+			"label": _("Picked Qty"),
 			"fieldtype": "Float",
 			"width": 80
-		},
+		}
 	]
 
 	return columns
-
-def _get_columns():
-	return [
-		_("Sales Order") + ":Link/Sales Order:100",
-		_("Date") + ":Date:100",
-		_("Customer") + ":Link/Customer:100",
-		_("Item Code") + ":Link/Item:100",
-		_("Item Name") + ":Data:100",
-		_("Qty") + ":Float:100",
-		_("Rate") + ":Currency:100",
-		_("Amount") + ":Currency:100",
-		_("Delivered Qty") + ":Float:100",
-		_("Pending Qty") + ":Float:100",
-		_("Delivery Note") + ":Link/Delivery Note:100",
-		_("Delivery Date") + ":Date:100",
-		_("Delivery Qty") + ":Float:100",
-	]

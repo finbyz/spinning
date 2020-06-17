@@ -25,6 +25,9 @@ this.frm.fields_dict.taxes_and_charges.get_query = function(doc){
 }
 
 frappe.ui.form.on('Purchase Invoice', {
+	refresh: function(frm){
+		frm.set_df_property("company", "read_only", (!frm.doc.__islocal || frm.doc.amended_from) ? 1 : 0);
+	},
 	onload: function(frm){
 		frm.trigger('override_merge_new_doc');
 		frm.trigger('override_grade_new_doc');

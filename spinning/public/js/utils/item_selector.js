@@ -96,7 +96,7 @@ ItemSelector = Class.extend({
 				(me.frm.doc.locations).map(function (i) {
 					if (i.item_code === item && i.sales_order === sales_order && i.sales_order_item === sales_order_item) {
 						total_qty = total_qty + i.qty
-						me.dialog.set_value('so_qty', total_qty);
+						// me.dialog.set_value('so_qty', total_qty);
 						me.dialog.set_value('picked_qty', 0);
 					}
 				});
@@ -106,14 +106,14 @@ ItemSelector = Class.extend({
 			fieldtype: 'Section Break',
 			label: __('Quantity')
 		},
-		{
-			label: __('Sales Order Qty'),
-			fieldtype: 'Float',
-			fieldname: 'so_qty',
-			reqd: 0,
-			default: '0',
-			read_only: 1,
-		},
+		// {
+		// 	label: __('Sales Order Qty'),
+		// 	fieldtype: 'Float',
+		// 	fieldname: 'so_qty',
+		// 	reqd: 0,
+		// 	default: '0',
+		// 	read_only: 1,
+		// },
 		{
 			fieldtype: 'Column Break'
 		},
@@ -140,12 +140,8 @@ ItemSelector = Class.extend({
 			let picked_qty = me.values.picked_qty
 			let so_qty = me.values.so_qty
 
-			if (so_qty >= picked_qty) {
-				me.set_item_locations_in_frm();
-				me.dialog.hide();
-			} else {
-				frappe.msgprint("Picked Qty and Sales Order Qty Are not equal")
-			}
+			me.set_item_locations_in_frm();
+			me.dialog.hide();
 		});
 
 		let $package_wrapper = this.get_item_location_wrapper();

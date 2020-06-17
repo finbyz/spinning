@@ -19,3 +19,21 @@ this.frm.cscript.onload = function (frm) {
         }
     });
 }
+frappe.ui.form.on("Sales Invoice", {
+    refresh: function(frm){
+        frm.set_df_property("company", "read_only", (!frm.doc.__islocal || frm.doc.amended_from) ? 1 : 0);
+    },
+    onload: function (frm) {
+        frm.trigger("set_default_bank_account");
+    },
+    company: function (frm) {
+        frm.trigger("set_default_bank_account");
+    },
+    set_default_bank_account: function (frm) {
+        frappe.db.get_value("Bank Account", { 'is_default': 1, 'is_company_account': 1, 'company': frm.doc.company }, 'name', function (r) {
+            if (r.name) {
+                frm.set_value('bank_account', r.name)
+            }
+        })
+    }
+});

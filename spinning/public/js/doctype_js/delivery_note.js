@@ -79,7 +79,16 @@ cur_frm.fields_dict.taxes_and_charges.get_query = function (doc) {
 }
 
 frappe.ui.form.on("Delivery Note", {
-
+	company: function (frm) {
+		frm.trigger("set_default_bank_account");
+	},
+	set_default_bank_account: function (frm) {
+		frappe.db.get_value("Bank Account", { 'is_default': 1, 'is_company_account': 1, 'company': frm.doc.company }, 'name', function (r) {
+			if (r.name) {
+				frm.set_value('bank_account', r.name)
+			}
+		})
+	},
 	set_s_warehouse: function (frm) {
 		frappe.db.get_value("Company", frm.doc.company, 'abbr', function (r) {
 			frm.doc.pallet_item.forEach(function (row) {
@@ -97,9 +106,14 @@ frappe.ui.form.on("Delivery Note", {
 	},
 
 	onload: function (frm) {
+		frm.trigger("set_default_bank_account");
 		if (!frm.doc.tc_name) {
 			frm.set_value("tc_name", "Delivery Challan Terms");
 		}
+	},
+
+	refresh: function(frm){
+		frm.set_df_property("company", "read_only", (!frm.doc.__islocal || frm.doc.amended_from) ? 1 : 0);
 	},
 
 	validate: function (frm) {
