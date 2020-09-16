@@ -60,8 +60,9 @@ def get_data(filters):
 	idx = 0
 
 	for row in data_copy:
+		if row.item_code:
+			row.actual_qty = frappe.db.get_value("Stock Ledger Entry", {'item_code': row.item_code}, 'sum(actual_qty)') or 0
 		idx = insert_pick_list(data, row, idx + 1)
-
 	return data
 
 def insert_pick_list(data, row , idx):
@@ -140,7 +141,7 @@ def get_columns():
 		},
 		{
 			"fieldname": "qty",
-			"label": _("Qty"),
+			"label": _("Sales Order Qty"),
 			"fieldtype": "Float",
 			"width": 80
 		},
@@ -165,6 +166,12 @@ def get_columns():
 		{
 			"fieldname": "pending_qty",
 			"label": _("Pending Qty"),
+			"fieldtype": "Float",
+			"width": 80
+		},
+		{
+			"fieldname": "actual_qty",
+			"label": _("Available Qty"),
 			"fieldtype": "Float",
 			"width": 80
 		},

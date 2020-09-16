@@ -156,7 +156,9 @@ frappe.ui.form.on("Work Order Finish", {
 			}
 		})
 	},
-
+	on_submit: function (frm) {
+		frm.trigger("cal_total");
+	},
 	cal_total: function (frm) {
 		let spool = 0;
 		let net_weight = 0.0;
@@ -172,7 +174,7 @@ frappe.ui.form.on("Work Order Finish", {
 			total_tare_weight += d.tare_weight;
 			frappe.model.set_value(d.doctype, d.name, "tare_weight", tare_weight);
 			frappe.model.set_value(d.doctype, d.name, "net_weight", flt(d.gross_weight - d.tare_weight))
-			net_weight += d.net_weight;
+			net_weight += flt(d.gross_weight - d.tare_weight);
 			total_sheets += d.no_of_sheets
 		});
 		frm.set_value("total_spool", spool);

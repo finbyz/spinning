@@ -212,7 +212,9 @@ PackageSelector = Class.extend({
                 fieldtype: 'Data',
                 fieldname: 'package',
                 onchange: function() {
-                    me.set_filtered_package_data();
+                    //me.set_filtered_package_data();
+					let filters = me.get_package_filters();
+					me.get_packages(filters);
                 },
             },
 
@@ -231,7 +233,9 @@ PackageSelector = Class.extend({
                     }
                 },
                 change: function() {
-                    me.set_filtered_package_data();
+                    //me.set_filtered_package_data();
+					let filters = me.get_package_filters();
+					me.get_packages(filters);
                 },
             },
             { fieldtype: 'Column Break' },
@@ -241,7 +245,10 @@ PackageSelector = Class.extend({
                 fieldtype: 'Int',
                 fieldname: 'spools',
                 change: function() {
-                    me.set_filtered_package_data();
+                    //me.set_filtered_package_data();
+					let filters = me.get_package_filters();
+					me.get_packages(filters);
+					
                 },
             },
         ]
@@ -487,7 +494,7 @@ PackageSelector = Class.extend({
         }
 
         if (values.package) {
-            filters['package'] = values.package;
+            filters['name'] = values.package;
         }
 
         return filters;
@@ -497,18 +504,20 @@ PackageSelector = Class.extend({
         let me = this;
         let filters = this.get_package_filters();
         let packages = this.dialog.fields_dict.packages;
-
         let data = this.package_data.filter(function(row) {
             let flag = 1;
 
             $.each(filters, function(key, value) {
-                if (row[key].toString().indexOf(value.toString()) > -1 && flag) {
-                    flag = 1;
-                } else { flag = 0 }
+				if(row[key]){
+					if (row[key].toString().indexOf(value.toString()) > -1 && flag) {
+						flag = 1;
+					} 
+					else { flag = 0 }
 
-                if (flag == 0) {
-                    return false;
-                }
+					if (flag == 0) {
+						return false;
+					}
+				}
             })
 
             return flag == 1;
@@ -530,6 +539,8 @@ PackageSelector = Class.extend({
             packages.grid.refresh();
             return;
         }
+		
+		
 
 
         filters['company'] = me.frm.doc.company;

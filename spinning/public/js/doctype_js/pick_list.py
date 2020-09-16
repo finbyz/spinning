@@ -8,7 +8,19 @@ from frappe.model.mapper import get_mapped_doc, map_child_doc
 def validate(self, method):
 	if self.posting_date > self.delivery_date:
 		frappe.throw("Delivery Date cannot be before Posting Date.")
+	
+	so_qty = 0
+	for item in location:
+		if item.warehouse and item.batch_no:
+			item.available_qty = frappe.db.get_value("Stock Ledger Entry", {'company': self.company, 'batch_no': item.batch_no, 'warehouse': item.warehouse}, 'sum(actual_qty) as available_qty')['available_qty']
+		elif item.batch_no:
+			item.available_qty = frappe.db.get_value("Stock Ledger Entry", {'company': self.company, 'batch_no': item.batch_no}, 'sum(actual_qty) as available_qty')['available_qty']
+		else:
+			item.available_qty = 0
 
+		so_qty += flt(item.so_qty)
+	
+	self.sales_order_qty = so_qty
 def before_submit(self, method):
 	self.status = 'To Deliver'
 	for item in self.locations:
@@ -267,10 +279,6 @@ def unpick_item(name):
 
 @frappe.whitelist()
 def update_status(name, update_status_):
-	doc = frappe.get_doc("Pick List", name)
-
-	doc.user_status_ = update_status_
-	doc.save()
-	# frappe.db.set_value("Pick List", name, 'user_status_', update_status_)
+	frappe.db.set_value("Pick List", name, 'user_status_', update_status_)
 
 	return 1

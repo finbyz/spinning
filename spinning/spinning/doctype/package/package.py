@@ -190,6 +190,7 @@ def get_packages(filters, raw_filters = None):
 
 	if isinstance(filters, string_types):
 		filters = json.loads(filters)
+	
 
 	# filters['status'] = ["!=", "Out of Stock"]
 

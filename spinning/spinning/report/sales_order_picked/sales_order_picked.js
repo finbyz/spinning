@@ -48,15 +48,11 @@ frappe.query_reports["Sales Order Picked"] = {
 						doctype: "Item",
 						filters: {
 							"item_group": item_group,
-							"is_item_series": 0
 						}
 					}
 				} else {
 					return {
 						doctype: "Item",
-						filters: {
-							"is_item_series": 0
-						}
 					}
 				}
 			}

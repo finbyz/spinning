@@ -18,6 +18,9 @@ def validate(self, method):
 			validate_packages(self)
 		else:
 			validate_gate_pass(self)
+			
+	calculate_gst_taxable_value(self)
+
 
 @frappe.whitelist()
 def before_save(self, method):
@@ -48,6 +51,18 @@ def on_cancel(self, method):
 		cancel_pallet_stock_entry(self)
 		remove_package_consumption(self)
 
+def calculate_gst_taxable_value(self):
+    account_list = []
+    gst_setting = frappe.get_single("GST Settings")
+    for row in gst_setting.gst_accounts:
+        if row.company == self.company:
+            account_list.append(row.cgst_account)
+            account_list.append(row.sgst_account)
+            account_list.append(row.igst_account)
+    for d in self.taxes:
+        if d.account_head in account_list:
+            self.gst_taxable_value = flt(d.base_total) - flt(d.base_tax_amount)
+            break
 
 def validate_package(self):
 	package_list = frappe.get_list("Package",filters={'purchase_document_type':self.doctype,'purchase_document_no':self.name})		
@@ -129,7 +144,7 @@ def create_pallet_stock_entry(self):
 			frappe.throw(str(e))
 	
 def cancel_pallet_stock_entry(self):
-	if self.pallet_item:
+	if self.pallet_item and self.is_returnable:
 		se = frappe.get_doc("Stock Entry",{'reference_doctype': self.doctype,'reference_docname':self.name})
 		se.flags.ignore_permissions = True
 		try:

@@ -26,6 +26,7 @@
   "source_warehouse",
   "target_warehouse",
   "batch_no",
+  "print_with_company_name",
   "no_of_adapter",
   "adapter_weight",
   "section_break_9",
@@ -329,10 +330,19 @@
    "fieldname": "adapter_weight",
    "fieldtype": "Float",
    "label": "Adapter Weight"
+  },
+  {
+   "allow_on_submit": 1,
+   "default": "0",
+   "fetch_from": "work_order.print_with_company_name",
+   "fieldname": "print_with_company_name",
+   "fieldtype": "Check",
+   "label": "Print with Company Name",
+   "read_only": 1
   }
  ],
  "is_submittable": 1,
- "modified": "2020-05-16 10:47:35.617350",
+ "modified": "2020-08-29 14:41:43.599749",
  "modified_by": "Administrator",
  "module": "Spinning",
  "name": "Work Order Finish",

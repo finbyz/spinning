@@ -18,6 +18,13 @@ cur_frm.fields_dict['pallet_item'].grid.get_field("pallet_item").get_query = fun
 		}
 	}
 };
+cur_frm.fields_dict.party.get_query = function(doc) {
+	return {
+		filters: {
+			"disabled":0
+		}
+	}
+};
 
 
 frappe.ui.form.on("Material Issue Pallet Item", {

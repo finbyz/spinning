@@ -25,9 +25,20 @@ frappe.ui.form.on("Sales Invoice", {
     },
     onload: function (frm) {
         frm.trigger("set_default_bank_account");
+        frm.trigger("set_insurance_detail");
     },
     company: function (frm) {
         frm.trigger("set_default_bank_account");
+        frm.trigger("set_insurance_detail");
+    },
+    set_insurance_detail: function (frm) {
+        if (!frm.doc.insurance_detail && frm.doc.docstatus != 1) {
+            frappe.db.get_value("Company", frm.doc.company, 'insurance_detail', function (r) {
+                if (r.insurance_detail) {
+                    frm.set_value("insurance_detail", r.insurance_detail)
+                }
+            })
+        }
     },
     set_default_bank_account: function (frm) {
         frappe.db.get_value("Bank Account", { 'is_default': 1, 'is_company_account': 1, 'company': frm.doc.company }, 'name', function (r) {

@@ -3,13 +3,14 @@ from __future__ import unicode_literals
 from . import __version__ as app_version
 
 
-# import erpnext
+import erpnext
 from erpnext.setup.doctype.naming_series.naming_series import NamingSeries
 from erpnext.stock.doctype.pick_list.pick_list import PickList
 from spinning.override_method import get_transactions, set_item_locations
 NamingSeries.get_transactions = get_transactions
 PickList.set_item_locations = set_item_locations
-
+from spinning.doc_events.sales_order import make_delivery_note as mk_dn
+erpnext.selling.doctype.sales_order.sales_order.make_delivery_note = mk_dn
 
 app_name = "spinning"
 app_title = "Spinning"
@@ -196,7 +197,10 @@ doc_events = {
 	'Sales Invoice':{
 		'validate': "spinning.doc_events.sales_invoice.validate"
 	},
-	('Material Issue','Material Receipt','Material Transfer','Gate Exit', 'Gate Entry','Pick List','Other Production',"Quality Inspection", "Job Work Return"):{
+	'Quality Inspection':{
+		'before_cancel': "spinning.doc_events.quality_inspection.before_cancel"
+	},
+	('Material Issue','Material Receipt','Material Transfer','Gate Exit', 'Gate Entry','Pick List','Other Production',"Quality Inspection", "Job Work Return","Delivery Trip", "Leave Application", "Leave Allocation", "Additional Salary", "Expense Claim", "Appraisal", "Employee Advance", "Vehicle Log", "Salary Slip"):{
 		'before_naming': 'spinning.api.before_naming'
 	}
 }

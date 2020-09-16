@@ -12,16 +12,14 @@ frappe.ui.form.on('Merge', {
 			}
 		};
 	},
-	merge:function(frm){
-		if(frm.doc.merge){
-			frm.set_df_property("item_code", "read_only",1);
-		}
-		else{
-			frm.set_df_property("item_code", "read_only",0);
-		}
-	},
 
 	onload: function(frm){
+		if (frm.doc.item_code) {
+			frm.set_df_property("item_code", "read_only", 1);
+		}
+		else {
+			frm.set_df_property("item_code", "read_only", 0);
+		}
 		frm.trigger('override_quality_inspection_template_new_doc');
 	},
 	override_quality_inspection_template_new_doc: function(frm){

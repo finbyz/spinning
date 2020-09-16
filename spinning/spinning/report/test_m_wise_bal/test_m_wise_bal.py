@@ -156,7 +156,6 @@ def get_item_details(filters):
 
 	return item_map
 
-
 def get_packages_map(filters, float_precision):
 	packages_data = get_package_details(filters)
 	package_map = {}

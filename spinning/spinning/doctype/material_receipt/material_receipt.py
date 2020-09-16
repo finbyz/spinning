@@ -17,6 +17,7 @@ from erpnext.setup.doctype.brand.brand import get_brand_defaults
 from six import string_types
 from datetime import datetime
 from spinning.api import get_fiscal
+from spinning.controllers.merge_validation import validate_merge
 
 class MaterialReceipt(Document):
 	def before_naming(self):
@@ -34,6 +35,10 @@ class MaterialReceipt(Document):
 			self.validate_weights()
 		set_batches(self, 't_warehouse')
 		self.calculate_amount()
+		for row in self.items:
+			if row.merge:
+				if frappe.db.get_value("Merge", row.merge, 'item_code') != row.item_code:
+					frappe.throw(_("Please select correct merge for the item {0}".format(row.item_code)))
 
 	def calculate_amount(self):
 		for row in self.items:

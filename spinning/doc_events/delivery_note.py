@@ -7,14 +7,14 @@ from frappe.utils import flt, cint
 from erpnext.stock.doctype.batch.batch import set_batch_nos
 from erpnext.stock.doctype.delivery_note.delivery_note import DeliveryNote
 from spinning.controllers.batch_controller import set_batches
-
+from datetime import datetime
 
 def before_validate(self, method):
 	if self.is_return == 0:
 		validate_packages(self)
 	
 	validate_item_from_so(self)
-	validate_item_from_picklist(self)
+	#validate_item_from_picklist(self)
 	
 def validate_item_from_so(self):
 	for row in self.items:
@@ -30,7 +30,11 @@ def validate_item_from_picklist(self):
 	for row in self.items:
 		if frappe.db.exists("Pick List Item",row.against_pick_list):
 			picked_qty = flt(frappe.db.get_value("Pick List Item",row.against_pick_list,"qty"))
-			if flt(row.qty) > picked_qty:
+			
+			over_delivery_receipt_allowance = flt(frappe.db.get_single_value("Stock Settings", 'over_delivery_receipt_allowance'))
+			tolernace = picked_qty * over_delivery_receipt_allowance / 100.0
+			
+			if flt(row.qty) > flt(picked_qty) + flt(tolernace):
 				frappe.throw(_(f"Row: {row.idx}: Delivered Qty {frappe.bold(row.qty)} can not be higher than picked Qty {frappe.bold(picked_qty)} for item {frappe.bold(row.item_code)}."))
 		elif frappe.db.get_value("Item",row.item_code,"has_batch_no") ==1:
 			frappe.throw(_(f"Row: {row.idx}: The item {frappe.bold(row.item_code)} has not been picked for picklist {frappe.bold(row.against_pick_list)}"))
@@ -46,10 +50,12 @@ def on_submit(self, method):
 	for item in self.items:
 		if item.against_pick_list:
 			pick_list_item = frappe.get_doc("Pick List Item", item.against_pick_list)
+			pick_list_delivery_date = frappe.get_value("Pick List", item.pick_list_no, 'delivery_date')
+			if self.posting_date< pick_list_delivery_date:
+				frappe.throw("Row: {} Delivery date can not be greater than date in pick list".format(item.idx))
 			delivered_qty = item.qty + pick_list_item.delivered_qty
-			# if delivered_qty > pick_list_item.qty:
-				# frappe.throw(f"Row {item.idx}: You can not deliver more than picked qty")
 			pick_list_item.db_set("delivered_qty", delivered_qty)
+	
 	calculate_pick_delivered(self)
 
 def calculate_pick_delivered(self):
@@ -268,6 +274,7 @@ def create_pallet_stock_entry(self):
 						'item_code':row.pallet_item,
 						'qty': row.qty,
 						's_warehouse': row.s_warehouse,
+						'cost_center': 'Main - %s' %abbr
 					})
 				try:
 					mi.save(ignore_permissions=True)
@@ -291,6 +298,7 @@ def create_pallet_stock_entry(self):
 						'item_code':row.pallet_item,
 						'qty': row.qty,
 						's_warehouse': row.s_warehouse,
+						'cost_center': 'Main - %s' %abbr
 					})
 				try:
 					mr.save(ignore_permissions=True)

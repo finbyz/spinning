@@ -15,6 +15,13 @@ frappe.query_reports["Sales Order Delivery Details"] = {
 			"label": __("Customer"),
 			"fieldtype": "Link",
 			"options": "Customer",
+			"get_query": function () {
+				return {
+					"filters": {
+						"disabled": 0
+					},
+				}
+			}
 		},
 		{
 			"fieldname": "from_date",

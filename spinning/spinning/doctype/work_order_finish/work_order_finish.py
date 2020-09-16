@@ -177,6 +177,7 @@ class WorkOrderFinish(Document):
 		return doc
 
 	def on_submit(self):
+		self.calculate_totals()
 		self.update_package_details()
 		self.create_stock_entry()
 		self.create_pallet_entry()
@@ -258,7 +259,7 @@ class WorkOrderFinish(Document):
 				's_warehouse': self.package_warehouse or wo.wip_warehouse,
 				'qty': self.total_spool,
 			})
-		if self.package_item and self.package_type != "Pallet":
+		if self.package_item and self.package_type != "Pallet" and frappe.db.get_value("Item",self.package_item,'is_stock_item'):
 			se.append("items",{
 				'item_code': self.package_item,
 				's_warehouse': self.package_warehouse or self.source_warehouse,
@@ -496,7 +497,7 @@ class WorkOrderFinish(Document):
 					't_warehouse': pallet_in_warehouse
 					#'allow_zero_valuation_rate': 1
 				})
-			if self.package_item:
+			if self.package_item and frappe.db.get_value("Item",self.package_item,'is_stock_item'):
 				pallet_se.append("items",{
 					'item_code': self.package_item,
 					'qty':  len(self.package_details),
@@ -504,7 +505,6 @@ class WorkOrderFinish(Document):
 					't_warehouse': pallet_in_warehouse
 					#'allow_zero_valuation_rate': 1
 				})
-			
 			try:
 				pallet_se.save(ignore_permissions=True)
 				pallet_se.get_stock_and_rate()
