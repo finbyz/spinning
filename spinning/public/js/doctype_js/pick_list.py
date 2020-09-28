@@ -236,7 +236,7 @@ def unpick_item(name):
 	doc = frappe.get_doc("Pick List Item", name)
 
 	if doc.delivered_qty:
-		frappe.throw(_("You can not cancel this Sales Order, Delivery Note already there for this Sales Order."))
+		frappe.throw(_("Delivery Note already there for this Picklist. Cancel Delivery Note against this picklist to unpick"))
 
 	picked_qty = frappe.db.get_value("Sales Order Item", doc.sales_order_item, 'picked_qty')
 	frappe.db.set_value("Sales Order Item", doc.sales_order_item, 'picked_qty', flt(picked_qty) - flt(doc.qty))

@@ -3,9 +3,10 @@
 from __future__ import unicode_literals
 import frappe
 from frappe import _
-from frappe.utils import flt
+from frappe.utils import flt, cint
 from frappe.contacts.doctype.address.address import get_company_address
 from erpnext.accounts.utils import get_fiscal_year, getdate
+import datetime
 
 @frappe.whitelist()
 def company_address(company):
@@ -103,23 +104,22 @@ def get_package_details(batch_no,to_date):
 	
 @frappe.whitelist()
 def before_naming(self, method):
-	if not self.get('amended_from'):
-		
-		date = self.get("transaction_date") or self.get("posting_date") or getdate()
+	if not self.get('amended_from') and not self.get('name'):
+		date = self.get("transaction_date") or self.get("posting_date") or  self.get("manufacturing_date") or getdate()
 		fiscal = get_fiscal(date)
 		self.fiscal = fiscal
+		if not self.get('company_series'):
+			self.company_series = None
+		if self.get('series_value'):
+			if self.series_value > 0:
+				name = naming_series_name(self.naming_series, fiscal, self.company_series)
+				check = frappe.db.get_value('Series', name, 'current', order_by="name")
+				if check == 0:
+					pass
+				elif not check:
+					frappe.db.sql("insert into tabSeries (name, current) values ('{}', 0)".format(name))
 
-		# if self.get('series_value'):
-			# if self.series_value > 0:
-				# name = naming_series_name(self.naming_series, fiscal,self.company_series)
-				
-				# check = frappe.db.get_value('Series', name, 'current', order_by="name")
-				# if check == 0:
-					# pass
-				# elif not check:
-					# frappe.db.sql(f"insert into tabSeries (name, current) values ('{name}', 0)")
-				
-				# frappe.db.sql(f"update `tabSeries` set current = {int(self.series_value) - 1} where name = '{name}'")
+				frappe.db.sql("update `tabSeries` set current = {} where name = '{}'".format(cint(self.series_value) - 1, name))
 
 def naming_series_name(name, fiscal, company_series=None):
 	if company_series:

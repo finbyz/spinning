@@ -13,8 +13,38 @@ frappe.ui.form.on('Gate Exit', {
 				};
 			}
 		}
+		if (frm.doc.__islocal){
+			
+			frm.trigger('naming_series');
+		}
+		
 	},
-	
+	naming_series: function (frm) {
+		if (frappe.meta.get_docfield("Gate Exit", "series_value", frm.doc.name)){
+			if (frm.doc.__islocal && frm.doc.company && !frm.doc.amended_from) {
+				
+				frappe.call({
+					method: "finbyzerp.api.check_counter_series",
+					args: {
+						'name': frm.doc.naming_series,
+						'date': frm.doc.posting_date,
+						'company_series': frm.doc.company_series || null,
+					},
+					callback: function (e) {
+						// frm.doc.series_value = e.message;
+						frm.set_value('series_value', e.message);
+					}
+				});
+				// frm.refresh_field('series_value')
+			}
+		}
+	},
+	company: function (frm) {
+		frm.trigger('naming_series');
+	},
+	posting_date: function (frm) {
+		frm.trigger('naming_series');
+	},
 	calculate_package_qty : function(frm) {
 		let items = frm.doc.items;
 		let total = {"total_qty" : 0,'total_packages': 0};
@@ -35,7 +65,7 @@ frappe.ui.form.on('Gate Exit', {
 		frm.trigger('calculate_package_qty');
 
 	},
-	"party": function(frm) {
+	party: function(frm) {
 		frappe.call({
 			method:"erpnext.accounts.party.get_party_details",
 			args:{

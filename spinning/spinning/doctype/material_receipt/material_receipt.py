@@ -251,7 +251,8 @@ class MaterialReceipt(Document):
 					'expense_account': 'Temporary Opening - %s' % abbr,
 					'merge': row.merge,
 					'grade': row.grade,
-					'batch_no': row.batch_no
+					'batch_no': row.batch_no,
+					'cost_center': row.cost_center
 				})
 			else:
 				se.append("items",{
@@ -261,7 +262,8 @@ class MaterialReceipt(Document):
 					't_warehouse': row.t_warehouse or self.warehouse,
 					'merge': row.merge,
 					'grade': row.grade,
-					'batch_no': row.batch_no
+					'batch_no': row.batch_no,
+					'cost_center': row.cost_center
 				})
 		if self.pallet_item:
 			for d in self.pallet_item:
@@ -273,6 +275,7 @@ class MaterialReceipt(Document):
 						'basic_rate': rate or 0,
 						'expense_account': 'Temporary Opening - %s' % abbr,
 						't_warehouse': d.t_warehouse or 'Pallet In - %s' % abbr,
+						'cost_center': row.cost_center
 						#'allow_zero_valuation_rate': 1
 					})
 				else:
@@ -281,6 +284,7 @@ class MaterialReceipt(Document):
 						'qty': d.qty,
 						'basic_rate': rate or 0,
 						't_warehouse': d.t_warehouse or 'Pallet In - %s' % abbr,
+						'cost_center': row.cost_center
 						#'allow_zero_valuation_rate': 1
 					})
 		try:

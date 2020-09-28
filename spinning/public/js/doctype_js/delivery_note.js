@@ -193,7 +193,7 @@ frappe.ui.form.on("Delivery Note", {
 						callback: function (r) {
 							if (r.message.has_batch_no) {
 								to_remove.push(row.idx - 1);
-								if (row.merge && row.grade && row.warehouse) {
+								if (row.merge && row.grade && row.warehouse && row.so_detail) {
 									let item_merge_grade = row.item_code.toString() + row.merge.toString() + row.grade.toString() + row.warehouse.toString()
 									if (!(item_merge_grade in item_merge_grade_row_dict)) {
 										//console.log("Adding Item to Merge Dict" + item_merge_grade);
