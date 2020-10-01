@@ -494,7 +494,7 @@ PackageSelector = Class.extend({
         }
 
         if (values.package) {
-            filters['name'] = values.package;
+            filters['name'] = ["like", values.package + "%"];
         }
 
         return filters;

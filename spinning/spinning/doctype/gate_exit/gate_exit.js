@@ -90,8 +90,8 @@ frappe.ui.form.on('Gate Exit', {
 	        frappe.model.with_doc(frm.doc.document_type, frm.doc.document_number, function(){
 	        var item_doc = frappe.model.get_doc(frm.doc.document_type, frm.doc.document_number);
 	        
-	        
 	        $.each(item_doc.items, function(index, row){
+				console.log(row.no_of_packages)
 	            let d = frm.add_child("items");
 	           // d.item_code = row.item_name;
 	           //d.name = row.item_name;
