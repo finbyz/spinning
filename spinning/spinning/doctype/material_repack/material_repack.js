@@ -186,13 +186,8 @@ frappe.ui.form.on("Material Repack Package Detail", {
 			},
 			callback: function(r) {
 				frm.reload_doc();
-				console.log(frappe.urllib.get_full_url("/printview?"
-						+ "doctype=" + encodeURIComponent("Material Repack Package Detail")
-						+ "&name=" + r.message
-						+ ("&trigger_print=1")
-						+ "&format=" + encodeURIComponent("Repack Packing Sticker")
-					));
-				return false;
+				
+				
 				var w = window.open(frappe.urllib.get_full_url("/printview?"
 						+ "doctype=" + encodeURIComponent("Material Repack Package Detail")
 						+ "&name=" + encodeURIComponent(r.message)

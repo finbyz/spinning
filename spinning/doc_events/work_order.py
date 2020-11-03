@@ -63,3 +63,34 @@ def update_merge(self):
 def on_submit(self,method):
 	if self.paper_tube and not self.spool_weight:
 		frappe.throw(_("Please set Weight per unit in {}").format(self.paper_tube))
+
+@frappe.whitelist()	
+def sales_order_query(doctype, txt, searchfield, start, page_len, filters):
+	conditions = []
+
+	so_searchfield = frappe.get_meta("Sales Order").get_search_fields()
+	so_searchfields = " or ".join(["so.`" + field + "` like %(txt)s" for field in so_searchfield])
+
+	soi_searchfield = frappe.get_meta("Sales Order Item").get_search_fields()
+	soi_searchfield += ["item_code"]
+	soi_searchfields = " or ".join(["soi.`" + field + "` like %(txt)s" for field in soi_searchfield])
+
+	searchfield = so_searchfields + " or " + soi_searchfields
+
+	return frappe.db.sql("""select so.name, so.status, so.transaction_date, soi.item_code,so.customer
+			from `tabSales Order` so
+		RIGHT JOIN `tabSales Order Item` soi ON (so.name = soi.parent)
+		where so.docstatus = 1
+			and so.status != "Closed"
+			and so.status != "On Hold"
+			and soi.item_code = %(item_code)s
+			and ({searchfield})
+		order by
+			if(locate(%(_txt)s, so.name), locate(%(_txt)s, so.name), 99999)
+		limit %(start)s, %(page_len)s """.format(searchfield=searchfield), {
+			'txt': '%%%s%%' % txt,
+			'_txt': txt.replace("%", ""),
+			'start': start,
+			'page_len': page_len,
+			'item_code': filters.get('production_item'),
+		})

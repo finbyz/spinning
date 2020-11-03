@@ -34,6 +34,7 @@ def make_delivery_note(source_name, target_doc=None, skip_item_mapping = False):
 								'rate': i.rate,
 								'against_sales_order': source.name,
 								'so_detail': i.name,
+								'purchase_order_item':i.purchase_order_item,
 								'pick_list_no': pick_doc.parent,
 								'against_pick_list': pick_doc.name,
 								'warehouse': pick_doc.warehouse,
@@ -49,6 +50,7 @@ def make_delivery_note(source_name, target_doc=None, skip_item_mapping = False):
 						'rate': i.rate,
 						'against_sales_order': source.name,
 						'so_detail': i.name,
+						'purchase_order_item':i.purchase_order_item,
 						'warehouse': i.warehouse,
 						'item_series': i.item_series
 					})

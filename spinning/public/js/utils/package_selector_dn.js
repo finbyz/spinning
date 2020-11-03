@@ -13,7 +13,6 @@ PackageSelector = Class.extend({
         this.merge = this.merge ? this.merge : this.frm.doc.merge;
         this.grade = '';
         this.package_data = [];
-
     },
 
     make_dialog: function() {

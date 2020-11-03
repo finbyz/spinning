@@ -58,6 +58,7 @@ doctype_js = {
 	"Sales Order": "public/js/doctype_js/sales_order.js",
 	"Pick List": "public/js/doctype_js/pick_list.js",
 	"Company": "public/js/doctype_js/company.js",
+	"Work Order": "public/js/doctype_js/work_order.js",
 }
 
 # Home Pages
@@ -160,6 +161,12 @@ doc_events = {
 		"on_cancel": "spinning.doc_events.purchase_receipt.on_cancel",
 		"before_save": "spinning.doc_events.purchase_receipt.before_save",
 	},
+
+	"Purchase Order": {
+		"on_submit": "spinning.doc_events.purchase_order.on_submit",
+		"on_cancel": "spinning.doc_events.purchase_order.on_cancel",
+		"on_trash": "spinning.doc_events.purchase_order.on_trash",
+	},
 	
 	"Purchase Invoice": {
 		"validate": "spinning.doc_events.purchase_invoice.validate",
@@ -177,6 +184,8 @@ doc_events = {
 		"before_save": "spinning.doc_events.delivery_note.before_save",
 		"on_submit": "spinning.doc_events.delivery_note.on_submit",
 		"on_cancel": "spinning.doc_events.delivery_note.on_cancel",
+		"on_trash": "spinning.doc_events.delivery_note.on_trash",
+
 	},
 
 	"Work Order": {
@@ -195,7 +204,10 @@ doc_events = {
 		"on_cancel": "spinning.doc_events.stock_reconciliation.on_cancel",
 	},
 	'Sales Invoice':{
-		'validate': "spinning.doc_events.sales_invoice.validate"
+		'validate': "spinning.doc_events.sales_invoice.validate",
+		"on_submit": "spinning.doc_events.sales_invoice.on_submit",
+		"on_cancel": "spinning.doc_events.sales_invoice.on_cancel",
+		"on_trash": "spinning.doc_events.sales_invoice.on_trash",
 	},
 	'Quality Inspection':{
 		'before_cancel': "spinning.doc_events.quality_inspection.before_cancel"

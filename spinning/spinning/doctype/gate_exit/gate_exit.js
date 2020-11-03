@@ -76,13 +76,15 @@ frappe.ui.form.on('Gate Exit', {
 				if(r.message){
 					frm.set_value ('party_name', frm.doc.party);
 					frm.set_value('address_display', r.message.address_display);
-					frm.set_value('shipping_address', r.message.shipping_address);
+					// if(frm.doc.document_type != 'Delivery Note' && frm.doc.document_number){
+					// 	frm.set_value('shipping_address', r.message.shipping_address);
+					// }
 				}
 			}
 		})
 	},
 	document_number: function (frm) {
-		frm.trigger('get_party');
+		frm.trigger('get_address');
 	    frm.doc.items = [];
 	    refresh_field('items');
 	    if (frm.doc.document_number){
@@ -91,7 +93,6 @@ frappe.ui.form.on('Gate Exit', {
 	        var item_doc = frappe.model.get_doc(frm.doc.document_type, frm.doc.document_number);
 	        
 	        $.each(item_doc.items, function(index, row){
-				console.log(row.no_of_packages)
 	            let d = frm.add_child("items");
 	           // d.item_code = row.item_name;
 	           //d.name = row.item_name;
@@ -104,6 +105,7 @@ frappe.ui.form.on('Gate Exit', {
 	           // d.item_code = row.item.code;
 	        });
 			frm.refresh_field('items');
+			//frm.set_value('shipping_address',item_doc.shipping_address)
 			frm.trigger('calculate_package_qty');
 		
 	    });
@@ -115,17 +117,30 @@ frappe.ui.form.on('Gate Exit', {
 		frm.set_value('party', '');
 		frm.set_value('party_name', '');
 	},
-	get_party: function (frm) { 
+	get_address: function (frm) { 
 		if(frm.doc.document_type == 'Delivery Note' && frm.doc.document_number){
 			frm.set_value('party_type', 'Customer');
 			frappe.db.get_value(frm.doc.document_type, frm.doc.document_number, 'customer', function (d) {		
 				frm.set_value('party',d.customer)
 			})
+			frappe.db.get_value(frm.doc.document_type, frm.doc.document_number, 'shipping_address', function (d) {	
+				frm.set_value('shipping_address',d.shipping_address)
+			})
+		}
+		else if(frm.doc.document_type == 'Purchase Receipt' && frm.doc.document_number){
+			frm.set_value('party_type', 'Supplier');
+			frappe.db.get_value(frm.doc.document_type, frm.doc.document_number, 'supplier', function (d) {		
+				frm.set_value('party',d.supplier)
+			})
+			frappe.db.get_value(frm.doc.document_type, frm.doc.document_number, 'shipping_address_display', function (d) {	
+				frm.set_value('shipping_address',d.shipping_address_display)
+			})
 		}
 		else {
-			frappe.db.get_value(frm.doc.document_type, frm.doc.document_number, ['party_type','party'], function (d) {
+			frappe.db.get_value(frm.doc.document_type, frm.doc.document_number, ['party_type','party','shipping_address'], function (d) {
 				frm.set_value('party_type', d.party_type)
 				frm.set_value('party', d.party)
+				frm.set_value('shipping_address', d.shipping_address)
 			})
 		}
 	}

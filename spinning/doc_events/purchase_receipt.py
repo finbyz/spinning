@@ -67,7 +67,7 @@ def calculate_gst_taxable_value(self):
 def validate_package(self):
 	package_list = frappe.get_list("Package",filters={'purchase_document_type':self.doctype,'purchase_document_no':self.name})		
 	for row in package_list:		
-		doc = frappe.get_doc("Package", row.name)	
+		doc = frappe.get_doc("Package", row.name)
 		if doc.warehouse != self.set_warehouse:
 			frappe.throw(_("Package {} does not belong to warehouse {}.".format(doc.name,self.set_warehouse)))
 			
@@ -75,7 +75,8 @@ def validate_package(self):
 def validate_purchase_receipt(self):
 	for row in self.items:
 		if row.purchase_order:
-			pr_name,pr_item, pr_rate = frappe.db.get_value("Purchase Order Item",row.purchase_order_item,['name','item_code','rate'])
+			pr_name, pr_item, pr_rate = frappe.db.get_value("Purchase Order Item",row.purchase_order_item,['name','item_code','rate'])
+
 			if row.item_code == pr_item and row.purchase_order_item == pr_name:
 				rate = frappe.db.sql("""
 								select pii.rate from `tabPurchase Order Item` as pii

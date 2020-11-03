@@ -137,8 +137,11 @@ class Package(Document):
 			child_doctype = doc_dict[self.purchase_document_type]
 			child_table_name = frappe.db.sql_list("""select name from `tab{0}` where package = '{1}'""".format(child_doctype,self.name))
 			for r in child_table_name:
-				frappe.db.set_value(child_doctype,r,"package","")
-			frappe.db.commit()
+				doc_child = frappe.get_doc(child_doctype,r)
+				doc_child.db_set('package','')
+				doc_child.db_update()
+				# frappe.db.set_value(child_doctype,r,"package","")
+			# frappe.db.commit()
 			
 			#frappe.db.sql("""update `tab{0}` set `package` = NULL where `name` = {1}""".format(child_doctype,r))
 			

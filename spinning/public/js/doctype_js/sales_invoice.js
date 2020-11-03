@@ -22,10 +22,32 @@ this.frm.cscript.onload = function (frm) {
 frappe.ui.form.on("Sales Invoice", {
     refresh: function(frm){
         frm.set_df_property("company", "read_only", (!frm.doc.__islocal || frm.doc.amended_from) ? 1 : 0);
+        if (frm.doc.amended_from && frm.doc.__islocal && frm.doc.docstatus == 0){
+            frm.set_value("inter_company_invoice_reference", "");
+            frm.set_value("pi_ref", "");
+            frm.set_value("si_ref", "");
+            }
     },
     onload: function (frm) {
         frm.trigger("set_default_bank_account");
         frm.trigger("set_insurance_detail");
+        erpnext.queries.setup_queries(frm, "Warehouse", function() {
+			// return erpnext.queries.warehouse(frm.doc);
+        });
+        frm.fields_dict.set_warehouse.get_query = function (doc) {
+			return {
+				filters: {
+					"company": doc.company
+				}
+			}
+		};
+        frm.fields_dict.set_target_warehouse.get_query = function (doc) {
+			return {
+				filters: {
+					"company": doc.customer
+				}
+			}
+		};
     },
     company: function (frm) {
         frm.trigger("set_default_bank_account");

@@ -110,10 +110,40 @@ frappe.ui.form.on("Delivery Note", {
 		if (!frm.doc.tc_name) {
 			frm.set_value("tc_name", "Delivery Challan Terms");
 		}
+		//addded
+		erpnext.queries.setup_queries(frm, "Warehouse", function() {
+			// return erpnext.queries.warehouse(frm.doc);
+		});
+		frm.fields_dict.set_warehouse.get_query = function (doc) {
+			return {
+				filters: {
+					"company": doc.company
+				}
+			}
+		};
+		frm.fields_dict.set_target_warehouse.get_query = function (doc) {
+			return {
+				filters: {
+					"company": doc.customer
+				}
+			}
+		};
 	},
 
 	refresh: function(frm){
+		if (frm.doc.amended_from && frm.doc.__islocal && frm.doc.docstatus == 0){
+			frm.set_value("inter_company_receipt_reference", "");
+			frm.set_value("pr_ref", "");
+			frm.set_value("dn_ref", "");
+		}
 		frm.set_df_property("company", "read_only", (!frm.doc.__islocal || frm.doc.amended_from) ? 1 : 0);
+		
+		
+		// if (frm.doc.amended_from && frm.doc.__islocal && frm.doc.docstatus == 0){
+		// 	frm.set_value("inter_company_receipt_reference", "");
+		// 	frm.set_value("pr_ref", "");
+		// 	frm.set_value("dn_ref", "");
+		// 	}
 	},
 
 	validate: function (frm) {

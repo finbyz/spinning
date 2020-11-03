@@ -1,9 +1,28 @@
 
+
 frappe.ui.form.on("Purchase Order", {
 	onload: function(frm){
 		cur_frm.remove_custom_button('Material to Supplier', 'Transfer');
+		erpnext.queries.setup_queries(frm, "Warehouse", function() {
+			// return erpnext.queries.warehouse(frm.doc);
+		});
+		frm.fields_dict.set_supplier_warehouse.get_query = function (doc) {
+			return {
+				filters: {
+					"company": doc.supplier
+				}
+			}
+		};
+		frm.fields_dict.set_warehouse.get_query = function (doc) {
+			return {
+				filters: {
+					"company": doc.company
+				}
+			}
+		};
 	},
 	refresh: function (frm) {
+		frm.trigger("purchase_series");
 		cur_frm.remove_custom_button('Material to Supplier', 'Transfer');
 		var me = this;
 		if(frm.doc.status != "Closed") {
@@ -15,6 +34,14 @@ frappe.ui.form.on("Purchase Order", {
 			}
 		}
 		frm.set_df_property("company", "read_only", (!frm.doc.__islocal || frm.doc.amended_from) ? 1 : 0);
+
+		if (frm.doc.amended_from && frm.doc.__islocal && frm.doc.docstatus == 0){
+			frm.set_value("inter_company_order_reference", "");
+			frm.set_value("so_ref", "");
+			}
+	},
+	supplier: function(frm){
+		frm.trigger("purchase_series");
 	},
 	make_transfer: function(frm) {
 		var items = $.map(cur_frm.doc.items, function(d) { return d.bom ? d.item_code : false; });
@@ -129,6 +156,24 @@ frappe.ui.form.on("Purchase Order", {
 			dialog.hide();
 		});
 
+	},
+
+	purchase_series: function(frm){
+		console.log("enter")
+		frappe.db.get_value("Supplier", frm.doc.supplier, "is_internal_supplier", function(r){
+			console.log(r)
+			if(r.is_internal_supplier){
+				console.log("yes")
+				cur_frm.set_df_property("purchase_naming_series", "hidden", 0);
+
+			}
+			else{
+				cur_frm.set_df_property("purchase_naming_series", "hidden", 1);
+
+			}
+
+	
+		})
 	},
 
 	_make_rm_mt: function(frm,rm_items_) {

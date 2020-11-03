@@ -155,7 +155,7 @@ class MaterialRepack(Document):
 			child_row.save(ignore_permissions=True)
 
 		self.calculate_totals()
-		frappe.db.commit()
+		# frappe.db.commit()
 		return child_row.name
 
 	def get_child_doc(self, child_row):

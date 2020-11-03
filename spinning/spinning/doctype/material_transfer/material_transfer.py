@@ -93,12 +93,13 @@ class MaterialTransfer(Document):
 			key = (row.item_code, row.merge, row.grade, row.batch_no)
 			package_items.setdefault(key, frappe._dict({
 				'net_weight': 0,
+				'packages': 0
 			}))
 			package_items[key].update(items_row_dict.get(row.item_code))
 			package_items[key].s_warehouse = self.s_warehouse
 			package_items[key].t_warehouse = self.t_warehouse
 			package_items[key].net_weight += row.net_weight
-			package_items[key].no_of_packages += 1
+			package_items[key].packages += 1
 
 		else:
 			[self.remove(d) for d in to_remove]
@@ -106,7 +107,7 @@ class MaterialTransfer(Document):
 		for (item_code, merge, grade, batch_no), args in package_items.items():
 			amount = flt(args.basic_rate * args.net_weight)
 			_args = args.copy()
-			_args.no_of_packages = args.no_of_packages
+			_args.no_of_packages = args.packages
 			_args.pop('idx')
 			_args.pop('name')
 			_args.qty = args.net_weight
@@ -115,7 +116,6 @@ class MaterialTransfer(Document):
 			_args.merge = merge
 			_args.grade = grade
 			_args.batch_no = batch_no
-
 			self.append('items', _args)
 
 		if package_items:
@@ -278,7 +278,7 @@ class MaterialTransfer(Document):
 		se.submit()
 		#self.db_set('stock_entry_ref', se.name)
 		self.update_packages()
-		frappe.db.commit()
+		# frappe.db.commit()
 
 	def cancel_stock_entry(self):
 		se = frappe.get_doc("Stock Entry",{'reference_doctype': self.doctype,'reference_docname':self.name})
@@ -292,7 +292,7 @@ class MaterialTransfer(Document):
 		se.db_set('reference_docname','')
 
 		self.update_packages()
-		frappe.db.commit()
+		# frappe.db.commit()
 		
 	def consumption_validation(self):
 		for row in self.packages:

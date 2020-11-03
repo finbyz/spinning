@@ -70,19 +70,22 @@ class OtherProduction(Document):
             'spools': 0.0,
             'net_weight': 0.0,
             'gross_weight': 0.0,
-            'tare_weight': 0.0
+            'tare_weight': 0.0,
+            'total_sheets': 0
         })
 
         for row in self.package_details:
-            totals.spools += row.no_of_spool
-            totals.gross_weight += row.gross_weight
-            totals.tare_weight += row.tare_weight
-            totals.net_weight += row.net_weight
+            totals.spools += flt(row.no_of_spool)
+            totals.gross_weight += flt(row.gross_weight)
+            totals.tare_weight += flt(row.tare_weight)
+            totals.net_weight += flt(row.net_weight)
+            totals.total_sheets += flt(row.no_of_sheets)
 
         self.db_set('total_spool', flt(totals.spools, 3))
         self.db_set('total_net_weight', flt(totals.net_weight, 3))
         self.db_set('total_gross_weight', flt(totals.gross_weight, 3))
         self.db_set('total_tare_weight', flt(totals.tare_weight, 3))
+        self.db_set('total_sheets', flt(totals.total_sheets, 3))
         
     def print_row_package(self, child_row, commit=True):
         def get_package_doc(source_name, target_doc=None, ignore_permissions = True):
@@ -94,8 +97,8 @@ class OtherProduction(Document):
                 target.merge = self.merge
                 target.grade = self.grade
                 target.package_type = self.package_type
+                target.sheet_item = self.sheet_item
 
-                
             return get_mapped_doc("Other Production", source_name, {
                 "Other Production": {
                     "doctype": "Package",
@@ -140,8 +143,8 @@ class OtherProduction(Document):
                 value = self.series_value + 1
                 self.update_series_value(value)
 
-        child_row.tare_weight = flt(child_row.package_weight + (child_row.no_of_spool * self.spool_weight))
-        child_row.net_weight = child_row.gross_weight - child_row.tare_weight
+        child_row.tare_weight = flt(child_row.package_weight) + (flt(child_row.no_of_spool) * flt(self.spool_weight))
+        child_row.net_weight = flt(child_row.gross_weight) - flt(child_row.tare_weight)
 
         if not child_row.package:
             child_row.package = package.name
@@ -150,7 +153,7 @@ class OtherProduction(Document):
             child_row.save(ignore_permissions=True)
 
         self.calculate_totals()
-        frappe.db.commit()
+        #  frappe.db.commit()
         return child_row.name
 
     def get_child_doc(self, child_row):
@@ -180,6 +183,7 @@ class OtherProduction(Document):
             doc.package_type = self.package_type
             doc.package_item = self.package_item
             doc.paper_tube = self.paper_tube
+            doc.sheet_item = self.sheet_item
             doc.spool_weight = self.spool_weight
             doc.purchase_date =  self.posting_date
             doc.purchase_time = self.posting_time           
@@ -187,6 +191,7 @@ class OtherProduction(Document):
             doc.net_weight = row.net_weight
             doc.tare_weight = row.tare_weight
             doc.spools = row.no_of_spool
+            doc.no_of_sheets = row.no_of_sheets
             doc.package_weight = row.package_weight     
             doc.purchase_document_type = self.doctype
             doc.purchase_document_no = self.name
@@ -199,6 +204,7 @@ class OtherProduction(Document):
             doc.net_weight = 0.0
             doc.tare_weight = 0.0
             doc.spools = 0.0
+            doc.no_of_sheets = 0
             doc.package_weight = 0.0
             doc.purchase_document_no = ''
             doc.save(ignore_permissions=True)
@@ -259,7 +265,7 @@ class OtherProduction(Document):
         se.db_set('reference_doctype','')
         se.db_set('reference_docname','')
         
-        frappe.db.commit()
+        # frappe.db.commit()
     
     def set_package_series(self):
         if not (self.company or self.workstation):

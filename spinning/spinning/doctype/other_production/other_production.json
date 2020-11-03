@@ -9,6 +9,7 @@
   "item_code",
   "item_name",
   "package_type",
+  "sheet_item",
   "package_item",
   "merge",
   "grade",
@@ -34,6 +35,7 @@
   "section_break_20",
   "total_gross_weight",
   "total_net_weight",
+  "total_sheets",
   "column_break_23",
   "total_tare_weight",
   "total_spool",
@@ -256,10 +258,23 @@
    "fieldtype": "Data",
    "hidden": 1,
    "label": "Company Series"
+  },
+  {
+   "depends_on": "eval: doc.package_type == \"Pallet\"",
+   "fieldname": "sheet_item",
+   "fieldtype": "Link",
+   "label": "Sheet Item",
+   "options": "Item"
+  },
+  {
+   "fieldname": "total_sheets",
+   "fieldtype": "Int",
+   "label": "Total Sheets",
+   "read_only": 1
   }
  ],
  "is_submittable": 1,
- "modified": "2020-05-13 16:22:07.285988",
+ "modified": "2020-10-16 11:34:02.908407",
  "modified_by": "Administrator",
  "module": "Spinning",
  "name": "Other Production",

@@ -96,8 +96,8 @@ class MaterialUnpack(Document):
 		except Exception as e:
 			frappe.db.rollback()
 			frappe.throw(str(e))
-		else:
-			frappe.db.commit()
+		# else:
+		# 	frappe.db.commit()
 
 	def cancel_stock_entry(self):
 		se = frappe.get_doc("Stock Entry",{'reference_doctype': self.doctype,'reference_docname':self.name})
@@ -112,7 +112,7 @@ class MaterialUnpack(Document):
 		se.db_set('reference_docname','')
 		
 		self.update_packages()
-		frappe.db.commit()
+		# frappe.db.commit()
 		
 	def update_packages(self):
 		if self._action == "submit":

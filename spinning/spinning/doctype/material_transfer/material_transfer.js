@@ -77,7 +77,7 @@ frappe.ui.form.on('Material Transfer', {
 					values.gross_wt = args.gross_weight
 					values.spools = args.no_of_spools
 					values.no_of_packages = args.packages
-
+					
 					frm.add_child('items', values);
 				});
 			}, 
@@ -175,6 +175,9 @@ frappe.ui.form.on('Material Transfer', {
 		// erpnext.utils.copy_value_in_all_rows(frm.doc, cdt, cdn, "items", "t_warehouse");
 		erpnext.utils.copy_parent_value_in_all_row(frm.doc, cdt, cdn, "items", "t_warehouse", "t_warehouse");
 	},
+	// validate: function(frm){
+	// 	frm.trigger('set_items_as_per_packages')
+	// },
 
 	company: function(frm) {
 		if(frm.doc.company) {

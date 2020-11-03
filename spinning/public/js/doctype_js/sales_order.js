@@ -1,28 +1,4 @@
 this.frm.cscript.onload = function (frm) {
-
-    // Billing Address Filter
-    this.frm.set_query("customer_address", function () {
-        return {
-            query: "frappe.contacts.doctype.address.address.address_query",
-            filters: { link_doctype: "Customer", link_name: cur_frm.doc.customer }
-        };
-    });
-
-    // Shipping Address Filter
-    this.frm.set_query("shipping_address_name", function () {
-        return {
-            query: "frappe.contacts.doctype.address.address.address_query",
-            filters: { link_doctype: "Customer", link_name: cur_frm.doc.customer }
-        };
-    });
-
-    // Supplier Contact Filter
-    this.frm.set_query("contact_person", function () {
-        return {
-            query: "frappe.contacts.doctype.contact.contact.contact_query",
-            filters: { link_doctype: "Customer", link_name: cur_frm.doc.customer }
-        };
-    });
     // this.frm.fields_dict.items.grid.get_field("ref_no").get_query = function (doc) {
     //     return {
     //         filters: {
@@ -30,19 +6,37 @@ this.frm.cscript.onload = function (frm) {
     //         }
     //     }
     // };
-    cur_frm.fields_dict.items.grid.get_field("ref_no").get_query = function (doc, cdt, cdn) {
-        let d = locals[cdt][cdn];
-        return {
-            filters: {
-                "product_name": d.item_code,
-            }
-        }
-    };
 }
 frappe.ui.form.on("Sales Order", {
     onload: function (frm) {
-        frm.set_value("tc_name", "SO Specification");
-        frm.trigger("set_default_bank_account");
+        if (frm.doc.__islocal){
+            frm.set_value("tc_name", "SO Specification");
+            frm.trigger("set_default_bank_account");
+        }
+        
+        cur_frm.cscript.onload = function(frm) {
+            cur_frm.set_query('shipping_address_name', function(doc) {
+                return {
+                    query: 'frappe.contacts.doctype.address.address.address_query',
+                    filters: {
+                        link_doctype: 'Customer',
+                        link_name: doc.customer
+                    }
+                };
+            }),
+            cur_frm.set_query("customer_address", function (doc) {
+                return {
+                    query: "frappe.contacts.doctype.address.address.address_query",
+                    filters: { link_doctype: "Customer", link_name: doc.customer }
+                };
+            }),
+            cur_frm.set_query("contact_person", function (doc) {
+                return {
+                    query: "frappe.contacts.doctype.contact.contact.contact_query",
+                    filters: { link_doctype: "Customer", link_name: doc.customer }
+                };
+            });
+        }
     },
     company: function (frm) {
         frm.trigger("set_default_bank_account");

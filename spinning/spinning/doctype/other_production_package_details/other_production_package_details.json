@@ -10,6 +10,7 @@
   "column_break_4",
   "net_weight",
   "tare_weight",
+  "no_of_sheets",
   "print",
   "package"
  ],
@@ -67,10 +68,15 @@
    "no_copy": 1,
    "options": "Package",
    "read_only": 1
+  },
+  {
+   "fieldname": "no_of_sheets",
+   "fieldtype": "Int",
+   "label": "No of sheets"
   }
  ],
  "istable": 1,
- "modified": "2020-06-10 11:40:11.012395",
+ "modified": "2020-10-16 11:32:46.711776",
  "modified_by": "Administrator",
  "module": "Spinning",
  "name": "Other Production Package Details",

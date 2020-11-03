@@ -247,11 +247,12 @@
   {
    "fieldname": "no_of_packages",
    "fieldtype": "Int",
-   "label": "No of Packages"
+   "label": "No of Packages",
+   "no_copy": 1
   }
  ],
  "istable": 1,
- "modified": "2019-12-20 12:09:42.020964",
+ "modified": "2020-10-01 10:57:29.579933",
  "modified_by": "Administrator",
  "module": "Spinning",
  "name": "Material Transfer Item",
