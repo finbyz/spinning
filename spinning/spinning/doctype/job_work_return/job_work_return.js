@@ -133,7 +133,6 @@ frappe.ui.form.on('Job Work Return', {
 
 frappe.ui.form.on("Job Work Return Package Details", {
 	items_add: function(frm, cdt, cdn){
-		console.log("hello");
 	},
 	gross_weight: function(frm, cdt, cdn){
 		frm.events.cal_total_package_gross_wt(frm)
@@ -170,4 +169,45 @@ frappe.ui.form.on("Job Work Return Item", {
 		frappe.model.set_value(d.doctype, d.name, 'amount', flt(d.qty * d.basic_rate));
 		frappe.model.set_value(d.doctype, d.name, 'basic_amount', flt(d.amount));
 	},
+	grade: function (frm, cdt, cdn) {
+		let d = locals[cdt][cdn];
+		if(d.merge){
+			frappe.call({
+				method: "spinning.controllers.batch_controller.get_batch_no",
+				args: {
+					'args': {
+						'item_code': d.item_code,
+						'merge': d.merge,
+						'grade':d.grade
+					},
+				},
+				callback: function(r) {
+					if(r.message){
+						console.log(r)
+						frappe.model.set_value(d.doctype,d.name,'batch_no',r.message)
+					}
+				 }
+			});
+		}
+    },
+	merge: function (frm, cdt, cdn) {
+		let d = locals[cdt][cdn];
+		if(d.grade){
+			frappe.call({
+				method: "spinning.controllers.batch_controller.get_batch_no",
+				args: {
+					'args': {
+						'item_code': d.item_code,
+						'merge': d.merge,
+						'grade':d.grade
+					},
+				},
+				callback: function(r) {
+					if(r.message){
+						frappe.model.set_value(d.doctype,d.name,'batch_no',r.message)
+					}
+				 }
+			});
+		}
+    },
 });

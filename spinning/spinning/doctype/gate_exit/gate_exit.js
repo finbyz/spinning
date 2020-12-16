@@ -4,15 +4,27 @@
 
 frappe.ui.form.on('Gate Exit', {
 	onload: function (frm) {
-		if (frm.doc.document_type != 'Delivery Note') {
-			frm.fields_dict.document_number.get_query = function (doc) {
-				return {
-					filters: {
-						"send_to_party": 1
-					}
-				};
+		if(frm.doc.company){
+			cur_frm.fields_dict.document_number.get_query = function (doc) {
+				if (frm.doc.document_type != 'Delivery Note') {
+					return {
+						filters: {
+							"send_to_party": 1,
+							"company": doc.company
+						}
+					};
+				}
+				else{
+					return {
+						filters: {
+							"company": doc.company
+						}
+					};
+				}
 			}
 		}
+
+
 		if (frm.doc.__islocal){
 			
 			frm.trigger('naming_series');

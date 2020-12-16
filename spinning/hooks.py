@@ -6,11 +6,17 @@ from . import __version__ as app_version
 import erpnext
 from erpnext.setup.doctype.naming_series.naming_series import NamingSeries
 from erpnext.stock.doctype.pick_list.pick_list import PickList
+from erpnext.manufacturing.doctype.work_order.work_order import WorkOrder
 from spinning.override_method import get_transactions, set_item_locations
+from spinning.doc_events.sales_order import make_delivery_note as mk_dn
+from spinning.doc_events.work_order import set_required_items
 NamingSeries.get_transactions = get_transactions
 PickList.set_item_locations = set_item_locations
-from spinning.doc_events.sales_order import make_delivery_note as mk_dn
+WorkOrder.set_required_items = set_required_items
 erpnext.selling.doctype.sales_order.sales_order.make_delivery_note = mk_dn
+
+from spinning.doc_events.sales_order import create_pick_list
+erpnext.selling.doctype.sales_order.sales_order.create_pick_list = create_pick_list
 
 app_name = "spinning"
 app_title = "Spinning"
@@ -163,11 +169,14 @@ doc_events = {
 	},
 
 	"Purchase Order": {
+		"before_submit": "spinning.doc_events.purchase_order.before_submit",
 		"on_submit": "spinning.doc_events.purchase_order.on_submit",
 		"on_cancel": "spinning.doc_events.purchase_order.on_cancel",
 		"on_trash": "spinning.doc_events.purchase_order.on_trash",
 	},
-	
+	"Sales Order": {
+		"before_submit": "spinning.doc_events.sales_order.before_submit",
+	},
 	"Purchase Invoice": {
 		"validate": "spinning.doc_events.purchase_invoice.validate",
 		"on_submit": "spinning.doc_events.purchase_invoice.on_submit"
@@ -226,9 +235,7 @@ doc_events = {
 # Overriding Whitelisted Methods
 # ------------------------------
 #
-import erpnext
-from spinning.doc_events.sales_order import create_pick_list
-erpnext.selling.doctype.sales_order.sales_order.create_pick_list = create_pick_list
+
 override_whitelisted_methods = {
 	"erpnext.selling.doctype.sales_order.sales_order.create_pick_list": "spinning.spining.get_events"
 }

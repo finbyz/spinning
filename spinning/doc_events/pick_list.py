@@ -217,7 +217,7 @@ def get_cost_center(for_item, from_doctype, company):
 def set_delivery_note_missing_values(target):
 	target.run_method('set_missing_values')
 	target.run_method('set_po_nos')
-	target.run_method('calculate_taxes_and_totals')
+	#target.run_method('calculate_taxes_and_totals')
 
 @frappe.whitelist()
 def unpick_item(name):

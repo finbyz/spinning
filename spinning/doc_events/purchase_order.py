@@ -17,7 +17,17 @@ def on_cancel(self, method):
 def on_trash(self, method):
 	delete_sales_order(self)
 
-
+def before_submit(self,method):
+	item_dict = {}
+	for row in self.items:
+		row_index = item_dict.get((row.item_code+str(row.rate)), [])
+		row_index.append(row.idx)
+		item_dict.update({(row.item_code+str(row.rate)):row_index})
+	
+	for key, value in item_dict.items():
+		if len(value) > 1:
+			frappe.throw("Row:{0}: Not allowed to add multiple item with same rate.".format(value))
+			
 @frappe.whitelist()
 def create_transfer(purchase_order, rm_items):
 	if isinstance(rm_items, string_types):
@@ -92,10 +102,10 @@ def create_sales_order(self):
 			target_company_abbr = frappe.db.get_value("Company", target.company, "abbr")
 			source_company_abbr = frappe.db.get_value("Company", source.company, "abbr")
 
-			# if source.taxes_and_charges:
-			# 	target_taxes_and_charges = source.taxes_and_charges.replace(source_company_abbr, target_company_abbr)
-			# 	if frappe.db.exists("Sales Taxes and Charges Template", target_taxes_and_charges):
-			# 		target.taxes_and_charges = target_taxes_and_charges
+			if source.taxes_and_charges:
+				target_taxes_and_charges = source.taxes_and_charges.replace(source_company_abbr, target_company_abbr)
+				if frappe.db.exists("Sales Taxes and Charges Template", target_taxes_and_charges):
+					target.taxes_and_charges = target_taxes_and_charges
 
 			if self.amended_from:
 				name = frappe.db.get_value("Sales Order", {'po_ref': self.amended_from}, "name")

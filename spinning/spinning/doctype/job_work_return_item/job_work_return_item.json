@@ -45,7 +45,8 @@
    "fieldtype": "Link",
    "in_list_view": 1,
    "label": "Item Code",
-   "options": "Item"
+   "options": "Item",
+   "reqd": 1
   },
   {
    "fieldname": "column_break_3",
@@ -83,7 +84,8 @@
    "fieldname": "qty",
    "fieldtype": "Float",
    "in_list_view": 1,
-   "label": "Qty"
+   "label": "Qty",
+   "reqd": 1
   },
   {
    "fieldname": "basic_rate",
@@ -155,7 +157,8 @@
    "fieldtype": "Link",
    "in_list_view": 1,
    "label": "Merge",
-   "options": "Merge"
+   "options": "Merge",
+   "reqd": 1
   },
   {
    "fieldname": "accounting_section",
@@ -194,11 +197,12 @@
    "fieldtype": "Link",
    "in_list_view": 1,
    "label": "Grade",
-   "options": "Grade"
+   "options": "Grade",
+   "reqd": 1
   }
  ],
  "istable": 1,
- "modified": "2019-12-31 12:00:49.901998",
+ "modified": "2020-12-14 18:31:05.962161",
  "modified_by": "Administrator",
  "module": "Spinning",
  "name": "Job Work Return Item",

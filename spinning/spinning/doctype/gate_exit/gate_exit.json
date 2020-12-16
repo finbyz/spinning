@@ -10,6 +10,7 @@
   "document_number",
   "challan_no",
   "challan_date",
+  "consignee_name",
   "column_break_7",
   "company",
   "posting_date",
@@ -205,9 +206,15 @@
    "fieldtype": "Link",
    "label": "Letter Head",
    "options": "Letter Head"
+  },
+  {
+   "depends_on": "eval:(in_list(\"Delivery Note\", doc.document_type))",
+   "fieldname": "consignee_name",
+   "fieldtype": "Data",
+   "label": "Consignee Name"
   }
  ],
- "modified": "2020-05-23 14:16:50.588175",
+ "modified": "2020-11-23 16:48:17.787895",
  "modified_by": "Administrator",
  "module": "Spinning",
  "name": "Gate Exit",

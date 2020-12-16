@@ -107,6 +107,10 @@ def validate_packages(self):
 
 		if status == "Out of Stock":
 			frappe.throw(_("Row {}: Package {} is Out of Stock. Please select another package.".format(row.idx, frappe.bold(row.package))))
+		
+		if row.warehouse != frappe.db.get_value("Package",row.package,'warehouse'):
+			frappe.msgprint(_("Package {} does not belong to same warehouse".format(row.package)))
+			row.warehouse = frappe.db.get_value("Package",row.package,'warehouse')
 
 def set_pallet_item(self):
 	finish_list = []
@@ -329,17 +333,18 @@ def cancel_pallet_stock_entry(self):
 def create_purchase_receipt(self):
 	def get_purchase_receipt_entry(source_name, target_doc=None, ignore_permissions= True):
 
-		def set_missing_value(source, target):
+		def set_missing_values(source, target):
 
 			target.company = source.customer
 			target.supplier = source.company
-
+			target.set_posting_time = 1
+			target.posting_date = source.posting_date
+			
 			target_company_abbr = frappe.db.get_value("Company", target.company, "abbr")
 			source_company_abbr = frappe.db.get_value("Company", source.company, "abbr")
-
 			if source.taxes_and_charges:
 				target_taxes_and_charges = source.taxes_and_charges.replace(source_company_abbr, target_company_abbr)
-				if frappe.db.exists("Sales Taxes and Charges Template", target_taxes_and_charges):
+				if frappe.db.exists("Purchase Taxes and Charges Template", target_taxes_and_charges):
 					target.taxes_and_charges = target_taxes_and_charges
 
 			# if source_parent.purchase_naming_series:
@@ -354,10 +359,8 @@ def create_purchase_receipt(self):
 				name = frappe.db.get_value("Purchase Receipt", {'dn_ref': self.amended_from}, "name")
 				target.amended_from = name
 			
-			target.set_posting_time = 1
 
-			target.run_method("set_missing_values")
-			target.run_method("calculate_taxes_and_charges")
+
 
 		def update_items(source_doc, target_doc, source_parent):
 			source_company_abbr = frappe.db.get_value("Company", source_parent.company, "abbr")
@@ -388,7 +391,7 @@ def create_purchase_receipt(self):
 			"Delivery Note": {
 				"doctype": "Purchase Receipt",
 				"field_map": {
-					"name": "supplier_delivery_note",
+					"set_posting_time": "set_posting_time",
 					"selling_price_list": "buying_price_list",
 					"shipping_address_name": "shipping_address",
 					"shipping_address": "shipping_address_display",
@@ -396,6 +399,7 @@ def create_purchase_receipt(self):
 					"posting_time": "posting_time",
 					"ignore_pricing_rule": "ignore_pricing_rule",
 					"set_target_warehouse": "set_warehouse",
+					"name": "supplier_delivery_note",
 					"posting_date": "supplier_delivery_note_date",
 					"purchase_naming_series": "naming_series",
 				},
@@ -403,7 +407,8 @@ def create_purchase_receipt(self):
 					"taxes_and_charges",
 					"series_value",
 					"letter_head",
-				]
+				],
+
 			},
 			"Delivery Note Item": {
 				"doctype": "Purchase Receipt Item",
@@ -442,7 +447,7 @@ def create_purchase_receipt(self):
 			source_name,
 			fields,
 			target_doc,
-			set_missing_value,
+			set_missing_values,
 			ignore_permissions=ignore_permissions
 		)
 
@@ -479,7 +484,8 @@ def create_purchase_receipt(self):
 				if purchase_order:
 					pr.items[index].schedule_date = frappe.db.get_value("Purchase Order", purchase_order, 'schedule_date')
 					pr.items[index].purchase_order = purchase_order
-					frappe.db.set_value("Delivery Note Item", self.items[index].name, 'pr_detail', pr.items[index].name)
+				self.items[index].pr_detail = pr.items[index].name
+				# frappe.db.set_value("Delivery Note Item", self.items[index].name, 'pr_detail', pr.items[index].name)
 			
 			pr.save(ignore_permissions = True)
 

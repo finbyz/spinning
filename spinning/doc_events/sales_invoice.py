@@ -147,6 +147,8 @@ def make_inter_company_transaction(self, target_doc=None):
 		target.company = source.customer
 		target.supplier = source.company
 		# target.buying_price_list = source.selling_price_list
+		target.posting_date = source.posting_date
+
 
 		abbr = frappe.db.get_value("Company", target.company, 'abbr')
 

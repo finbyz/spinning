@@ -234,13 +234,19 @@ def clear_package_weight(self):
 def update_packages(self, method):
 	if method == "on_submit" and self.is_return:
 		for row in self.packages:
-			doc = frappe.get_doc("Package", row.package)
+			package_no = frappe.db.get_value("Package",{'package_no':row.package,'purchase_document_no':self.return_against},'name')
+			if not package_no:
+				frappe.throw(_("Return Package not found"))
+			doc = frappe.get_doc("Package", package_no)
 			doc.add_consumption(self.doctype, self.name, row.net_weight, self.posting_date, self.posting_time)
 			doc.save(ignore_permissions=True)
 
-	elif method == "on_cancel":
+	elif method == "on_cancel" and self.is_return:
 		for row in self.packages:
-			doc = frappe.get_doc("Package", row.package)
+			package_no = frappe.db.get_value("Package",{'package_no':row.package,'purchase_document_no':self.return_against},'name')
+			if not package_no:
+				frappe.throw(_("Return Package not found"))
+			doc = frappe.get_doc("Package", package_no)
 			doc.remove_consumption(self.doctype, self.name)
 			doc.save(ignore_permissions=True)
 

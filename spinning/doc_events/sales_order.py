@@ -117,3 +117,14 @@ def create_pick_list(source_name, target_doc=None):
 	# doc.delivery_date = frappe.db.get_value('Sales Order', source_name, 'delivery_date')
 	doc.set_item_locations()
 	return doc
+
+def before_submit(self,method):
+	item_dict = {}
+	for row in self.items:
+		row_index = item_dict.get((row.item_code+str(row.rate)), [])
+		row_index.append(row.idx)
+		item_dict.update({(row.item_code+str(row.rate)):row_index})
+	
+	for key, value in item_dict.items():
+		if len(value) > 1:
+			frappe.throw("Row:{0}: Not allowed to add multiple item with same rate.".format(value))

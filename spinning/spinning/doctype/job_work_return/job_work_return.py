@@ -25,6 +25,12 @@ class JobWorkReturn(Document):
 		self.validate_weights()
 	
 	def on_submit(self):
+		for row in self.items:
+			has_batch_no = frappe.db.get_value('Item', self.item_code, 'has_batch_no')
+			if has_batch_no and not batch_no:
+				frappe.throw(_("Row:{} Merge and grade is manadatory for item {}".format(row.idx,row.item_code))
+
+				
 		self.create_packages()
 		self.create_stock_entry()
 
@@ -62,9 +68,10 @@ class JobWorkReturn(Document):
 			se.append("items",{
 				'item_code': row.item_code,
 				's_warehouse': self.s_warehouse,
+				'qty': row.qty,
+				'batch_no':row.batch_no,
 				'merge': row.merge,
 				'grade': row.grade,
-				'qty': row.qty,
 			})
 		se.append("items",{
 			'item_code': self.item_code,
