@@ -8,7 +8,7 @@ def get_data():
 			"module_name": "Spinning",
 			"category": "Modules",
 			"color": "Orange",
-			"icon": "fa fa-industry",
+			"icon": "icon finbyz-yarn",
 			"type": "module",
 			"label": _("Spinning")
 		}

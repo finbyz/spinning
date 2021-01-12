@@ -109,9 +109,8 @@ def validate_packages(self):
 			frappe.throw(_("Row {}: Package {} is Out of Stock. Please select another package.".format(row.idx, frappe.bold(row.package))))
 		
 		if row.warehouse != frappe.db.get_value("Package",row.package,'warehouse'):
-			frappe.msgprint(_("Package {} does not belong to same warehouse".format(row.package)))
-			row.warehouse = frappe.db.get_value("Package",row.package,'warehouse')
-
+			frappe.throw(_("Package {} does not belong to same warehouse. Re-select the packages".format(row.package)))
+			
 def set_pallet_item(self):
 	finish_list = []
 	result = {}
@@ -212,6 +211,8 @@ def update_packages(self, method):
 	elif method == "on_cancel":
 		for row in self.packages:
 			doc = frappe.get_doc("Package", row.package)
+			if doc.warehouse != row.warehouse:
+				frappe.throw(_("Row:{}  Package {} does not belong to warehouse {}.Please cancel the tranfer and reselect the package".format(row.idx,row.package,row.warehouse)))
 			doc.remove_consumption(self.doctype, self.name)
 			doc.save(ignore_permissions=True)
 

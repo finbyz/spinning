@@ -62,15 +62,15 @@ cur_frm.fields_dict.material_unpack.get_query = function(doc){
 
 frappe.ui.form.on('Material Repack', {
 	onload: function(frm){
-		if(frm.doc.__islocal){
-			frappe.db.get_value("Company", frm.doc.company, 'abbr', function(r){
-				frm.set_value('package_warehouse','Work In Progress - ' + r.abbr)
+		if (frm.doc.__islocal) {
+			frappe.db.get_value("Company", frm.doc.company, 'abbr', function (r) {
+				frm.set_value('package_warehouse', 'Work In Progress - ' + r.abbr)
 			});
 		}
 		frm.events.set_package_series(frm);
 	},
 	before_save: function(frm){
-		//frm.trigger("cal_total");
+		frm.trigger("cal_total");
 	},
 	set_package_series: function(frm){
 		return frappe.call({
@@ -159,7 +159,12 @@ frappe.ui.form.on("Material Repack Package Detail", {
 		let d = locals[cdt][cdn];
 		frappe.model.set_value(cdt, cdn, "net_weight", flt(d.gross_weight - d.tare_weight));
 	},
-
+	net_weight: function (frm, cdt, cdn) {
+		let d = locals[cdt][cdn];
+		if(d.gross_weight){
+			frm.trigger('cal_total')
+		}
+	},
 	package_weight: function (frm, cdt, cdn) {
 		let d = locals[cdt][cdn];
 		frappe.model.set_value(cdt, cdn, "tare_weight", flt(d.package_weight + (d.no_of_spool * frm.doc.spool_weight)));
@@ -185,8 +190,7 @@ frappe.ui.form.on("Material Repack Package Detail", {
 				child_row: row
 			},
 			callback: function(r) {
-				frm.reload_doc();
-				
+				//frm.reload_doc();
 				
 				var w = window.open(frappe.urllib.get_full_url("/printview?"
 						+ "doctype=" + encodeURIComponent("Material Repack Package Detail")
@@ -195,9 +199,11 @@ frappe.ui.form.on("Material Repack Package Detail", {
 						+ "&format=" + encodeURIComponent("Repack Packing Sticker")
 					));
 					if (!w) {
-						frappe.msgprint(__("Please enable pop-ups")); return;
+						frappe.msgprint(__("Please enable pop-ups"));
+						return;
 					}
 				//cur_frm.print_doc();
+				//frm.events.cal_total(frm)
 			}
 		});
 	},	

@@ -27,10 +27,8 @@ class JobWorkReturn(Document):
 	def on_submit(self):
 		for row in self.items:
 			has_batch_no = frappe.db.get_value('Item', self.item_code, 'has_batch_no')
-			if has_batch_no and not batch_no:
-				frappe.throw(_("Row:{} Merge and grade is manadatory for item {}".format(row.idx,row.item_code))
-
-				
+			if has_batch_no and not row.batch_no:
+				frappe.throw(_("Row:{} Merge and grade is manadatory for item {}".format(row.idx,row.item_code)))
 		self.create_packages()
 		self.create_stock_entry()
 

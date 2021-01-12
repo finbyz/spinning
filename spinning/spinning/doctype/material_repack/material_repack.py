@@ -25,11 +25,11 @@ class MaterialRepack(Document):
 	
 	def validate(self):
 		validate_merge(self)
+		self.calculate_totals()
 		date = datetime.strptime(self.posting_date, '%Y-%m-%d').date()
 		cd   = datetime.date(datetime.now())
 		if date > cd:
 			frappe.throw(_('Posting Date Cannot Be After Today Date'))
-		self.calculate_totals()
 			
 	def before_save(self):
 		if not self.is_new():
@@ -155,6 +155,7 @@ class MaterialRepack(Document):
 			child_row.save(ignore_permissions=True)
 
 		self.calculate_totals()
+		
 		# frappe.db.commit()
 		return child_row.name
 
