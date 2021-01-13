@@ -237,7 +237,9 @@ doc_events = {
 #
 
 override_whitelisted_methods = {
-	"erpnext.selling.doctype.sales_order.sales_order.create_pick_list": "spinning.spining.get_events"
+	"erpnext.selling.doctype.sales_order.sales_order.create_pick_list": "spinning.spining.get_events",
+	"erpnext.regional.india.utils.generate_ewb_json": "spinning.eway_update.generate_ewb_json"
+
 }
 
 override_doctype_dashboards = {

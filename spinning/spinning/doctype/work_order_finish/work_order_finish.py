@@ -355,12 +355,13 @@ class WorkOrderFinish(Document):
 					frappe.throw(_("Sufficient quantity for item {} is not available in {} warehouse for merge {}.".format(frappe.bold(d.item_code), frappe.bold(d.s_warehouse), frappe.bold(d.merge))))
 
 		se.extend('items', items)
-
 		# for row in se.items:
 			# if row.s_warehouse:
 				# frappe.msgprint("Row {} : Item Code - {}, Batch No - {}, Merge - {}".format(row.idx, row.item_code, row.batch_no, row.merge))
 
+		se.calculate_rate_and_amount(update_finished_item_rate=True)
 		se.save(ignore_permissions=True)
+		se.calculate_rate_and_amount(update_finished_item_rate=True)
 		se.submit()
 		self.add_package_consumption(se)
 

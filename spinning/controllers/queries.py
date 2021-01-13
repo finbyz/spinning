@@ -5,6 +5,7 @@ import frappe
 from frappe import _
 from frappe.desk.reportview import get_match_cond
 
+@frappe.whitelist()
 def batch_query(doctype, txt, searchfield, start, page_len, filters):
 	cond = ""
 
@@ -53,6 +54,7 @@ def batch_query(doctype, txt, searchfield, start, page_len, filters):
 			order by expiry_date, name desc
 			limit %(start)s, %(page_len)s""".format(cond, match_conditions=get_match_cond(doctype)), args)
 			
+@frappe.whitelist()
 def grade_query(doctype, txt, searchfield, start, page_len, filters):
 	cond = ""
 	args = {
@@ -64,6 +66,7 @@ def grade_query(doctype, txt, searchfield, start, page_len, filters):
 			from `tabGrade Detail` gd
 				where gd.parent = %(item_code)s
 			""",args)
+			
 	if grade:
 		return grade
 	else:

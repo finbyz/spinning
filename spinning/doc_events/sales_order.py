@@ -113,7 +113,7 @@ def create_pick_list(source_name, target_doc=None):
 		},
 	}, target_doc)
 
-	doc.purpose = 'Delivery against Sales Order'
+	doc.purpose = 'Delivery'
 	# doc.delivery_date = frappe.db.get_value('Sales Order', source_name, 'delivery_date')
 	doc.set_item_locations()
 	return doc
