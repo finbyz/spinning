@@ -74,6 +74,8 @@ def validate_package(self):
 		
 def validate_purchase_receipt(self):
 	for row in self.items:
+		if row.warehouse and row.warehouse != self.set_warehouse:
+			frappe.throw(_("Row {} : Warehouse should same as {} for item {}").format(row.idx,self.set_warehouse,row.item_code))
 		if row.purchase_order:
 			pr_name, pr_item, pr_rate = frappe.db.get_value("Purchase Order Item",row.purchase_order_item,['name','item_code','rate'])
 

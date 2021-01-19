@@ -9,10 +9,11 @@ from erpnext.stock.doctype.pick_list.pick_list import PickList
 from erpnext.manufacturing.doctype.work_order.work_order import WorkOrder
 from spinning.override_method import get_transactions, set_item_locations
 from spinning.doc_events.sales_order import make_delivery_note as mk_dn
-from spinning.doc_events.work_order import set_required_items
+from spinning.doc_events.work_order import set_required_items,validate_work_order_against_so
 NamingSeries.get_transactions = get_transactions
 PickList.set_item_locations = set_item_locations
 WorkOrder.set_required_items = set_required_items
+WorkOrder.validate_work_order_against_so = validate_work_order_against_so
 erpnext.selling.doctype.sales_order.sales_order.make_delivery_note = mk_dn
 
 from spinning.doc_events.sales_order import create_pick_list

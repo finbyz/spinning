@@ -268,9 +268,16 @@ def unpick_item(name):
 @frappe.whitelist()
 def update_status(name, update_status_):
 	doc = frappe.get_doc("Pick List", name)
-
+	update_picked_qty(doc)
 	doc.user_status_ = update_status_
 	doc.save()
 	# frappe.db.set_value("Pick List", name, 'user_status_', update_status_)
 
 	return 1
+
+def update_picked_qty(doc):
+	for row in doc.locations:
+		if row.sales_order and row.sales_order_item:
+			frappe.db.sql("""
+				update `tabSales Order Item` set picked_qty =  delivered_qty where parent = '{}' and name = '{}'
+			""".format(row.sales_order,row.sales_order_item))

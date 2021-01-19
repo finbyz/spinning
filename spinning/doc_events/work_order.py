@@ -8,6 +8,7 @@ from frappe.utils import cint, cstr, flt
 from erpnext.manufacturing.doctype.work_order.work_order import WorkOrder
 from spinning.doc_events.bom import get_bom_items_as_dict 
 
+class OverProductionError(frappe.ValidationError): pass
 class StockOverProductionError(frappe.ValidationError): pass
 
 
@@ -131,3 +132,34 @@ def set_required_items(self, reset_only_qty=False):
 					self.project = item.get("project")
 
 		self.set_available_qty()
+
+def validate_work_order_against_so(self):
+	# already ordered qty
+	ordered_qty_against_so = frappe.db.sql("""select sum(qty) from `tabWork Order`
+		where production_item = %s and sales_order = %s and docstatus < 2 and status not in ('Stopped','Completed') and name != %s""",
+		(self.production_item, self.sales_order, self.name))[0][0]
+
+	# Finbyz changes
+	ordered_manufactured_qty_against_so = frappe.db.sql("""select sum(produced_qty) from `tabWork Order`
+		where production_item = %s and sales_order = %s and docstatus < 2 and status in ('Stopped','Completed') and name != %s""",
+		(self.production_item, self.sales_order, self.name))[0][0]
+
+	total_qty = flt(ordered_qty_against_so) + flt(ordered_manufactured_qty_against_so) + flt(self.qty)
+
+	# get qty from Sales Order Item table
+	so_item_qty = frappe.db.sql("""select sum(stock_qty) from `tabSales Order Item`
+		where parent = %s and item_code = %s""",
+		(self.sales_order, self.production_item))[0][0]
+	# get qty from Packing Item table
+	dnpi_qty = frappe.db.sql("""select sum(qty) from `tabPacked Item`
+		where parent = %s and parenttype = 'Sales Order' and item_code = %s""",
+		(self.sales_order, self.production_item))[0][0]
+	# total qty in SO
+	so_qty = flt(so_item_qty) + flt(dnpi_qty)
+
+	allowance_percentage = flt(frappe.db.get_single_value("Manufacturing Settings",
+		"overproduction_percentage_for_sales_order"))
+
+	if total_qty > so_qty + (allowance_percentage/100 * so_qty):
+		frappe.throw(_("Cannot produce more Item {0} than Sales Order quantity {1}")
+			.format(self.production_item, so_qty), OverProductionError)

@@ -1,5 +1,6 @@
 frappe.ui.form.on("Work Order", {
     setup: function(frm) {
+        frm.remove_custom_button('Re-open', 'Status');
         cur_frm.set_query('sales_order', function(doc) {
                 return {
                     query: "spinning.doc_events.work_order.sales_order_query",
@@ -8,5 +9,8 @@ frappe.ui.form.on("Work Order", {
                     }
                }
         })
+    },
+    refresh: function(frm){
+        frm.remove_custom_button('Re-open', 'Status');
     }
 })

@@ -258,12 +258,14 @@ class WorkOrderFinish(Document):
 				'item_code': self.paper_tube,
 				's_warehouse': self.package_warehouse or wo.wip_warehouse,
 				'qty': self.total_spool,
+				'conversion_factor':1,
 			})
 		if self.package_item and self.package_type != "Pallet" and frappe.db.get_value("Item",self.package_item,'is_stock_item'):
 			se.append("items",{
 				'item_code': self.package_item,
 				's_warehouse': self.package_warehouse or self.source_warehouse,
 				'qty': len(self.package_details),
+				'conversion_factor':1,
 			})
 		# if self.sheet_item and self.total_sheets:
 		# 	se.append("items",{
@@ -322,6 +324,7 @@ class WorkOrderFinish(Document):
 							'item_code': d.item_code,
 							's_warehouse': wo.wip_warehouse,
 							'qty': remaining_qty,
+							'conversion_factor':1,
 						}))
 
 				else:
@@ -345,6 +348,7 @@ class WorkOrderFinish(Document):
 								'item_code': d.item_code,
 								's_warehouse': wo.wip_warehouse,
 								'qty': remaining_qty,
+								'conversion_factor':1,
 							}))
 
 					if flag:
@@ -359,9 +363,8 @@ class WorkOrderFinish(Document):
 			# if row.s_warehouse:
 				# frappe.msgprint("Row {} : Item Code - {}, Batch No - {}, Merge - {}".format(row.idx, row.item_code, row.batch_no, row.merge))
 
-		se.calculate_rate_and_amount(update_finished_item_rate=True)
+		se.get_stock_and_rate()
 		se.save(ignore_permissions=True)
-		se.calculate_rate_and_amount(update_finished_item_rate=True)
 		se.submit()
 		self.add_package_consumption(se)
 
